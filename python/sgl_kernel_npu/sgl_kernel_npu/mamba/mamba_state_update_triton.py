@@ -18,7 +18,7 @@ import triton.language as tl
 
 
 @triton.jit
-def move_cache_dynamic_last_kernel_h_block(
+def move_cache_dynamic_last_kernel_flat_block(
     dst_cache_ptr,
     src_cache_ptr,
     dst_indices_ptr,
@@ -29,58 +29,47 @@ def move_cache_dynamic_last_kernel_h_block(
     draft_stride,
     dst_layer_stride,
     dst_size_stride,
-    h_dim,
-    dim_v,
-    dim_k,
-    num_layers,
-    H_BLOCK_SIZE: tl.constexpr,
-    BLOCK_V: tl.constexpr,  # Block size for dim_v
-    BLOCK_K: tl.constexpr,  # Block size for dim_k
+    elem_per_entry,
+    src_size,
+    draft_size,
+    dst_size,
+    BLOCK_SIZE: tl.constexpr,
 ):
     valid_id = tl.program_id(0)
+    layer_id = tl.program_id(1).to(tl.int64)
+    block_id = tl.program_id(2)
 
     # Load actual indices
-    dst_idx_val = tl.load(dst_indices_ptr + valid_id)
-    src_idx_val = tl.load(src_indices_ptr + valid_id)
-    last_step_val = tl.load(last_steps_ptr + valid_id)
+    dst_idx_val = tl.load(dst_indices_ptr + valid_id).to(tl.int64)
+    src_idx_val = tl.load(src_indices_ptr + valid_id).to(tl.int64)
+    last_step_val = tl.load(last_steps_ptr + valid_id).to(tl.int64)
     if last_step_val < 0:
         return
-    h_offsets = tl.arange(0, H_BLOCK_SIZE)
-    v_offsets = tl.arange(0, BLOCK_V)
-    k_offsets = tl.arange(0, BLOCK_K)
 
-    # Process each layer
-    for l in range(num_layers):
-        src_base_addr = (
-            src_cache_ptr
-            + tl.cast(l, tl.int64) * layer_stride
-            + tl.cast(src_idx_val, tl.int64) * size_stride
-        )
-        dst_base_addr = (
-            dst_cache_ptr
-            + tl.cast(l, tl.int64) * dst_layer_stride
-            + tl.cast(dst_idx_val, tl.int64) * dst_size_stride
-        )
-        src_addr = src_base_addr + tl.cast(last_step_val, tl.int64) * draft_stride
+    if not (
+        (dst_idx_val >= 0)
+        & (dst_idx_val < dst_size)
+        & (src_idx_val >= 0)
+        & (src_idx_val < src_size)
+        & (last_step_val < draft_size)
+    ):
+        return
 
-        # Process h dimension in blocks
-        for h_start in range(0, h_dim, H_BLOCK_SIZE):
-            h_real = h_start + h_offsets
-            h_mask = h_real < h_dim
+    offsets = block_id * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
+    mask = offsets < elem_per_entry
 
-            v_mask = v_offsets < dim_v
-            k_mask = k_offsets < dim_k
+    src_base_addr = (
+        src_cache_ptr
+        + layer_id * layer_stride
+        + src_idx_val * size_stride
+        + last_step_val * draft_stride
+    )
+    dst_base_addr = (
+        dst_cache_ptr + layer_id * dst_layer_stride + dst_idx_val * dst_size_stride
+    )
 
-            mask = h_mask[:, None, None] & v_mask[None, :, None] & k_mask[None, None, :]
-
-            linear_offset = (
-                h_real[:, None, None] * dim_v * dim_k
-                + v_offsets[None, :, None] * dim_k
-                + k_offsets[None, None, :]
-            )
-
-            src_block = tl.load(src_addr + linear_offset, mask=mask, other=0)
-            tl.store(dst_base_addr + linear_offset, src_block, mask=mask)
+    src_block = tl.load(src_base_addr + offsets, mask=mask, other=0)
+    tl.store(dst_base_addr + offsets, src_block, mask=mask)
 
 
 def move_intermediate_cache(
@@ -89,7 +78,7 @@ def move_intermediate_cache(
     dst_indices_tensor,
     src_indices_tensor,
     last_steps_tensor,
-    h_block_size=2,
+    h_block_size=None,
 ):
     """
     Move intermediate cache to SSM states using Triton kernel.
@@ -100,9 +89,11 @@ def move_intermediate_cache(
         dst_indices_tensor: Valid destination indices tensor
         src_indices_tensor: Valid source indices tensor
         last_steps_tensor: Last steps tensor
-        h_block_size: Block size for h dimension processing
+        h_block_size: Deprecated. Kept for API compatibility.
     """
     L, S, D, H, V, K = intermediate_state_cache.shape
+    if len(dst_indices_tensor) == 0:
+        return ssm_states
 
     strides = intermediate_state_cache.stride()
     layer_stride, size_stride, draft_stride = (
@@ -120,10 +111,14 @@ def move_intermediate_cache(
         last_steps_tensor
     ), "Source indices lengths must match"
 
-    # Grid: one thread per valid index
-    grid = (len(dst_indices_tensor),)
+    elem_per_entry = H * V * K
+    # Keep each program small enough for Ascend UB with large Mamba state shapes.
+    block_size = 1024
 
-    move_cache_dynamic_last_kernel_h_block[grid](
+    # Grid: request, layer, flattened state block.
+    grid = (len(dst_indices_tensor), L, triton.cdiv(elem_per_entry, block_size))
+
+    move_cache_dynamic_last_kernel_flat_block[grid](
         dst_cache_ptr=ssm_states,
         src_cache_ptr=intermediate_state_cache,
         dst_indices_ptr=dst_indices_tensor,
@@ -134,13 +129,11 @@ def move_intermediate_cache(
         draft_stride=draft_stride,
         dst_layer_stride=dst_layer_stride,
         dst_size_stride=dst_size_stride,
-        h_dim=H,
-        dim_v=V,
-        dim_k=K,
-        num_layers=L,
-        H_BLOCK_SIZE=h_block_size,  # Process 2 h elements per block
-        BLOCK_V=triton.next_power_of_2(V),  # Block size for dim_v
-        BLOCK_K=triton.next_power_of_2(K),  # Block size for dim_k
+        elem_per_entry=elem_per_entry,
+        src_size=S,
+        draft_size=D,
+        dst_size=ssm_states.shape[1],
+        BLOCK_SIZE=block_size,
     )
 
     return ssm_states

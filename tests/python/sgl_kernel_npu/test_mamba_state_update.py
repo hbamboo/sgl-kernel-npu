@@ -110,6 +110,8 @@ def test_conv_state_rollback(
             id="L{0}_S{1}_D{2}_H{3}_V{4}_K{5}_valid{6}_{7}".format(*test),
         )
         for test in [
+            (36, 229, 2, 8, 128, 128, 1, torch.bfloat16),
+            (36, 229, 2, 8, 128, 128, 180, torch.bfloat16),
             (36, 229, 4, 8, 128, 128, 180, torch.bfloat16),
             (18, 100, 4, 4, 64, 64, 50, torch.bfloat16),
             (36, 229, 4, 8, 128, 128, 229, torch.bfloat16),
