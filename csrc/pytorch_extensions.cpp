@@ -27,6 +27,10 @@ TORCH_LIBRARY_FRAGMENT(npu, m)
     m.def("sgl_kernel_npu_version() -> str", []() { return std::string("") + LIB_VERSION; });
 
     m.def("helloworld(Tensor x, Tensor y) -> Tensor");
+    m.def(
+        "qkv_rms_norm_rope_cache(Tensor qkv, Tensor q_gamma, Tensor k_gamma, Tensor cos, Tensor sin, Tensor index, "
+        "Tensor(a!) q_out, Tensor(b!) k_cache, Tensor(c!) v_cache, int num_head_q, int num_head_k, int num_head_v, "
+        "float epsilon) -> (Tensor(a!), Tensor(b!), Tensor(c!))");
 
     m.def(
         "alloc_extend(Tensor pre_lens, Tensor seq_lens, Tensor last_loc, Tensor free_pages, int page_size, "
@@ -241,6 +245,7 @@ TORCH_LIBRARY_IMPL(npu, CatchAll, m)
 TORCH_LIBRARY_IMPL(npu, PrivateUse1, m)
 {
     m.impl("helloworld", TORCH_FN(sglang::npu_kernel::helloworld));
+    m.impl("qkv_rms_norm_rope_cache", TORCH_FN(sglang::npu_kernel::qkv_rms_norm_rope_cache));
 
     m.impl("cache_loc_assign", TORCH_FN(sglang::npu_kernel::cache_loc_assign));
 

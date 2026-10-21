@@ -295,7 +295,23 @@ shm_allocator_create_and_register(int64_t size, int64_t device_id,
  * @brief Unregister and free all shared-memory entries for one device.
  */
 void shm_allocator_free_all(int64_t device_id);
+
 #endif
+
+/**
+ * @brief Split packed QKV, RMSNorm on Q/K, RoPE on Q/K, optional PA_NZ paged cache write.
+ *
+ * qkv: [tokens, (Nq+Nk+Nv)*D] bf16
+ * q_gamma / k_gamma: [D] bf16
+ * cos / sin: [tokens, D] bf16
+ * index: [tokens] int64, slot id = block_id * block_size + offset_in_block
+ * q_out: [tokens, Nq*D] bf16, written in place
+ * k_cache / v_cache: [blockNum, N*D/16, blockSize, 16] bf16 (PA_NZ), written in place
+ */
+std::tuple<at::Tensor, at::Tensor, at::Tensor> qkv_rms_norm_rope_cache(
+    const at::Tensor &qkv, const at::Tensor &q_gamma, const at::Tensor &k_gamma, const at::Tensor &cos,
+    const at::Tensor &sin, const at::Tensor &index, at::Tensor q_out, at::Tensor k_cache, at::Tensor v_cache,
+    int64_t num_head_q, int64_t num_head_k, int64_t num_head_v, double epsilon);
 
 } // namespace npu_kernel
 
