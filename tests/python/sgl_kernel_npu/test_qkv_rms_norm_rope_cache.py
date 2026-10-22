@@ -198,3 +198,117 @@ def test_qkv_rms_norm_rope_cache_deterministic():
     b = run()
     for x, y in zip(a, b):
         torch.testing.assert_close(x, y, rtol=0, atol=0)
+
+
+# ---------------------------------------------------------------------------------------------
+# ACL graph cover.
+#
+# A captured graph keeps the tiling buffers that were live at capture time: the H2D memcpy is
+# replayed as a node (it re-reads the host address) and the kernel argument holds the device
+# address.  Both used to be per-call temporaries in the host launcher, so once a *different*
+# tiling had gone through the launcher (another shape, a second graph, or an eager call in
+# between) replay ran the kernel with a foreign tiling: aivec error 263, or a silent no-op.
+# These three cases pin that behaviour down.
+# ---------------------------------------------------------------------------------------------
+
+
+class _GraphCase:
+    """Static inputs/outputs for one shape, so a graph can be captured and replayed."""
+
+    def __init__(self, tokens, nq, nk, nv, block_num, block_size, seed):
+        torch.manual_seed(seed)
+        dtype = torch.bfloat16
+        self.dims = (nq, nk, nv)
+        self.tokens = tokens
+        self.block_num = block_num
+        self.block_size = block_size
+        self.qkv = torch.randn(tokens, (nq + nk + nv) * HEAD_DIM, dtype=dtype, device="npu")
+        self.q_gamma = torch.randn(HEAD_DIM, dtype=dtype, device="npu")
+        self.k_gamma = torch.randn(HEAD_DIM, dtype=dtype, device="npu")
+        self.cos = torch.randn(tokens, HEAD_DIM, dtype=dtype, device="npu").clamp(-1, 1)
+        self.sin = torch.randn(tokens, HEAD_DIM, dtype=dtype, device="npu").clamp(-1, 1)
+        self.index = make_index(tokens, block_num, block_size).to("npu")
+        self.out = self._fresh_out()
+
+    def _fresh_out(self):
+        nq, nk, nv = self.dims
+        dtype = torch.bfloat16
+        return (
+            torch.full((self.tokens, nq * HEAD_DIM), 7.0, dtype=dtype, device="npu"),
+            torch.full((self.block_num, nk * D1, self.block_size, D0), 3.0, dtype=dtype, device="npu"),
+            torch.full((self.block_num, nv * D1, self.block_size, D0), -5.0, dtype=dtype, device="npu"),
+        )
+
+    def reset_out(self):
+        for tensor, fill in zip(self.out, (7.0, 3.0, -5.0)):
+            tensor.fill_(fill)
+
+    def run(self, out=None):
+        nq, nk, nv = self.dims
+        q, k, v = self.out if out is None else out
+        torch.ops.npu.qkv_rms_norm_rope_cache(
+            self.qkv, self.q_gamma, self.k_gamma, self.cos, self.sin, self.index,
+            q, k, v, nq, nk, nv, 1e-6)
+
+    def eager_result(self):
+        """Run eagerly into throw-away buffers; must not touch self.out."""
+        out = self._fresh_out()
+        self.run(out)
+        torch.npu.synchronize()
+        return out
+
+    def capture(self):
+        graph = torch.npu.NPUGraph()
+        stream = torch.npu.Stream()
+        torch.npu.synchronize()
+        with torch.npu.graph(graph, stream=stream, auto_dispatch_capture=True):
+            self.run()
+        torch.npu.synchronize()
+        return graph
+
+
+def _assert_graph_matches(tag, case):
+    ref = case.eager_result()
+    for name, got, exp in zip(("q_out", "k_cache", "v_cache"), case.out, ref):
+        check(f"{tag}.{name}", got.cpu(), exp.cpu())
+
+
+def test_qkv_rms_norm_rope_cache_aclgraph_replay():
+    case = _GraphCase(130, 8, 2, 2, 8, 32, seed=0)
+    graph = case.capture()
+    case.reset_out()
+    graph.replay()
+    torch.npu.synchronize()
+    _assert_graph_matches("aclgraph.replay", case)
+
+
+def test_qkv_rms_norm_rope_cache_aclgraph_after_other_shape():
+    """The regression: another shape's tiling must not leak into a captured graph."""
+    case = _GraphCase(130, 8, 2, 2, 8, 32, seed=0)
+    other = _GraphCase(2048, 32, 8, 8, 256, 16, seed=1)
+    graph = case.capture()
+    for _ in range(3):
+        other.eager_result()
+    case.reset_out()
+    graph.replay()
+    torch.npu.synchronize()
+    _assert_graph_matches("aclgraph.after-other-shape", case)
+
+
+def test_qkv_rms_norm_rope_cache_aclgraph_two_shapes_interleaved():
+    a = _GraphCase(130, 8, 2, 2, 8, 32, seed=0)
+    b = _GraphCase(2048, 32, 8, 8, 256, 16, seed=1)
+    graph_a, graph_b = a.capture(), b.capture()
+
+    b.reset_out()
+    graph_b.replay()
+    torch.npu.synchronize()
+    a.reset_out()
+    graph_a.replay()
+    torch.npu.synchronize()
+    _assert_graph_matches("aclgraph.interleaved-a", a)
+
+    b.reset_out()
+    graph_b.replay()
+    torch.npu.synchronize()
+    _assert_graph_matches("aclgraph.interleaved-b", b)

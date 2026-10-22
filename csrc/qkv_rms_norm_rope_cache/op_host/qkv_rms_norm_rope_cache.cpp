@@ -18,8 +18,12 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <mutex>
 #include <stdexcept>
+#include <string>
 #include <tuple>
+#include <unordered_map>
+#include <utility>
 
 #include "defines.h"
 #include "torch_helper.h"
@@ -94,14 +98,46 @@ QkvRmsNormRopeCacheTilingData BuildTiling(int64_t tokens, int64_t num_head_q, in
     return tiling;
 }
 
-at::Tensor CopyTilingToDevice(const QkvRmsNormRopeCacheTilingData &tiling)
+// The tiling has to be handed to the kernel through memory, and a captured ACL graph keeps
+// pointing at that memory: the H2D copy is replayed as a node (so it re-reads the host address)
+// and the kernel argument holds the device address.  When both buffers were per-call temporaries
+// they died at the end of the launcher, *inside* the capture region, so the next call with a
+// different tiling (another shape, another graph, or an eager call in between) could land on the
+// same recycled block.  Replay then ran with a foreign tiling - silently wrong results when it
+// happened to fit, aivec error 263 when blockDim/blockFactor came from a larger shape.
+//
+// Fix: one immutable (pinned host, device) pair per distinct tiling.  The bytes never change, so
+// a replayed H2D writes the same content back, and both addresses stay valid for the graph's
+// lifetime.  Distinct tilings get distinct buffers, so graphs of different shapes cannot cross-
+// talk.  It also takes the pin + H2D off the steady-state path.
+const std::pair<at::Tensor, at::Tensor> &CachedTilingBuffers(const QkvRmsNormRopeCacheTilingData &tiling)
 {
+    // Deliberately leaked: the cache must outlive every graph and must not be torn down during
+    // static destruction, when the NPU context is already gone.
+    static auto *cache = new std::unordered_map<std::string, std::pair<at::Tensor, at::Tensor>>();
+    static auto *cache_mutex = new std::mutex();
+
+    int device_index = 0;
+    c10_npu::GetDevice(&device_index);
+    std::string key(reinterpret_cast<const char *>(&tiling), sizeof(tiling));
+    key.append(reinterpret_cast<const char *>(&device_index), sizeof(device_index));
+
+    std::lock_guard<std::mutex> guard(*cache_mutex);
+    const auto cached = cache->find(key);
+    if (cached != cache->end()) {
+        return cached->second;
+    }
+
     constexpr int64_t kPadding = 32;
     const int64_t bytes =
         (static_cast<int64_t>(sizeof(QkvRmsNormRopeCacheTilingData)) + kPadding - 1) / kPadding * kPadding;
     auto buffer = at::empty({bytes}, at::TensorOptions().dtype(at::kByte).device(at::kCPU));
     std::memcpy(buffer.data_ptr(), &tiling, sizeof(QkvRmsNormRopeCacheTilingData));
-    return TorchNpuHelper::CopyTensorHostToDevice(buffer);
+
+    at::Tensor host_pinned = buffer.pin_memory();
+    at::Tensor device = host_pinned.to(c10::Device(DEVICE_TYPE, device_index), host_pinned.scalar_type(),
+                                       /*non_blocking=*/true, /*copy=*/true);
+    return cache->emplace(key, std::make_pair(std::move(host_pinned), std::move(device))).first->second;
 }
 
 }  // namespace
@@ -149,7 +185,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor> qkv_rms_norm_rope_cache(
 
     const auto tiling =
         BuildTiling(tokens, num_head_q, num_head_k, num_head_v, dim, k_cache.size(2), static_cast<float>(epsilon));
-    const at::Tensor tiling_device = CopyTilingToDevice(tiling);
+    const at::Tensor tiling_device = CachedTilingBuffers(tiling).second;
     const uint32_t block_dim = static_cast<uint32_t>(tiling.blockDim);
     EXEC_KERNEL_CMD(qkv_rms_norm_rope_cache, block_dim, qkv, q_gamma, k_gamma, cos, sin, index, q_out, k_cache,
                     v_cache, tiling_device);

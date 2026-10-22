@@ -30,10 +30,11 @@ python benchmark/qkv_rms_norm_rope_cache/bench_vs_triton.py --tokens 34460 --war
 | B2 | 单 VEC_SCOPE + gamma/cos-sin 复用 | — | 1 047 us | 825 GB/s |
 | B3 | 连续 slot 批量 scatter + ubRows=192 | — | 737 us | 1 173 GB/s |
 | B4 | gamma 折进 RoPE 系数 | — | 699 us | 1 236 GB/s |
-| B5 | 核数按实测工作量重分（39/16/9） | 566.7 us | **597.0 us** | **1 448 GB/s** |
+| B5 | 核数按实测工作量重分（39/16/9） | 566.7 us | 597.0 us | 1 448 GB/s |
+| B7 | tiling 缓冲常驻（去每调用 pin + H2D） | — | **580.2 us** | **1 490 GB/s** |
 | 对照 | Triton `split_qkv_rmsnorm_rope` | 4 788 us | 5 031 us | 172 GB/s |
 
-**最终：比迁移初版快 8.6x，比 Triton 快 8.4x。**
+**最终：比迁移初版快 8.9x，比 Triton 快 8.7x。**
 
 ---
 
@@ -99,6 +100,25 @@ python benchmark/qkv_rms_norm_rope_cache/bench_vs_triton.py --tokens 34460 --war
 - **原理**：V 是纯拷贝，原实现先 `load → 寄存器 → store` 到输出 UB 再 scatter；改为直接从输入 staging buffer scatter，用 `MTE2_MTE3` / `MTE3_MTE2` 显式同步。
 - **收益**：整机时间无可测收益（Q 是关键路径），但省掉 V 组每 head 4 条向量指令、简化了路径，并为 B5 的分核留出空间。
 
+### B7. tiling 缓冲常驻：去掉每次调用的 pin + H2D（同时也是 ACL graph 的正确性修复）
+
+- **原理**：原 launcher 每次调用都 `at::empty` 一个 128 B 的 CPU 张量 → `pin_memory()` → `.to(device)`
+  把 `QkvRmsNormRopeCacheTilingData` 拷到 device，再把 device 张量交给 kernel。tiling 只由形状决定，
+  同一形状的字节完全相同，所以这份「pinned host + device」对可以按 `(tiling 内容, device index)`
+  缓存下来复用：稳态调用不再有 pin、不再有 H2D、不再有两次分配。
+- **收益**：34460 token 端到端 **597.0 → 580.2 us（-2.8%）**，带宽 1 448 → 1 490 GB/s；kernel 本体不变，
+  省的是暴露在关键路径上的 host 开销。
+- **为什么必须常驻（正确性）**：ACL graph 捕获后，replay 会重放「host→device 的 tiling 拷贝」这个
+  节点（即重新读 host 地址），kernel 参数里也保留着 device 地址。原来的两个 buffer 都是本次调用的
+  临时量，在 launcher 返回时就释放了——而这时仍在捕获区内。于是只要之后有**另一个 tiling** 走过
+  同一条路径（另一个 shape、第二个 graph、中间插入一次 eager 调用），被回收的块就会被新 tiling 覆盖，
+  replay 便拿着别人的 tiling 启动 kernel：`blockDim/blockFactor` 来自更大的形状 → 越界，
+  实测 `aivec error 263`（`The DDR address of the MTE instruction is out of range`）；如果字节恰好还
+  「像」本形状，则表现为静默算错。缓存后：每个 tiling 有独立的、内容永不改变的 buffer，两个地址
+  在整个 graph 生命周期内有效，replay 的 H2D 是幂等写回，形状不同的 graph 之间也不会互相串。
+  见 `tests/.../test_qkv_rms_norm_rope_cache.py` 末尾 3 个 `*_aclgraph_*` 用例（回退到旧 launcher 时
+  其中 2 个会以 263 失败）。
+
 ---
 
 ## 5. 被否决的方案（均已实测）
@@ -116,14 +136,14 @@ python benchmark/qkv_rms_norm_rope_cache/bench_vs_triton.py --tokens 34460 --war
 
 ## 6. 极限分析
 
-- **向量吞吐**：Q 组 39 核，每核约 1.1 M 条向量指令，597 us / 1.1 M ≈ **1 条 VL 指令/cycle**（fp32 64 lane）——向量单元已满吞吐。
-- **理论地板**：总向量工作（Q+K 共 55 M 条 VL）在 64 核上 ≈ 478 us；K/V 的 scatter DMA（134 MB）已用批量写与计算重叠。当前 597 us 已落在「向量地板 + 未完全重叠的 scatter」区间。
+- **向量吞吐**：Q 组 39 核，每核约 1.1 M 条向量指令，597 us（kernel 本体，不含 host 开销）/ 1.1 M ≈ **1 条 VL 指令/cycle**（fp32 64 lane）——向量单元已满吞吐。
+- **理论地板**：总向量工作（Q+K 共 55 M 条 VL）在 64 核上 ≈ 478 us；K/V 的 scatter DMA（134 MB）已用批量写与计算重叠。当前 kernel 597 us 已落在「向量地板 + 未完全重叠的 scatter」区间；端到端 580 us 是 host 开销也去掉之后的结果。
 - **与 memcpy roofline 的差距**（1448 vs 3208 GB/s）来自算法固有的 fp32 向量指令数（≈20 条/head：2 次 cast、平方、归约、4 条标量、2 次除法、6 条 RoPE、2 次 store），不降精度无法再省。
 - **已无进一步明显收益的方向**：三种分组策略都已试过（三组最优），tile 尺寸受 UB 限制，scatter 已批量。
 
 ## 7. 精度与验证
 
-- `tests/python/sgl_kernel_npu/test_qkv_rms_norm_rope_cache.py`：**10 passed**（8 组 shape + 全 `index=-1` + 重复执行一致性；golden 为上游 ST 公式的 fp32 复算）。
+- `tests/python/sgl_kernel_npu/test_qkv_rms_norm_rope_cache.py`：**13 passed**（8 组 shape + 全 `index=-1` + 重复执行一致性 + 3 个 ACL graph 用例；golden 为上游 ST 公式的 fp32 复算）。
 - 与 Triton 同输入对跑（34460 / 32768 / 8192）：`q_out`、`k_cache` **0 offender**（>1 bf16 ULP 且 |diff|>1e-5），`v_cache` **逐 bit 相等**。
 - 复用 `qkv_rms_norm_rope_cache_b16_pa_nz_quant.h`/`_comm.h` 的旧 UB-tile 实现已删除（未被编译），备份在 `/mnt/paas/hxdnpu/removed_kernel_backup/`，上游源码仍在 `ops-transformer/posembedding/qkv_rms_norm_rope_cache/`。
 
