@@ -10,6 +10,8 @@
 
 #include "mla_prolog_v3_host.h"
 
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <deque>
 #include <mutex>
@@ -204,6 +206,37 @@ bool MlaPrologV3RunTiling(const MlaPrologV3Tensors &tensors, optiling::MlaProlog
 
     optiling::MlaPrologTiling tiling;
     const ge::graphStatus st = tiling.RunBigKernelTiling(ctx, tilingData);
+    if (st != ge::GRAPH_SUCCESS && std::getenv("DSH_MLA_V3_DEBUG") != nullptr) {
+        auto dump = [](const char *name, const std::vector<int64_t> &d) {
+            std::fprintf(stderr, "[dsh-v3] %-22s", name);
+            for (int64_t v : d) {
+                std::fprintf(stderr, " %ld", static_cast<long>(v));
+            }
+            std::fprintf(stderr, "\n");
+        };
+        dump("tokenX", tensors.tokenX);
+        dump("weightDq", tensors.weightDq);
+        dump("weightUqQr", tensors.weightUqQr);
+        dump("weightUk", tensors.weightUk);
+        dump("weightDkvKr", tensors.weightDkvKr);
+        dump("gammaCq", tensors.gammaCq);
+        dump("gammaCkv", tensors.gammaCkv);
+        dump("ropeSin", tensors.ropeSin);
+        dump("kvCache", tensors.kvCache);
+        dump("krCache", tensors.krCache);
+        dump("query", tensors.query);
+        dump("queryRope", tensors.queryRope);
+        dump("queryNorm", tensors.queryNorm);
+        dump("dequantScaleQNope", tensors.dequantScaleQNope);
+        dump("dequantScaleQNorm", tensors.dequantScaleQNorm);
+        dump("cacheIndex", tensors.cacheIndex);
+        std::fprintf(stderr, "[dsh-v3] types: x=%d dq=%d uqqr=%d uk=%d dkvkr=%d qn=%d eps=(%f,%f) mode=%d kvq=%d qnf=%d\n",
+                     static_cast<int>(tensors.tokenXType), static_cast<int>(tensors.weightDqType),
+                     static_cast<int>(tensors.weightUqQrType), static_cast<int>(tensors.weightUkType),
+                     static_cast<int>(tensors.weightDkvKrType), static_cast<int>(tensors.queryNormType),
+                     tensors.rmsEpsCq, tensors.rmsEpsCkv, static_cast<int>(tensors.weightQuantMode),
+                     static_cast<int>(tensors.kvQuantMode), static_cast<int>(tensors.queryNormFlag));
+    }
     if (st != ge::GRAPH_SUCCESS) {
         if (err != nullptr) {
             *err = "[mla_prolog_v3] RunBigKernelTiling failed";

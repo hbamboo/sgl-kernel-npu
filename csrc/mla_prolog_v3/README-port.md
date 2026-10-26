@@ -129,6 +129,10 @@ Measured machine limits on this card:
 * HBM bandwidth (256 MiB copy): **3.27 TB/s**
 * bf16 matmul (4096^3): **424 TFLOP/s**
 * machine balance: 424 / 3.27 = **130 FLOP/byte**
+* **High-level Python entry** `sgl_kernel_npu.mla_prolog_v3` / `..._out`: accepts the
+  checkpoint's fp8 weights *plus* their e8m0 scales in the original `[out, in]` ND layout and
+  does the dequantisation, reorientation, NZ cast and quant-mode resolution itself (verified
+  against the CPU golden with real layer-2 weights: five outputs >= 0.9999974).
 * **PyBind11 fast path**: `import libsgl_kernel_npu as _C; _C.mla_prolog_v3_out(...)`
   skips the torch dispatcher: T=1 36.7 -> **32.9 us** (-10.4%), T=8 35.4 -> 32.8 us,
   bit-identical results.  The binding lives in the same `libsgl_kernel_npu.so`
@@ -393,7 +397,7 @@ tile boundary (1..1000) all stay >= 0.9995 on the five outputs.
 
 It runs four real-checkpoint layers (0/2/23/46) so the validation is not tied to one layer, and repeats layer 2 through the PyBind entry (`PYBIND=1`), which reproduces the torch.ops numbers exactly - the fast path is verified against the golden on real weights, not only bit-identical against the torch path.
 
-Last run: **18/18 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
+Last run: **19/19 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
 T=2048 649.9 us.
 
 ## Status
