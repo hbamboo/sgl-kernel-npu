@@ -225,7 +225,22 @@ cd csrc/mla_prolog_v3/tests/e2e && bash run_server.sh
 
 ---
 
-## 10. 一页式验收清单
+## 10. 从零复现实测
+
+在一台干净 build 目录 + 清空测试 `__pycache__` 的条件下完整跑了一遍（device 5）：
+
+| 步骤 | 命令 | 耗时 | 结果 |
+|---|---|---|---|
+| configure | `cmake ... -B /tmp/bk_drill -S .` | < 10 s | rc=0 |
+| build | `cmake --build /tmp/bk_drill --target sgl_kernel_npu -j 16` | **217 s** | rc=0、**0 error**、`.so` 3.08 MB |
+| 验收 | `bash csrc/mla_prolog_v3/tests/run_acceptance.sh 5` | **112 s** | **12/12 通过** |
+
+验收后的性能与既有记录一致：T=64 53.8 µs、T=256 **89.9 µs**、T=512 169.9 µs、
+T=1024 329.3 µs、T=2048 **650.0 µs**。
+
+即：**从零到通过验收约 5.5 分钟**（其中构建 3.6 分钟），无需人工干预。
+
+## 11. 一页式验收清单
 
 复制到目标机器后，按顺序执行即可判定交付是否可用：
 
@@ -245,7 +260,7 @@ cd csrc/mla_prolog_v3/tests/e2e && bash run_server.sh
 * 三个投影权重必须是 **bf16 + FRACTAL_NZ**（PyBind 路径），torch.ops 路径会自动做 ND→NZ 与
   MXFP8→bf16 转换（已缓存）。
 
-## 11. 后续路线（若要把利用率推上去）
+## 12. 后续路线（若要把利用率推上去）
 
 | 方案 | 做法 | 预估收益 | 风险/成本 |
 |---|---|---|---|
