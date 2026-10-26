@@ -3,8 +3,7 @@
 SGLang's NPU MLA preprocess calls ``torch.ops.custom.npu_mla_prolog_v3`` (see
 ``sglang/srt/hardware_backend/npu/attention/mla_preprocess.py::forward_mlaprolog``),
 which is provided by the ``custom_ops`` package.  In images where that package does
-not ship the operator, GLM-4.7-Flash (whose checkpoint lists ``kv_b_proj`` in the
-quant ``ignore`` list, i.e. it *is* routed to ``forward_mlaprolog``) fails with
+not ship the operator, the call fails with
 
     AttributeError: 'OpNamespace' object has no attribute 'npu_mla_prolog_v3'
 
@@ -16,11 +15,12 @@ kr_cache, cache_index, dequant_scale_w_uq_qr, rmsnorm_epsilon_cq, rmsnorm_epsilo
 cache_mode, query_norm_flag, weight_quant_mode`` and unpacks five outputs in the same
 order (q_nope, q_pe, dequant_scale_q_nope, qr, dequant_q_norm).
 
-Usage (before the first forward, e.g. in the model loader or a sitecustomize):
+Usage (before the model is loaded, e.g. in the launcher or a sitecustomize):
 
     import sgl_kernel_npu  # loads libsgl_kernel_npu.so -> torch.ops.npu.*
-    from sgl_kernel_npu.mla_prolog_v3_compat import register_custom_alias
-    register_custom_alias()
+    from sgl_kernel_npu.mla_prolog_v3_compat import register_custom_alias, enable_mlaprolog
+    register_custom_alias()   # 让 custom::npu_mla_prolog_v3 解析到本实现
+    enable_mlaprolog()        # 让 SGLang 真正走 forward_mlaprolog 分支
 
 Notes
 -----
@@ -34,6 +34,8 @@ Notes
   and is 13-14% faster at decode; a serving stack that can pre-allocate per-layer
   buffers should call it instead.
 """
+
+import re
 
 import torch
 import torch_npu  # noqa: F401  (registers the PrivateUse1 dispatch key)
@@ -77,6 +79,44 @@ def register_custom_alias(force: bool = False) -> bool:
     lib.impl("npu_mla_prolog_v3", _forward, "PrivateUse1")
     lib.impl("npu_mla_prolog_v3", _forward, "Autograd")
     _libs.append(lib)
+    return True
+
+
+def with_kv_b_proj_ignored(ignore):
+    """Return ``ignore`` with the marker SGLang's ``_is_mlaprolog`` looks for."""
+    ignore = list(ignore or [])
+    if not any(re.fullmatch(r".*kv_b_proj", str(entry)) for entry in ignore):
+        ignore.append("kv_b_proj")
+    return ignore
+
+
+def enable_mlaprolog() -> bool:
+    """Make SGLang route the attention prologue through ``forward_mlaprolog``.
+
+    ``mla_preprocess`` decides with
+    ``any(re.fullmatch(r".*kv_b_proj", l) for l in quant_config.ignore)``, but the
+    modelslim config fills ``ignore`` from an ``"ignore"`` key (absent in the GLM
+    ``quant_model_description.json``), so ``ignore == []`` and the fused path is never
+    taken even though ``kv_b_proj`` *is* stored as FLOAT.  Patch
+    ``ModelSlimConfig.__init__`` to append the marker.
+
+    Returns True when sglang was importable and the patch is in place.
+    """
+    try:
+        from sglang.srt.layers.quantization.modelslim import modelslim as _modelslim
+    except Exception:  # noqa: BLE001 - sglang not importable in this process
+        return False
+    cls = _modelslim.ModelSlimConfig
+    if getattr(cls, "_mlaprolog_patched", False):
+        return True
+    orig_init = cls.__init__
+
+    def patched_init(self, *args, **kwargs):
+        orig_init(self, *args, **kwargs)
+        self.ignore = with_kv_b_proj_ignored(getattr(self, "ignore", None))
+
+    cls.__init__ = patched_init
+    cls._mlaprolog_patched = True
     return True
 
 
