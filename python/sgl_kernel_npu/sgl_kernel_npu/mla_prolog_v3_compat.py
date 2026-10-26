@@ -215,11 +215,22 @@ def _forward(*args, **kwargs):
             args[idx] = ensure_nz(args[idx])
 
     try:
-        return torch.ops.npu.mla_prolog_v3(*args, **kwargs)
+        out = torch.ops.npu.mla_prolog_v3(*args, **kwargs)
     except Exception:
         if _DEBUG():
             _dump_args(args, kwargs)
         raise
+
+    # SGLang's forward_mlaprolog does `dequant_q_norm.view(hidden_states.shape[0])`
+    # unconditionally; with bf16 weights the kernel emits an empty scale (nothing is
+    # quantised), so hand back a per-token ones vector instead of crashing.
+    if (isinstance(out, tuple) and len(out) >= 5 and kwargs.get("query_norm_flag")
+            and isinstance(out[4], torch.Tensor) and out[4].numel() == 0):
+        tokens = out[3].shape[0] if isinstance(out[3], torch.Tensor) and out[3].dim() > 0 else None
+        if tokens:
+            scale = torch.ones(tokens, dtype=torch.float32, device=out[0].device)
+            out = out[:4] + (scale,)
+    return out
 
 
 def register_custom_alias(force: bool = False) -> bool:
@@ -389,17 +400,9 @@ def enable_mlaprolog() -> bool:
 
     mla_cls.mlaprolog_preprocess_weight = patched_preprocess
 
-    orig_forward = mla_cls.forward
-
-    def patched_forward(self, positions, hidden_states, forward_batch, zero_allocator):
-        # forward() prefers the int8 forward_mlapo whenever the quant method reports
-        # modelslim - MXFP8 also does - but that path needs W8A8 `input_offset`s.
-        for attr in ("qkv_a_proj", "q_b_proj"):
-            mod = getattr(self, attr, None)
-            w = getattr(mod, "weight", None)
-            if w is not None and w.dtype == torch.float8_e4m3fn:
-                return self.forward_mlaprolog(positions, hidden_states, forward_batch)
-        return orig_forward(self, positions, hidden_states, forward_batch, zero_allocator)
-
-    mla_cls.forward = patched_forward
+    # NOTE: do not divert forward() to forward_mlaprolog here.  The caller
+    # (`npu_mla_preprocess`) decides how many values to unpack from
+    # `quant_config.ignore`; hijacking the return shape raises "too many values to
+    # unpack".  SGLang's intended MLAPO configuration (W8A8 int8 projections with an
+    # unquantised kv_b_proj) already takes that branch by itself.
     return True
