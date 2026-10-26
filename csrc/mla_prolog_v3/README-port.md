@@ -200,6 +200,19 @@ inside capture).  Graph capture is therefore only useful for the whole-model gra
 SGLang builds, not per op; the `_out` entry point still matters there because it gives
 stable buffer addresses.
 
+Steady-state kernel profile, same script and device (msprof `PipeUtilization`, median):
+
+| metric | before (32 cores, first port) | now (16 cores) |
+|---|---|---|
+| kernel time (T=1) | 28.96 us | **18.64 us (-36%)** |
+| AIC MAC | 9.5% | **29.3%** |
+| AIC MTE1 | 15.3% | 51.2% |
+| AIC MTE2 | 35.9% | 48.9% |
+| AIC scalar | 30.7% | 36.2% |
+
+Prefill (T=256, 32 cores): MTE1 **56.4%** (busiest), MTE2 28.4%, MAC 17.9%, scalar 10% -
+i.e. the L1->L0 feed, which matches the "L1 fully allocated" finding below.
+
 Steady-state msprof `PipeUtilization` on the decode case (T=1, 16 cores, median task
 duration **18.9 us**): AIC MTE2 **47%**, AIC MTE1 **47%**, MAC 27%, AIC scalar 34%,
 fixpipe 6%; AIV scalar 30%, AIV vec 0.1%.  So the GEMV-shaped GEMMs are limited by the
