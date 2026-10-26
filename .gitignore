@@ -64,3 +64,6 @@ python/sgl_kernel_npu/sgl_kernel_npu/config.ini
 
 # profiler exports from benchmark scripts
 **/export_only_prof_dir/
+
+# leftover build tree from before the port (kept by another user, ignore in git)
+build.hostbuild.bak/
