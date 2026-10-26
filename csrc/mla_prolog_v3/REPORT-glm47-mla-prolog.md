@@ -173,6 +173,15 @@ mm1 最小瓦片（已固化为 32，+2%）、mm3 baseK、mm1/mm2 baseK、acgrap
    `tests/test_sglang_mode_infer.py` 验证了 4 种 dtype 的推断结果，以及"按 SGLang 原样
    kwargs（mode=1 + bf16 权重 + scale 张量）调用"与直接 mode=0 调用**逐位一致**。
 
+   **第四个坑（最隐蔽）：`q_b_proj` 是 ND 格式**。`mlaprolog_preprocess_weight` 只对
+   融合后的 `qkv_a_proj` 做 `npu_format_cast`（→NZ），`q_b_proj.weight` 与 `w_kc` 原样
+   传入（MXFP8 scheme 的 `process_weights_after_loading` 明确走"只转置、不转 NZ"分支）。
+   而本 kernel 的三个投影矩阵必须是 NZ（ND 会算出 cosine 0.005 的垃圾值）。shim 因此
+   在转发前对 `weight_dq/weight_uq_qr/weight_dkv_kr` 做 ND→NZ 转换并缓存（权重加载后
+   静态，`clear_format_cache()` 可清缓存）。`tests/test_sglang_nd_weights.py` 模拟真实
+   情形（qkv_a 为 NZ、q_b 为 ND、`weight_quant_mode=1`），结果与"全 NZ + mode 0"
+   参考调用**逐位一致**，且第二次调用命中缓存后仍一致。
+
    **与 SGLang 权重预处理的约定已逐项对齐**（读 `mla_preprocess.py` 源码确认）：
    `qkv_a_proj.weight.transpose(0,1)` 后按 `q_lora_rank` 切出 q_a / kv_a（即 [in, out]）、
    `npu_format_cast` 转 NZ、`kv_b_proj.weight.unflatten(0,(-1,D+v)).split([D,v],1)` 取

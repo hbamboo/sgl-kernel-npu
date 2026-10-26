@@ -24,8 +24,11 @@ Usage (before the model is loaded, e.g. in the launcher or a sitecustomize):
 
 Notes
 -----
-* Weights must be NZ (``torch_npu.npu_format_cast(w, 29)``) for the three projection
-  matrices, matching what ``mlaprolog_preprocess_weight`` produces.
+* The kernel needs FRACTAL_NZ for the three projection matrices.  SGLang only NZ-casts
+  the fused qkv_a projection and hands over ``q_b_proj.weight`` / ``w_kc`` in ND (the
+  MXFP8 scheme keeps them ND on purpose), and ND weights make the kernel produce
+  garbage (cosine 0.005).  The shim therefore casts ND -> NZ on the fly and caches the
+  result (weights are static after loading; ``clear_format_cache()`` drops it).
 * SGLang hardcodes ``weight_quant_mode=1`` in ``forward_mlaprolog``.  The shim derives
   the mode from the actual dtypes (float weights -> 0, fp8 + e8m0 scale -> 3, int8 ->
   keep the caller's 1/2) and drops the scale arguments the derived mode does not use,
@@ -58,6 +61,39 @@ _SCHEMA = (
 )
 
 _libs = []
+
+# FRACTAL_NZ format enum for torch_npu
+_NZ_FORMAT = 29
+
+# ND -> NZ conversions, keyed by (data_ptr, shape, dtype, device).  The projection
+# weights are static after loading, so one conversion per tensor is enough; call
+# clear_format_cache() if a weight is re-loaded in place.
+_NZ_CACHE = {}
+
+
+def clear_format_cache():
+    """Drop the cached NZ conversions (call after re-loading weights in place)."""
+    _NZ_CACHE.clear()
+
+
+def ensure_nz(t):
+    """Return ``t`` in FRACTAL_NZ, converting and caching it if needed."""
+    if t is None:
+        return None
+    try:
+        fmt = torch_npu.get_npu_format(t)
+    except Exception:  # noqa: BLE001 - not an NPU tensor / unknown format
+        return t
+    if fmt == _NZ_FORMAT:
+        return t
+    key = (t.data_ptr(), tuple(t.shape), t.dtype, t.device.index)
+    cached = _NZ_CACHE.get(key)
+    if cached is not None:
+        return cached
+    converted = torch_npu.npu_format_cast(t, _NZ_FORMAT)
+    _NZ_CACHE[key] = converted
+    return converted
+
 
 # scale arguments that only make sense for a quantised weight mode
 _WEIGHT_SCALE_ARGS = (
@@ -96,6 +132,11 @@ def _forward(*args, **kwargs):
         if mode == 0:
             for name in _WEIGHT_SCALE_ARGS:
                 kwargs.pop(name, None)
+    # the kernel needs FRACTAL_NZ for the three projection matrices
+    args = list(args)
+    for idx in (1, 2, 4):  # weight_dq, weight_uq_qr, weight_dkv_kr
+        if idx < len(args):
+            args[idx] = ensure_nz(args[idx])
     return torch.ops.npu.mla_prolog_v3(*args, **kwargs)
 
 
