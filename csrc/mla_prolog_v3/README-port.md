@@ -124,8 +124,8 @@ Latest timings (auto core count: 16 cores for T <= 128, 32 above):
 
 | T | total | kernel (total - 23.4) | roofline floor | kernel / floor |
 |---|---|---|---|---|
-| 1 | 41.6 us | 18.2 us | 5.3 us (BW) | 29% |
-| 8 | 41.6 us | 18.2 us | 5.4 us (BW) | 30% |
+| 1 | 41.6 us (36.3 with `_out`) | 18.2 us | 5.3 us (BW) | 29% |
+| 8 | 41.6 us (36.3 with `_out`) | 18.2 us | 5.4 us (BW) | 30% |
 | 16 | 42.7 us | 19.3 us | 5.6 us (BW) | 29% |
 | 64 | 53.9 us | 30.5 us | 7.4 us (BW) | 24% |
 | 256 | 90.0 us | 66.6 us | 10.4 us (compute) | 16% |
@@ -235,6 +235,11 @@ porting regression); improving it needs kernel work.
 * [x] GLM-4.7-Flash geometry accepted (bf16 and MXFP8)
 * [x] CPU golden + precision pass (bf16), synthetic and real checkpoint weights
 * [x] host overhead reduced (tiling cache + workspace reuse)
+* [x] `mla_prolog_v3_out` entry point (caller-provided output buffers): **bit-identical**
+      to the allocating entry and **13-14% faster at decode** (T=1: 41.8 -> 36.3 us,
+      T=8: 42.4 -> 36.3 us) because the five `at::empty` calls disappear; no change at
+      T=256.  This is also the entry point the serving stack should use: one set of
+      buffers per layer, stable addresses for ACL graph capture.
 * [ ] native MXFP8 numerics for `Hcq=768` (`test_mxfp8_precision.py`, T=8):
 
       | path | 16 cores | 32 cores |

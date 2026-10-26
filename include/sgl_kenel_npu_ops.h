@@ -322,6 +322,29 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor, at::Tensor> mla_prolo
     bool query_norm_flag, int64_t weight_quant_mode, int64_t kv_cache_quant_mode, int64_t query_quant_mode,
     int64_t ckvkr_repo_mode, int64_t quant_scale_repo_mode, int64_t tile_size, double qc_qr_scale, double kc_scale);
 
+// Same operator, but writes into caller-provided buffers (stable addresses for the
+// serving stack / ACL graph capture).
+void mla_prolog_v3_out(const at::Tensor &token_x, const at::Tensor &weight_dq, const at::Tensor &weight_uq_qr,
+                       const at::Tensor &weight_uk, const at::Tensor &weight_dkv_kr,
+                       const at::Tensor &rmsnorm_gamma_cq, const at::Tensor &rmsnorm_gamma_ckv,
+                       const at::Tensor &rope_sin, const at::Tensor &rope_cos, at::Tensor &kv_cache,
+                       at::Tensor &kr_cache, at::Tensor &query, at::Tensor &query_rope,
+                       at::Tensor &dequant_q_nope, at::Tensor &query_norm, at::Tensor &dequant_q_norm,
+                       const c10::optional<at::Tensor> &cache_index,
+                       const c10::optional<at::Tensor> &dequant_scale_x,
+                       const c10::optional<at::Tensor> &dequant_scale_w_dq,
+                       const c10::optional<at::Tensor> &dequant_scale_w_uq_qr,
+                       const c10::optional<at::Tensor> &dequant_scale_w_dkv_kr,
+                       const c10::optional<at::Tensor> &quant_scale_ckv,
+                       const c10::optional<at::Tensor> &quant_scale_ckr,
+                       const c10::optional<at::Tensor> &smooth_scales_cq,
+                       const c10::optional<at::Tensor> &actual_seq_len,
+                       const c10::optional<at::Tensor> &k_nope_clip_alpha, double rmsnorm_epsilon_cq,
+                       double rmsnorm_epsilon_ckv, c10::optional<c10::string_view> cache_mode, bool query_norm_flag,
+                       int64_t weight_quant_mode, int64_t kv_cache_quant_mode, int64_t query_quant_mode,
+                       int64_t ckvkr_repo_mode, int64_t quant_scale_repo_mode, int64_t tile_size,
+                       double qc_qr_scale, double kc_scale);
+
 std::tuple<at::Tensor, at::Tensor, at::Tensor> qkv_rms_norm_rope_cache(
     const at::Tensor &qkv, const at::Tensor &q_gamma, const at::Tensor &k_gamma, const at::Tensor &cos,
     const at::Tensor &sin, const at::Tensor &index, at::Tensor q_out, at::Tensor k_cache, at::Tensor v_cache,

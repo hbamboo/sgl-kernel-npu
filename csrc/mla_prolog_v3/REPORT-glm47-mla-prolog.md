@@ -10,7 +10,7 @@
 |---|---|
 | 源码 | 从 `/mnt/paas/hxdnpu/ops-transformer/attention/mla_prolog_v3` 完整复制，另加其依赖的 `attention/mla_prolog`（op_host tiling + arch35 kernel） |
 | 构建 | 纳入 sgl-kernel-npu 的 kernels 模块（A5 only），产出 `libsgl_kernel_npu.so` |
-| 调用 | `torch.ops.npu.mla_prolog_v3(...)`（Direct kernel launch，不经 aclnn/GE） |
+| 调用 | `torch.ops.npu.mla_prolog_v3(...)`（分配输出）/ `torch.ops.npu.mla_prolog_v3_out(...)`（调用方给缓冲区，解码快 13–14%）|
 | 测试 | `tests/`：冒烟、CPU golden、真实权重、RoPE 标定、bench、profiling |
 
 构建：
@@ -105,7 +105,8 @@ GLM 几何、T=8：
 本算子逻辑 ~1.5 µs。任何 `torch.ops` 算子都要付这 16.7 µs。
 
 优化轨迹（T=1）：77.7 → 48.5（tiling/workspace 缓存）→ 45.1（无分配哈希 key）
-→ 41.6 µs（核数启发式：T≤128 用 16 核）；预填 T=256：118.8 → **93.8 µs**（mm1 最小瓦片 64→32）。
+→ 41.6（核数启发式：T≤128 用 16 核）→ **36.3 µs**（`_out` 变体，调用方预分配缓冲，逐位一致）；
+预填 T=256：118.8 → **90.0 µs**（mm1 最小瓦片 64→32 + D=192 每步 128 token）；T=2048：687.7 → **650.9 µs**。
 当前实现比 CANN 内置算子**快 15–17%**（同几何、逐位一致）。
 
 瓶颈归因（msprof `PipeUtilization`）：
