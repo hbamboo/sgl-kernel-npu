@@ -182,7 +182,15 @@ L1/L0 feeding pipelines plus scalar bookkeeping, with roughly 2x headroom to the
 roofline - closing it needs deeper Matmul-API pipeline tuning (larger L1 stages) or a
 purpose-built decode path, not a tiling knob.
 
-Two experiments that did **not** pan out (both reverted / kept opt-in):
+Prefill (T=256, 32 cores, median task 94 us) shows the same picture, more strongly:
+AIC MTE1 **49%**, MTE2 34%, **MAC only 20%**, scalar 13%.  So even at T=256 the kernel
+is L1->L0 movement bound and the cube is starved - the "13% of the compute roofline"
+is caused by feeding, not by the GEMM math.  Raising the mm3 baseK (64 -> 128, stepK
+compensated) measured no change at all (93.8 / 93.9 / 93.9 us), so mm3's L0 tile shape
+is not the limiter; the remaining gap needs a different data-flow (deeper L1 pipeline
+or fusing the phases), i.e. kernel work.
+
+Three experiments that did **not** pan out (reverted / kept opt-in):
 
 * enabling the op's split-K/N schedule on DAV_3510 (`IsSplitKnSupported` is hard-gated
   to DAV_9201) faults the device (`507015`), so the arch gate is intentional;

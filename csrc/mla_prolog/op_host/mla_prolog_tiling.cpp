@@ -1013,6 +1013,7 @@ ge::graphStatus MlaPrologTiling::GenTilingKey() const
     context_->tplArgs.enableRope = 1U;
     context_->tplArgs.cvMode = cvMode;
 
+
     if (scenarioInfo_.emptyTensorMode_ == EMPTY_TENSOR_MODE::EMPTY_QUERY) {
         context_->tilingKey = GET_TPL_TILING_KEY(
             0, 0, 0, false, false, static_cast<uint8_t>(scenarioInfo_.emptyTensorMode_), 0, 0, true, cvMode);
@@ -1030,6 +1031,7 @@ ge::graphStatus MlaPrologTiling::GenTilingKey() const
         context_->tplArgs.splitMMode = static_cast<uint32_t>(scenarioInfo_.splitMFlag_);
         context_->tplArgs.enableRope = enableRope_ ? 1U : 0U;
         context_->tplArgs.cvMode = cvMode;
+
         context_->tilingKey = GET_TPL_TILING_KEY(
             static_cast<uint8_t>(cacheMode), typeValue, quantType, enableDequantOpt_, enableGroupComputeOpt_,
             static_cast<uint8_t>(scenarioInfo_.emptyTensorMode_), static_cast<uint8_t>(scenarioInfo_.actualSeqMode_),
