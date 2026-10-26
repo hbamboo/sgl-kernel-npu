@@ -411,6 +411,8 @@ private:
     QUANT_MODE GetQuantizationModeV3Dav() const;
     ge::graphStatus CheckTokenShape() const;
     ge::graphStatus SetShapeInfo();
+    // [sgl-kernel-npu port] decode heuristic: fewer cores copy larger tiles.
+    ge::graphStatus AdjustCoreNumByShape();
     void SetCacheShapeInfo();
     void SetShapeInfoDrSize();
     ge::graphStatus ProcessBaseInputs();

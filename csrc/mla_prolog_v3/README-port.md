@@ -99,40 +99,38 @@ Measured machine limits on this card:
 * bf16 matmul (4096^3): **424 TFLOP/s**
 * machine balance: 424 / 3.27 = **130 FLOP/byte**
 * **framework floor**: any NPU kernel op costs **23.4 us** per call on this stack
-  (measured with `helloworld` and a tiny `qkv_rms_norm_rope_cache`); the whole
-  torch dispatcher + `OpCommand::RunOpApi` + launch path is included.  Our op adds
-  ~0.7 us on top of that.
+  (`helloworld`, tiny `qkv_rms_norm_rope_cache`).  The op itself adds ~0.7 us on top.
 
-Per call the op streams 17.3 MB of bf16 weights and does 17.3 MFLOP per token, so
-it is memory bound up to T ~ 130 and compute bound above.
+Per call the op streams 17.3 MB of bf16 weights and does 17.3 MFLOP per token, so it
+is memory bound up to T ~ 130 and compute bound above.
+
+Latest timings (auto core count: 16 cores for T <= 128, 32 above):
 
 | T | total | kernel (total - 23.4) | roofline floor | kernel / floor |
 |---|---|---|---|---|
-| 1 | 45.1 us | 21.7 us | 5.3 us (BW) | 24% |
-| 8 | 45.7 us | 22.3 us | 5.4 us (BW) | 24% |
-| 256 | 95.8 us | 72.4 us | 10.4 us (compute) | 14% |
-| 2048 | 688 us | 665 us | 83.6 us (compute) | 13% |
+| 1 | 41.6 us | 18.2 us | 5.3 us (BW) | 29% |
+| 8 | 41.7 us | 18.3 us | 5.4 us (BW) | 29% |
+| 16 | 41.4 us | 18.0 us | 5.6 us (BW) | 31% |
+| 64 | 54.3 us | 30.9 us | 7.4 us (BW) | 24% |
+| 256 | 96.0 us | 72.6 us | 10.4 us (compute) | 14% |
+| 2048 | 688.7 us | 665.3 us | 83.6 us (compute) | 13% |
 
-Core-count sweep (tuning knob `MLA_PROLOG_V3_CORES`, default 32):
+Progression of the decode path: 77.7 us (first working version) -> 48.5 us (tiling +
+workspace cache) -> 45.1 us (hash keys) -> **41.6 us** (core-count heuristic), i.e.
+**1.87x** faster than the first working port.
 
-| cores | T=1 | T=8 | T=256 | T=2048 |
-|---|---|---|---|---|
-| 32 | 44.9 | 44.8 | 95.8 | 688.7 |
-| 16 | 42.0 | 41.4 | 111.7 | 858.5 |
-| 8 | 44.4 | 48.3 | 137.1 | 1065 |
-| 4 | 56.9 | 52.7 | 244 | 1922 |
+Core-count behaviour (`MLA_PROLOG_V3_CORES` overrides, default is the heuristic):
 
-32 cores stays the default (best for compute-bound); 16 is marginally better for
-pure decode.
+| cores | T=1 | T=8 | T=16 | T=32 | T=128 | T=256 | T=2048 |
+|---|---|---|---|---|---|---|---|
+| 32 | 44.6 | 44.5 | 45.4 | 47.5 | 59.4 | 95.8 | 688.7 |
+| 16 | 42.1 | 42.6 | 42.1 | 45.1 | 58.2 | 111.7 | 858.5 |
+| 8 | 44.4 | 48.3 | - | - | - | 137.1 | 1065 |
 
-Reading of the remaining gap:
-
-* the four GEMMs are GEMV-shaped at decode (M = tokens), so each of the 32 cores
-  streams only ~1/32 of the weights with small DMA requests -> ~25% of peak BW;
-* at large T the tiling (sized for the DeepSeek geometry: He=7168, Hcq=1536, N=32)
-  gives each core only 24 columns of Hcq=768, so the cube is under-utilised -> ~13%;
-* the host side is already at the framework floor, so the only way to remove those
-  23.4 us in production is aclgraph capture (SGLang does this).
+msprof `PipeUtilization` on the decode case (T=1, 32 cores) shows where the remaining
+time goes: MTE2 (weight DMA) 36%, **AIC scalar 31%**, MTE1 15%, MAC 9.5% - i.e. the
+GEMV-shaped GEMMs are limited by scalar bookkeeping and small DMA requests, not by
+the cube or by raw bandwidth.
 
 ## Cross-check against the CANN built-in op
 
@@ -161,5 +159,7 @@ porting regression); improving it needs kernel work.
       `Hcq=768` (24 scale bytes/row, not 32 B aligned) while `Hcq=1536` is fine
 * [x] performance baseline + roofline: host at framework floor (23.4 us), kernel at
       24% (decode) / 13% (prefill) of the measured roofline
-* [ ] kernel-side performance work: fp8/MXFP8 weight streaming (halves the bytes) or
-      a GLM-specific retiling (32 cores leave only 24 columns per core)
+* [x] decode core-count heuristic (16 cores for T <= 128): 45.1 -> 41.6 us
+* [ ] kernel-side performance work: the profiler shows 31% AIC scalar + 36% MTE2 at
+      decode, so the next step is a GLM-specific GEMV path (larger DMA requests, less
+      per-token scalar work) and/or fp8 weight streaming to halve the bytes

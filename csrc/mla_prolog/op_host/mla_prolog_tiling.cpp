@@ -298,6 +298,22 @@ void MlaPrologTiling::SetCacheShapeInfo()
     }
 }
 
+// [sgl-kernel-npu port] GLM decode heuristic.  With T <= 128 the per-core N slice at
+// 32 cores is only 24 columns of Hcq, which wastes the cube and fragments the DMA;
+// using 16 cores (twice the tile) measured ~6% faster.  Override wins when set.
+ge::graphStatus MlaPrologTiling::AdjustCoreNumByShape()
+{
+    if (std::getenv("MLA_PROLOG_V3_CORES") != nullptr) {
+        return ge::GRAPH_SUCCESS;
+    }
+    constexpr uint32_t kDecodeTokenLimit = 128U;
+    if (baseShapeInfo_.tSize <= kDecodeTokenLimit && aicNum_ > 16U) {
+        aicNum_ = 16U;
+        aivNum_ = 32U;
+    }
+    return ge::GRAPH_SUCCESS;
+}
+
 ge::graphStatus MlaPrologTiling::SetShapeInfo()
 {
     if (CheckTokenShape() != ge::GRAPH_SUCCESS) {
@@ -1027,6 +1043,7 @@ ge::graphStatus MlaPrologTiling::RunBigKernelTiling(MlaPrologContext& context, M
         std::bind(&MlaPrologTilingCheck::CheckSingleRequiredParam, &tilingCheck_),
         std::bind(&MlaPrologTilingCheck::CheckCacheMode, &tilingCheck_),
         std::bind(&MlaPrologTiling::SetShapeInfo, this),
+        std::bind(&MlaPrologTiling::AdjustCoreNumByShape, this),
         std::bind(&MlaPrologTiling::SetScenarioInfo, this),
         std::bind(&MlaPrologTilingCheck::CheckScenarParam, &tilingCheck_),
         std::bind(&MlaPrologTilingCheck::CheckQuantMode, &tilingCheck_),
