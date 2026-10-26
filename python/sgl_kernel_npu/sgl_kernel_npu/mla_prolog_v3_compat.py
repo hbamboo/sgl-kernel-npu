@@ -140,6 +140,15 @@ def _is_mxfp8(weight, scale, block=32):
     return scale.shape[-1] * block in (weight.shape[0], weight.shape[1])
 
 
+def reorient_to_abi(weight, scale):
+    """Checkpoint ``[out, in]`` weight -> the kernel's ``[in, out]`` (detected via scale)."""
+    if weight is None or scale is None or weight.dim() != 2 or scale.dim() != 2:
+        return weight
+    if weight.shape[0] == scale.shape[0] and weight.shape[1] != scale.shape[0]:
+        return weight.t().contiguous()
+    return weight
+
+
 def ensure_bf16(weight, scale, block=32):
     """Return (bf16 weight, True) when ``weight`` is MXFP8; cached by identity."""
     if not _is_mxfp8(weight, scale, block):
@@ -196,9 +205,10 @@ def _forward(*args, **kwargs):
     # 1) MXFP8 -> bf16 when the caller provided e8m0 scales (cached)
     for w_idx, s_name in ((1, "dequant_scale_w_dq"), (2, "dequant_scale_w_uq_qr"), (4, "dequant_scale_w_dkv_kr")):
         if w_idx < len(args):
-            converted, done = ensure_bf16(args[w_idx], kwargs.get(s_name))
+            scale = kwargs.get(s_name)
+            converted, done = ensure_bf16(args[w_idx], scale)
             if done:
-                args[w_idx] = converted
+                args[w_idx] = reorient_to_abi(converted, scale)
     weight_uq_qr = args[2] if len(args) > 2 else kwargs.get("weight_uq_qr")
 
     # 2) derive the quant mode from the actual dtypes (SGLang hardcodes 1)

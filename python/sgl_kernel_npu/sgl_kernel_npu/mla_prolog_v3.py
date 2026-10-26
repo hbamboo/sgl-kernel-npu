@@ -28,6 +28,7 @@ from .mla_prolog_v3_compat import (
     ensure_bf16,
     ensure_nz,
     infer_weight_quant_mode,
+    reorient_to_abi,
 )
 
 __all__ = ["mla_prolog_v3", "mla_prolog_v3_out"]
@@ -49,10 +50,7 @@ def _prepare(weight, scale):
     converted, done = ensure_bf16(weight, scale)
     if not done:
         return ensure_nz(weight), None
-    if (converted.dim() == 2 and scale is not None and scale.dim() == 2
-            and converted.shape[0] == scale.shape[0] and converted.shape[1] != scale.shape[0]):
-        converted = converted.t().contiguous()  # [out, in] -> [in, out]
-    return ensure_nz(converted), 0
+    return ensure_nz(reorient_to_abi(converted, scale)), 0
 
 
 def _resolve_mode(weight_uq_qr, scale, requested):

@@ -47,6 +47,7 @@ run "mlapolog_scheme_state" $T8 csrc/mla_prolog_v3/tests/test_mlapolog_scheme_st
 run "pybind_fast_path"     $T8 csrc/mla_prolog_v3/tests/test_pybind_path.py
 run "shape_interleave"     $T8 csrc/mla_prolog_v3/tests/test_shape_interleave.py
 run "python_api_real_weights" $T8 csrc/mla_prolog_v3/tests/test_python_api.py
+run "shim_ckpt_orientation" $T8 csrc/mla_prolog_v3/tests/test_shim_ckpt_orientation.py
 run "perf_sweep"           $T8 csrc/mla_prolog_v3/tests/bench_mla_prolog.py
 
 echo
