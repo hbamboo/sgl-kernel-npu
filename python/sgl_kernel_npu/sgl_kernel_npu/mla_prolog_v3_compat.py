@@ -26,6 +26,10 @@ Notes
 -----
 * Weights must be NZ (``torch_npu.npu_format_cast(w, 29)``) for the three projection
   matrices, matching what ``mlaprolog_preprocess_weight`` produces.
+* SGLang hardcodes ``weight_quant_mode=1`` in ``forward_mlaprolog``.  The shim derives
+  the mode from the actual dtypes (float weights -> 0, fp8 + e8m0 scale -> 3, int8 ->
+  keep the caller's 1/2) and drops the scale arguments the derived mode does not use,
+  so a dequantised-to-bf16 GLM checkpoint works through the unmodified call site.
 * The ported kernel handles ``weight_quant_mode`` 0/1/2 natively.  For the MXFP8 GLM
   checkpoint (mode 3) the ``weight_uq_qr`` per-32 scale mapping is still incorrect for
   ``Hcq=768``, so dequantise the MXFP8 weights to bf16 offline and use mode 0 (see
@@ -55,8 +59,43 @@ _SCHEMA = (
 
 _libs = []
 
+# scale arguments that only make sense for a quantised weight mode
+_WEIGHT_SCALE_ARGS = (
+    "dequant_scale_x",
+    "dequant_scale_w_dq",
+    "dequant_scale_w_uq_qr",
+    "dequant_scale_w_dkv_kr",
+)
+
+
+def infer_weight_quant_mode(weight_uq_qr, weight_scale=None):
+    """Derive the weight quant mode from the projection dtypes, or None if unknown.
+
+    * float16/32/bfloat16 weights                  -> 0 (no quant)
+    * float8_e4m3fn weights with an e8m0 scale     -> 3 (MXFP8 full quant)
+    * int8 weights                                 -> None (the caller's 1/2 decides)
+    """
+    if weight_uq_qr is None:
+        return None
+    if weight_uq_qr.dtype in (torch.bfloat16, torch.float16, torch.float32):
+        return 0
+    if weight_uq_qr.dtype == torch.float8_e4m3fn and weight_scale is not None:
+        return 3
+    return None
+
 
 def _forward(*args, **kwargs):
+    # torch hands tensors to a library impl positionally: (token_x, weight_dq,
+    # weight_uq_qr, ...), while keyword-only arguments arrive as kwargs.
+    weight_uq_qr = kwargs.get("weight_uq_qr")
+    if weight_uq_qr is None and len(args) > 2:
+        weight_uq_qr = args[2]
+    mode = infer_weight_quant_mode(weight_uq_qr, kwargs.get("dequant_scale_w_uq_qr"))
+    if mode is not None and kwargs.get("weight_quant_mode") != mode:
+        kwargs["weight_quant_mode"] = mode
+        if mode == 0:
+            for name in _WEIGHT_SCALE_ARGS:
+                kwargs.pop(name, None)
     return torch.ops.npu.mla_prolog_v3(*args, **kwargs)
 
 

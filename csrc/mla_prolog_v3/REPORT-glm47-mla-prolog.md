@@ -167,6 +167,18 @@ mm1 最小瓦片（已固化为 32，+2%）、mm3 baseK、mm1/mm2 baseK、acgrap
    SGLang 的谓词、`custom::npu_mla_prolog_v3` 注册成功、`enable_mlaprolog()` 在本镜像
    里确实打上了补丁（`ModelSlimConfig._mlaprolog_patched == True`）。
 
+   **第三个坑：SGLang 把 `weight_quant_mode` 硬编码成 1**。GLM 的 MXFP8 权重若已按上文
+   反量化成 bf16，再用 mode=1 传入会被 tiling 拒绝。shim 因此在转发前按实际 dtype 推断模式
+   （浮点权重→0、fp8+e8m0→3、int8→保留调用方取值），并丢掉该模式用不到的 scale 参数；
+   `tests/test_sglang_mode_infer.py` 验证了 4 种 dtype 的推断结果，以及"按 SGLang 原样
+   kwargs（mode=1 + bf16 权重 + scale 张量）调用"与直接 mode=0 调用**逐位一致**。
+
+   **与 SGLang 权重预处理的约定已逐项对齐**（读 `mla_preprocess.py` 源码确认）：
+   `qkv_a_proj.weight.transpose(0,1)` 后按 `q_lora_rank` 切出 q_a / kv_a（即 [in, out]）、
+   `npu_format_cast` 转 NZ、`kv_b_proj.weight.unflatten(0,(-1,D+v)).split([D,v],1)` 取
+   `w_kc = [N, D, Hckv]`、`cos_sin_cache[positions]` 后 `chunk(2)` 再 `repeat(1,2)`
+   （即 cos/sin 前后半重复）——与本算子的 ABI 完全一致。
+
 ## 7. 复现命令
 
 ```bash
