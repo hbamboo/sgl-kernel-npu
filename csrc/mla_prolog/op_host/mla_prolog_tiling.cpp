@@ -750,7 +750,11 @@ ge::graphStatus MlaPrologTiling::ProcessBaseInputs()
          context_->weightUqQr.desc->GetDataType() == ge::DT_BF16) &&
         !mxfp8FullQuantMode;
     if (baseShapeInfo_.dSize != HIGH_THROUGHPUT__D_SIZE && waveBufAllocated) {
-        maxStepBatch = 64U;
+        // [sgl-kernel-npu port] upstream uses 64 for every D != 128.  With D=192
+        // (GLM-4.7-Flash) 128 tokens/step fits the UB budget on Ascend950 - validated
+        // against the CPU golden at T=256/512/1024 and ~4% faster - while 192
+        // tokens/step faults, so other D values keep the conservative 64.
+        maxStepBatch = (baseShapeInfo_.dSize == 192U) ? 128U : 64U;
     }
     // [sgl-kernel-npu port] tuning knob: per-step token cap (UB-budget bound).
     if (const char *stepEnv = std::getenv("MLA_PROLOG_V3_MAX_STEP")) {

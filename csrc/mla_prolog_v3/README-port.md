@@ -124,13 +124,22 @@ Latest timings (auto core count: 16 cores for T <= 128, 32 above):
 
 | T | total | kernel (total - 23.4) | roofline floor | kernel / floor |
 |---|---|---|---|---|
-| 1 | 40.9 us | 17.5 us | 5.3 us (BW) | 30% |
-| 8 | 41.8 us | 18.4 us | 5.4 us (BW) | 29% |
-| 16 | 42.2 us | 18.8 us | 5.6 us (BW) | 30% |
+| 1 | 41.6 us | 18.2 us | 5.3 us (BW) | 29% |
+| 8 | 41.6 us | 18.2 us | 5.4 us (BW) | 30% |
+| 16 | 42.7 us | 19.3 us | 5.6 us (BW) | 29% |
 | 64 | 53.9 us | 30.5 us | 7.4 us (BW) | 24% |
-| 256 | 93.8 us | 70.4 us | 10.4 us (compute) | 15% |
-| 512 | 176.4 us | 153.0 us | 20.8 us (compute) | 14% |
-| 2048 | 675.6 us | 652.2 us | 83.6 us (compute) | 13% |
+| 256 | 90.0 us | 66.6 us | 10.4 us (compute) | 16% |
+| 512 | 169.4 us | 146.0 us | 20.8 us (compute) | 14% |
+| 1024 | 329.3 us | 305.9 us | 41.8 us (compute) | 14% |
+| 2048 | 650.9 us | 627.5 us | 83.6 us (compute) | 13% |
+
+Note: this card occasionally flips into a second stable state (~48.5 us instead of
+~41.5 us for decode, same binary/config), most likely other tenants on the shared
+HBM/L2; all comparisons in this document use same-session A/B runs.
+
+He scaling at T=256 (He=1024/2048/4096/8192 -> 71.9/93.8/143.3/244.5 us) shows the two
+down-projection GEMMs (mm1+mm2) account for **~49 us of the ~70 us prefill kernel**
+(70%), which is why they are the only meaningful prefill target.
 
 Progression of the decode path: 77.7 us (first working version) -> 48.5 us (tiling +
 workspace cache) -> 45.1 us (hash keys) -> **41.6 us** (core-count heuristic), i.e.
@@ -194,9 +203,10 @@ Three experiments that did **not** pan out (reverted / kept opt-in):
 
 * enabling the op's split-K/N schedule on DAV_3510 (`IsSplitKnSupported` is hard-gated
   to DAV_9201) faults the device (`507015`), so the arch gate is intentional;
-* `MLA_PROLOG_V3_MAX_STEP=128` (per-step tokens 64 -> 128) is numerically identical and
-  ~5% faster at T >= 256, but the 64 cap exists for UB budget reasons on D != 128, so
-  it stays an opt-in knob rather than the default.
+* per-step tokens for D=192 are now **128** by default (upstream: 64).  Validated
+  against the CPU golden at T=256/512/1024 and ~4% faster (T=256 93.8 -> 90.0 us,
+  T=2048 675.6 -> 650.9 us); 192 tokens/step exceeds the UB budget and faults, so
+  every other D keeps 64.
 * `MLA_PROLOG_V3_MM1_MIN_TILE` changes how many cores the mm1 GEMM uses (64 -> 12
   cores for Hcq=768).  The port now defaults to **32** (24 cores at prefill): measured
   93.8 vs 96.0 us at T=256 and 675.6 vs 688.5 us at T=2048 (2 repeats each, stable to
