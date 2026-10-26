@@ -127,6 +127,11 @@ Core-count behaviour (`MLA_PROLOG_V3_CORES` overrides, default is the heuristic)
 | 16 | 42.1 | 42.6 | 42.1 | 45.1 | 58.2 | 111.7 | 858.5 |
 | 8 | 44.4 | 48.3 | - | - | - | 137.1 | 1065 |
 
+aclgraph (`torch.npu.NPUGraph`) capture works and replays bit-exactly, but a
+single-op graph is **slower** than eager on this stack (150 us replay vs 42 us eager:
+graph launch overhead dominates for a one-kernel graph), so graph capture is only
+useful for the whole-model graph SGLang builds, not per op.
+
 msprof `PipeUtilization` on the decode case (T=1, 32 cores) shows where the remaining
 time goes: MTE2 (weight DMA) 36%, **AIC scalar 31%**, MTE1 15%, MAC 9.5% - i.e. the
 GEMV-shaped GEMMs are limited by scalar bookkeeping and small DMA requests, not by
