@@ -13,6 +13,7 @@
  * \brief
  */
 
+#include <cstdlib>
 #include <numeric>
 #include <functional>
 #include <algorithm>
@@ -154,6 +155,17 @@ ge::graphStatus MlaPrologTiling::GetNpuInfo()
                 OPS_REPORT_VECTOR_INNER_ERR(context_->opName, "aicNum(%u):aivNum(%u) only support 1:1 or 1:2", aicNum_,
                                             aivNum_),
                 return GRAPH_FAILED);
+
+    // [sgl-kernel-npu port] optional core-count override for tuning: the tiling was
+    // sized for the DeepSeek geometry, GLM shapes are ~3x smaller.
+    const char *coresEnv = std::getenv("MLA_PROLOG_V3_CORES");
+    if (coresEnv != nullptr) {
+        const int cores = std::atoi(coresEnv);
+        if (cores > 0) {
+            aicNum_ = static_cast<uint32_t>(cores);
+            aivNum_ = aicNum_ * 2U;
+        }
+    }
 
     return ge::GRAPH_SUCCESS;
 }
