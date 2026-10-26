@@ -201,6 +201,26 @@ compensated) measured no change at all (93.8 / 93.9 / 93.9 us), so mm3's L0 tile
 is not the limiter; the remaining gap needs a different data-flow (deeper L1 pipeline
 or fusing the phases), i.e. kernel work.
 
+**Why the L0/L1 tile cannot simply be made larger** (probe, hardcoded values):
+
+| mm1/mm2 baseK (bf16) | result |
+|---|---|
+| 128 (upstream) | works, 90.0 us @T=256 |
+| 256, stepK=2 | faults (`507015`) once the step is 128 tokens (m=128) |
+| 512, stepK=1 | faults immediately |
+
+The kernel sizes its L1 staging as `128KB / (128 baseN * 4 stepK * sizeof(type))`, i.e.
+it already sits at the L1 capacity limit; with m=128 the A tile adds another
+`baseK*m*2` bytes, so 256/512 overflow.  (This also invalidates the earlier
+"baseK 64/128 measured neutral" note: that probe went through an env knob that did not
+actually reach the kernel - a hardcoded 256 faults, so it can never have been applied.)
+
+Consequence for the remaining gap: with L1 full and 24 cores on mm1 (n=32 per core),
+each core streams only ~131 KB per step yet the phase takes ~24 us, i.e. the cost is
+per-transfer / scalar overhead, not bandwidth - and the tile cannot grow without
+merging mm1+mm2 (n would become 56/core) or restructuring the phases.  Both are
+kernel rewrites, not knobs.
+
 Three experiments that did **not** pan out (reverted / kept opt-in):
 
 * enabling the op's split-K/N schedule on DAV_3510 (`IsSplitKnSupported` is hard-gated
