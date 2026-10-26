@@ -32,6 +32,7 @@ T8=python3
 run "golden_T8"            env T=8   $T8 csrc/mla_prolog_v3/tests/test_glm_mla_prolog_precision.py
 run "golden_T256"          env T=256 $T8 csrc/mla_prolog_v3/tests/test_glm_mla_prolog_precision.py
 run "real_weights_layer2"  $T8 csrc/mla_prolog_v3/tests/test_real_glm_weights.py
+run "token_boundary_sweep" $T8 csrc/mla_prolog_v3/tests/sweep_tokens.py
 run "vendor_bit_exact"     $T8 csrc/mla_prolog_v3/tests/cmp_builtin_numeric.py
 run "out_variant"          $T8 csrc/mla_prolog_v3/tests/test_out_variant.py
 run "mxfp8_auto_dequant"   $T8 csrc/mla_prolog_v3/tests/test_sglang_mxfp8_auto.py

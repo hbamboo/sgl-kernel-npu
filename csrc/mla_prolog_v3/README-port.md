@@ -371,7 +371,10 @@ bash csrc/mla_prolog_v3/tests/run_acceptance.sh 5    # device id, logs in /tmp/m
 Runs 11 checks in one go (CPU golden at T=8/T=256, real MXFP8 layer-2 weights, bit-exact
 comparison against the vendor operator, the `_out` variant, the four SGLang shim tests,
 the MXFP8 scheme-state reconstruction, and the performance sweep) and prints a summary.
-Last run: **12/12 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
+It includes a token-boundary sweep (`sweep_tokens.py`): 31 sizes around every internal
+tile boundary (1..1000) all stay >= 0.9995 on the five outputs.
+
+Last run: **13/13 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
 T=2048 649.9 us.
 
 ## Status
