@@ -101,6 +101,24 @@ if os.environ.get("SGLANG_ALIAS"):
 
     print("registered custom::npu_mla_prolog_v3:", register_custom_alias())
     q, qr, dqn, qn, dqnorm = torch.ops.custom.npu_mla_prolog_v3(**mlaprolog_args)
+elif os.environ.get("PYBIND"):
+    import sys
+
+    sys.path.insert(0, "/mnt/paas/hxdnpu/sgl-kernel-npu/python/sgl_kernel_npu/sgl_kernel_npu/lib")
+    import libsgl_kernel_npu as _C
+
+    print("pybind path:", _C.__name__)
+    q = torch.empty(T, N, Hckv, dtype=torch.bfloat16, device=dev)
+    qr = torch.empty(T, N, Dr, dtype=torch.bfloat16, device=dev)
+    dqn = torch.empty(0, dtype=torch.float32, device=dev)
+    qn = torch.empty(T, Hcq, dtype=torch.bfloat16, device=dev)
+    dqnorm = torch.empty(0, dtype=torch.float32, device=dev)
+    _C.mla_prolog_v3_out(
+        mlaprolog_args["token_x"], mlaprolog_args["weight_dq"], mlaprolog_args["weight_uq_qr"],
+        mlaprolog_args["weight_uk"], mlaprolog_args["weight_dkv_kr"], mlaprolog_args["rmsnorm_gamma_cq"],
+        mlaprolog_args["rmsnorm_gamma_ckv"], mlaprolog_args["rope_sin"], mlaprolog_args["rope_cos"],
+        mlaprolog_args["kv_cache"], mlaprolog_args["kr_cache"], q, qr, dqn, qn, dqnorm,
+        cache_index=idx, cache_mode="PA_BSND", query_norm_flag=True, weight_quant_mode=0)
 else:
     q, qr, dqn, qn, dqnorm = torch.ops.npu.mla_prolog_v3(**mlaprolog_args)
 torch_npu.npu.synchronize()

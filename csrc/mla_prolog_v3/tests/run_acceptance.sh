@@ -35,6 +35,7 @@ run "real_weights_layer2"  $T8 csrc/mla_prolog_v3/tests/test_real_glm_weights.py
 run "real_weights_layer0"  env LAYER=0  $T8 csrc/mla_prolog_v3/tests/test_real_glm_weights.py
 run "real_weights_layer23" env LAYER=23 $T8 csrc/mla_prolog_v3/tests/test_real_glm_weights.py
 run "real_weights_layer46" env LAYER=46 $T8 csrc/mla_prolog_v3/tests/test_real_glm_weights.py
+run "real_weights_pybind" env LAYER=2 PYBIND=1 $T8 csrc/mla_prolog_v3/tests/test_real_glm_weights.py
 run "token_boundary_sweep" $T8 csrc/mla_prolog_v3/tests/sweep_tokens.py
 run "vendor_bit_exact"     $T8 csrc/mla_prolog_v3/tests/cmp_builtin_numeric.py
 run "out_variant"          $T8 csrc/mla_prolog_v3/tests/test_out_variant.py

@@ -380,9 +380,9 @@ the MXFP8 scheme-state reconstruction, and the performance sweep) and prints a s
 It includes a token-boundary sweep (`sweep_tokens.py`): 31 sizes around every internal
 tile boundary (1..1000) all stay >= 0.9995 on the five outputs.
 
-It runs four real-checkpoint layers (0/2/23/46) so the validation is not tied to one layer.
+It runs four real-checkpoint layers (0/2/23/46) so the validation is not tied to one layer, and repeats layer 2 through the PyBind entry (`PYBIND=1`), which reproduces the torch.ops numbers exactly - the fast path is verified against the golden on real weights, not only bit-identical against the torch path.
 
-Last run: **16/16 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
+Last run: **17/17 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
 T=2048 649.9 us.
 
 ## Status
