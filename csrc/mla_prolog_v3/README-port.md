@@ -214,6 +214,15 @@ compensated) measured no change at all (93.8 / 93.9 / 93.9 us), so mm3's L0 tile
 is not the limiter; the remaining gap needs a different data-flow (deeper L1 pipeline
 or fusing the phases), i.e. kernel work.
 
+**mm2 core-split does not help either** (measured): `FillMatmul2Tiling` hardcodes
+`baseN = 64`, so mm2 runs 9 blocks x 64 columns while mm1 runs 24 x 32 - and since the two
+phases are sequential, halving mm2's per-core columns looked like an easy win.  Making it
+18 blocks x 32 columns (a legal 16-aligned tile) measured only 89.35 vs 89.75 us at
+T=256 and 645.7 vs 649.8 us at T=2048 (<1%), so the phase is *not* limited by per-core
+column count.  This also kills the "fuse mm1+mm2 for a bigger N per core" estimate: the
+only benefit left there would be removing one phase boundary (~2-4 us of 70), i.e. 3-6%
+of prefill - not worth a tiling + kernel-output-split rewrite.
+
 **The kernel's L1 is 100% allocated** (`mla_prolog_comm_arch35.h`):
 
 | constant | value | meaning |
