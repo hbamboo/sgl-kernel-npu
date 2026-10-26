@@ -531,7 +531,15 @@ ge::graphStatus MlaPrologTiling::FillMatmul1Tiling()
         auto dataType = context_->weightDq.desc->GetDataType();
         singlecoreHeadSizeCq_ =
             CalcSingleCoreN(baseShapeInfo_.hcqSize, aicNum_, BLOCK_SIZE / DTYPE_TO_SIZE.at(dataType));
-        singlecoreHeadSizeCq_ = std::max(singlecoreHeadSizeCq_, 64U); // 64：最大使用24核
+        // [sgl-kernel-npu port] tunable floor (default 64): how many cores mm1 uses.
+        uint32_t mm1MinTile = 64U;
+        if (const char *tileEnv = std::getenv("MLA_PROLOG_V3_MM1_MIN_TILE")) {
+            const int tile = std::atoi(tileEnv);
+            if (tile > 0) {
+                mm1MinTile = static_cast<uint32_t>(tile);
+            }
+        }
+        singlecoreHeadSizeCq_ = std::max(singlecoreHeadSizeCq_, mm1MinTile); // 64：最大使用24核
         mm1BlockNum_ = CeilDiv(baseShapeInfo_.hcqSize, singlecoreHeadSizeCq_);
     }
     return ge::GRAPH_SUCCESS;
