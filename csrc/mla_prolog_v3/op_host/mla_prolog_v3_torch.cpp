@@ -65,12 +65,24 @@ at::Tensor EmptyLikeShape(const std::vector<int64_t> &dims, at::ScalarType dtype
 at::Tensor &CachedTiling(const optiling::MlaPrologTilingData &tiling)
 {
     static std::mutex mtx;
-    static std::unordered_map<std::string, at::Tensor> cache;
+    static std::unordered_map<uint64_t, at::Tensor> cache;
 
     int device_index = 0;
     c10_npu::GetDevice(&device_index);
-    std::string key(reinterpret_cast<const char *>(&tiling), sizeof(tiling));
-    key.append(reinterpret_cast<const char *>(&device_index), sizeof(device_index));
+    // allocation-free hash of the tiling blob + device
+    uint64_t key = 1469598103934665603ULL;
+    {
+        const auto *p = reinterpret_cast<const unsigned char *>(&tiling);
+        for (size_t i = 0; i < sizeof(tiling); ++i) {
+            key ^= static_cast<uint64_t>(p[i]);
+            key *= 1099511628211ULL;
+        }
+        const auto *d = reinterpret_cast<const unsigned char *>(&device_index);
+        for (size_t i = 0; i < sizeof(device_index); ++i) {
+            key ^= static_cast<uint64_t>(d[i]);
+            key *= 1099511628211ULL;
+        }
+    }
 
     std::lock_guard<std::mutex> guard(mtx);
     auto it = cache.find(key);

@@ -100,7 +100,7 @@ outputs cosine >= 0.9999975, max abs diff <= 0.057.
 | 256 | 96.0 us | 256 GB/s (8%) | 46.1 TFLOP/s |
 | 2048 | 688 us | 109 GB/s (3%) | 51.5 TFLOP/s |
 
-Host cost 27 us/call (was 49). Decode is weight-bandwidth bound: 16.5 MiB bf16 at
+Host cost 24 us/call (was 49, then 27 after the first cache). Decode is weight-bandwidth bound: 16.5 MiB bf16 at
 3.27 TB/s implies a ~5 us floor; native MXFP8 weights (8.25 MiB) would halve it.
 
 ## Status

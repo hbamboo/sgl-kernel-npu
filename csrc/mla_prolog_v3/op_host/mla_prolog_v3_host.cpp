@@ -217,79 +217,77 @@ bool MlaPrologV3RunTiling(const MlaPrologV3Tensors &tensors, optiling::MlaProlog
 
 namespace {
 
-void AppendDims(std::string *key, const std::vector<int64_t> &dims)
+// Allocation-free FNV-1a over the full (shape, dtype, attr) configuration.
+inline void HashBytes(uint64_t *h, const void *data, size_t bytes)
 {
-    key->append(std::to_string(dims.size()));
-    for (int64_t d : dims) {
-        key->append(",");
-        key->append(std::to_string(d));
+    const auto *p = static_cast<const unsigned char *>(data);
+    for (size_t i = 0; i < bytes; ++i) {
+        *h ^= static_cast<uint64_t>(p[i]);
+        *h *= 1099511628211ULL;
     }
-    key->append(";");
 }
 
-void AppendAttr(std::string *key, double v)
+inline void HashDims(uint64_t *h, const std::vector<int64_t> &dims)
 {
-    key->append(std::to_string(v));
-    key->append(";");
+    const int64_t n = static_cast<int64_t>(dims.size());
+    HashBytes(h, &n, sizeof(n));
+    if (!dims.empty()) {
+        HashBytes(h, dims.data(), dims.size() * sizeof(int64_t));
+    }
 }
 
-std::string MakeTilingKey(const MlaPrologV3Tensors &t)
+inline void HashValue(uint64_t *h, int64_t v)
 {
-    std::string key;
-    key.reserve(1024);
-    AppendDims(&key, t.tokenX);
-    AppendDims(&key, t.weightDq);
-    AppendDims(&key, t.weightUqQr);
-    AppendDims(&key, t.weightUk);
-    AppendDims(&key, t.weightDkvKr);
-    AppendDims(&key, t.gammaCq);
-    AppendDims(&key, t.gammaCkv);
-    AppendDims(&key, t.ropeSin);
-    AppendDims(&key, t.ropeCos);
-    AppendDims(&key, t.kvCache);
-    AppendDims(&key, t.krCache);
-    AppendDims(&key, t.cacheIndex);
-    AppendDims(&key, t.dequantScaleX);
-    AppendDims(&key, t.dequantScaleWDq);
-    AppendDims(&key, t.dequantScaleWUqQr);
-    AppendDims(&key, t.dequantScaleWDkvKr);
-    AppendDims(&key, t.quantScaleCkv);
-    AppendDims(&key, t.quantScaleCkr);
-    AppendDims(&key, t.smoothScalesCq);
-    AppendDims(&key, t.actualSeqLen);
-    AppendDims(&key, t.kNopeClipAlpha);
-    AppendDims(&key, t.query);
-    AppendDims(&key, t.queryRope);
-    AppendDims(&key, t.queryNorm);
-    AppendDims(&key, t.dequantScaleQNorm);
-    const int dtypes[] = {static_cast<int>(t.tokenXType),   static_cast<int>(t.weightDqType),
-                          static_cast<int>(t.weightUqQrType), static_cast<int>(t.weightUkType),
+    HashBytes(h, &v, sizeof(v));
+}
+
+uint64_t MakeTilingHash(const MlaPrologV3Tensors &t)
+{
+    uint64_t h = 1469598103934665603ULL;
+    HashDims(&h, t.tokenX);
+    HashDims(&h, t.weightDq);
+    HashDims(&h, t.weightUqQr);
+    HashDims(&h, t.weightUk);
+    HashDims(&h, t.weightDkvKr);
+    HashDims(&h, t.gammaCq);
+    HashDims(&h, t.gammaCkv);
+    HashDims(&h, t.ropeSin);
+    HashDims(&h, t.ropeCos);
+    HashDims(&h, t.kvCache);
+    HashDims(&h, t.krCache);
+    HashDims(&h, t.cacheIndex);
+    HashDims(&h, t.dequantScaleX);
+    HashDims(&h, t.dequantScaleWDq);
+    HashDims(&h, t.dequantScaleWUqQr);
+    HashDims(&h, t.dequantScaleWDkvKr);
+    HashDims(&h, t.quantScaleCkv);
+    HashDims(&h, t.quantScaleCkr);
+    HashDims(&h, t.smoothScalesCq);
+    HashDims(&h, t.actualSeqLen);
+    HashDims(&h, t.kNopeClipAlpha);
+    HashDims(&h, t.query);
+    HashDims(&h, t.queryRope);
+    HashDims(&h, t.queryNorm);
+    HashDims(&h, t.dequantScaleQNorm);
+    const int dtypes[] = {static_cast<int>(t.tokenXType),      static_cast<int>(t.weightDqType),
+                          static_cast<int>(t.weightUqQrType),  static_cast<int>(t.weightUkType),
                           static_cast<int>(t.weightDkvKrType), static_cast<int>(t.gammaCqType),
-                          static_cast<int>(t.gammaCkvType), static_cast<int>(t.ropeSinType),
-                          static_cast<int>(t.ropeCosType), static_cast<int>(t.kvCacheType),
-                          static_cast<int>(t.krCacheType), static_cast<int>(t.scaleXType),
-                          static_cast<int>(t.scaleWDqType), static_cast<int>(t.scaleWUqQrType),
+                          static_cast<int>(t.gammaCkvType),    static_cast<int>(t.ropeSinType),
+                          static_cast<int>(t.ropeCosType),     static_cast<int>(t.kvCacheType),
+                          static_cast<int>(t.krCacheType),     static_cast<int>(t.scaleXType),
+                          static_cast<int>(t.scaleWDqType),    static_cast<int>(t.scaleWUqQrType),
                           static_cast<int>(t.scaleWDkvKrType), static_cast<int>(t.scaleQNopeType),
-                          static_cast<int>(t.scaleQNormType), static_cast<int>(t.queryNormType)};
-    for (int d : dtypes) {
-        key.append(std::to_string(d));
-        key.append(",");
-    }
-    key.append(t.cacheMode);
-    key.append(";");
-    AppendAttr(&key, t.rmsEpsCq);
-    AppendAttr(&key, t.rmsEpsCkv);
-    AppendAttr(&key, t.weightQuantMode);
-    AppendAttr(&key, t.kvQuantMode);
-    AppendAttr(&key, t.queryQuantMode);
-    AppendAttr(&key, t.ckvkrRepoMode);
-    AppendAttr(&key, t.quantScaleRepoMode);
-    AppendAttr(&key, t.tileSize);
-    AppendAttr(&key, t.qcQrScale);
-    AppendAttr(&key, t.kcScale);
-    AppendAttr(&key, t.queryNormFlag);
-    AppendAttr(&key, t.doRope);
-    return key;
+                          static_cast<int>(t.scaleQNormType),  static_cast<int>(t.queryNormType)};
+    HashBytes(&h, dtypes, sizeof(dtypes));
+    HashBytes(&h, t.cacheMode.data(), t.cacheMode.size());
+    const double attrs[] = {t.rmsEpsCq,     t.rmsEpsCkv,      static_cast<double>(t.weightQuantMode),
+                            static_cast<double>(t.kvQuantMode), static_cast<double>(t.queryQuantMode),
+                            static_cast<double>(t.ckvkrRepoMode), static_cast<double>(t.quantScaleRepoMode),
+                            static_cast<double>(t.tileSize), static_cast<double>(t.qcQrScale),
+                            static_cast<double>(t.kcScale), static_cast<double>(t.queryNormFlag),
+                            static_cast<double>(t.doRope)};
+    HashBytes(&h, attrs, sizeof(attrs));
+    return h;
 }
 
 } // namespace
@@ -304,9 +302,9 @@ bool MlaPrologV3RunTilingCached(const MlaPrologV3Tensors &tensors, optiling::Mla
         std::string err;
     };
     static std::mutex mutex;
-    static std::unordered_map<std::string, Entry> cache;
+    static std::unordered_map<uint64_t, Entry> cache;
 
-    const std::string key = MakeTilingKey(tensors);
+    const uint64_t key = MakeTilingHash(tensors);
     {
         std::lock_guard<std::mutex> guard(mutex);
         auto it = cache.find(key);
