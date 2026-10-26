@@ -279,8 +279,14 @@ template combination does not compile for our dtype on this toolchain (see the p
 notes).  A bf16 overlap therefore needs that protocol replicated (or a new flag scheme),
 which is upstream-scale kernel work with deadlock risk on a shared card.
 
-Expected payoff if done: up to ~24 us of the 70 us prefill kernel at T=256 (perfect
-overlap of 49 us), realistically 10-20% of prefill.
+Measured follow-up (this was checked, not assumed): the overlap has **no headroom**.
+At T=256 mm1 uses 24 of 32 cores (32 columns each) and mm2 uses 24 (24 columns each);
+both are throughput-bound, so moving mm2 onto the 8 idle cores would need 576/8 = 72
+columns per core - roughly 3x the per-core work - and end up slower than the 18 us it
+takes sequentially.  The only real lever is split-K (full N per core, K sliced), whose
+search (`mla_prolog_kn_search.h`) returns no candidate for GLM's shapes and whose kernel
+path is gated to DAV_9201.  Bypassing that gate changes nothing in the tiling, which
+confirms the schedule simply is not available for this geometry.
 
 ## Acceptance runner
 
