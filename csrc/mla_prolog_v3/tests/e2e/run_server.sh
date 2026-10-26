@@ -3,6 +3,7 @@
 set -u
 export PYTHONPATH="/mnt/paas/hxdnpu/sgl-kernel-npu/csrc/mla_prolog_v3/tests/e2e:/mnt/paas/hxdnpu/sgl-kernel-npu/python/sgl_kernel_npu:${PYTHONPATH:-}"
 export DSH_MLA_PROLOG_V3_PATCH=1
+export DSH_MLA_PROLOG_V3_FORCE_MLAPO=1
 export SGLANG_NPU_USE_MLAPO=1
 export ASCEND_USE_FIA=1
 export ENABLE_ASCEND_FLASH_ATTN=1

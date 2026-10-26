@@ -94,6 +94,25 @@ else 分支解包 7 个，我们却返回了 8 个。也就是说：**是否走 
 * 对**本 MXFP8 checkpoint**，SGLang 侧既不选 MLAPO 分支、也不接受 bf16 `qr`，属于上游
   功能缺口，需要在 SGLang 里做（明确的三条路线见下）。
 
+## 第 35 轮更新：强制 MLAPO 也走不通——**prefill 阶段用的是 int8 路径**
+
+试过用 `DSH_MLA_PROLOG_V3_FORCE_MLAPO=1` 把
+`deepseek_v2_attention_mla_npu.npu_mla_preprocess` 整体替换成恒走
+`forward_mlaprolog`（8 返回值）的版本。结果：
+
+* decode 阶段确实进了本算子（`[dsh-patch] forced the MLAPO path` 打印成功）；
+* 但 **prefill 阶段**报 `ReplicatedLinear has no attribute 'input_offset'` —— 因为
+  `NPUFusedMLAPreprocess.forward()` 的分派是
+  `if _is_w8a8: forward_mlapo(...)`（int8 融合路径，需要 W8A8 的 `input_offset`），
+  而 modelslim MXFP8 也满足 `_is_w8a8` 的判定（`quant_method.quantization_config`
+  的 name 同样是 "modelslim"）。
+
+也就是说：**SGLang 的 MLAPO 相关融合算子整体是围绕 W8A8 int8 设计的**，
+MXFP8 checkpoint 不仅缺 `weight_scale`/`input_offset`，连 prefill 都会走进 int8 分支。
+这条链路要支持 MXFP8，必须在 SGLang 侧新增分支，而不是在调用处包装。
+
+（该实验补丁已回滚，未留在代码里。）
+
 ## 建议的下一步（按代价排序）
 
 1. **给 MLAPO 路径加 bf16 支持**（上游改动）：`qr` 以 bf16 返回、`dequant_q_norm` 允许为空，
