@@ -134,6 +134,23 @@ Reading of the remaining gap:
 * the host side is already at the framework floor, so the only way to remove those
   23.4 us in production is aclgraph capture (SGLang does this).
 
+## Cross-check against the CANN built-in op
+
+On the DeepSeek-like geometry the built-in binary supports
+(`He=7168, Hcq=1536, Hckv=512, D=128, Dr=64, N=16`, bf16), the ported kernel is
+**bit-identical** to `torch_npu.npu_mla_prolog_v3` (max abs diff 0.00000 on all five
+outputs, `cmp_builtin_numeric.py`) and **15-17% faster** end-to-end because it skips
+the aclnn/op-plugin dispatch:
+
+| T | ported | CANN built-in |
+|---|---|---|
+| 1 | 56.7 us | 66.6 us |
+| 8 | 56.1 us | 67.9 us |
+| 64 | 66.8 us | 78.4 us |
+
+This also shows that the ~800 GB/s the kernel achieves is inherent to the op (not a
+porting regression); improving it needs kernel work.
+
 ## Status
 
 * [x] copied + builds inside sgl-kernel-npu (`torch.ops.npu.mla_prolog_v3`)
