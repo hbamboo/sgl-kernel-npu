@@ -182,6 +182,13 @@ mm1 最小瓦片（已固化为 32，+2%）、mm3 baseK、mm1/mm2 baseK、acgrap
    情形（qkv_a 为 NZ、q_b 为 ND、`weight_quant_mode=1`），结果与"全 NZ + mode 0"
    参考调用**逐位一致**，且第二次调用命中缓存后仍一致。
 
+   **第五个坑：MXFP8 权重**。kernel 原生 MXFP8 路径在 `Hcq=768` 下 scale 映射有误，唯一
+   数值正确的配置是 bf16 + mode 0。shim 因此在首次调用时把 `float8_e4m3` 权重按 e8m0 尺度
+   反量化成 bf16 并缓存（同时支持算子 ABI 的 `[in,out]` 与 checkpoint 的 `[out,in]` 两种
+   scale 朝向），随后把调用切到 mode 0。`tests/test_sglang_mxfp8_auto.py` 用 **真实 layer-2
+   的 fp8 权重 + e8m0 scale**（按 SGLang 的转置/切分方式组织）直接喂给 shim，五路输出
+   对 CPU golden 的 cosine 为 0.9999976 / 0.9999979 / 0.9999979 / 0.9999979 / 0.9999982。
+
    **与 SGLang 权重预处理的约定已逐项对齐**（读 `mla_preprocess.py` 源码确认）：
    `qkv_a_proj.weight.transpose(0,1)` 后按 `q_lora_rank` 切出 q_a / kv_a（即 [in, out]）、
    `npu_format_cast` 转 NZ、`kv_b_proj.weight.unflatten(0,(-1,D+v)).split([D,v],1)` 取

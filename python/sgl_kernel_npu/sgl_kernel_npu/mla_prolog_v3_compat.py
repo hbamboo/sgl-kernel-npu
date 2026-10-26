@@ -33,10 +33,12 @@ Notes
   the mode from the actual dtypes (float weights -> 0, fp8 + e8m0 scale -> 3, int8 ->
   keep the caller's 1/2) and drops the scale arguments the derived mode does not use,
   so a dequantised-to-bf16 GLM checkpoint works through the unmodified call site.
-* The ported kernel handles ``weight_quant_mode`` 0/1/2 natively.  For the MXFP8 GLM
-  checkpoint (mode 3) the ``weight_uq_qr`` per-32 scale mapping is still incorrect for
-  ``Hcq=768``, so dequantise the MXFP8 weights to bf16 offline and use mode 0 (see
-  ``csrc/mla_prolog_v3/REPORT-glm47-mla-prolog.md``).
+* The ported kernel handles ``weight_quant_mode`` 0/1/2 natively; its native MXFP8 path
+  (mode 3) mis-maps the ``weight_uq_qr`` per-32 scales at ``Hcq=768``.  The shim therefore
+  dequantises float8_e4m3 weights + e8m0 scales to bf16 on first use (cached, both the
+  op's ``[in, out]`` and the checkpoint's ``[out, in]`` scale orientations) and switches
+  the call to mode 0, so the MXFP8 checkpoint can be passed through unchanged.
+  ``clear_dequant_cache()`` drops the cache.
 * ``mla_prolog_v3_out`` (also exported here) accepts caller-provided output buffers
   and is 13-14% faster at decode; a serving stack that can pre-allocate per-layer
   buffers should call it instead.
@@ -95,6 +97,59 @@ def ensure_nz(t):
     return converted
 
 
+_BF16_CACHE = {}
+
+
+def clear_dequant_cache():
+    """Drop the cached MXFP8 -> bf16 dequantised weights."""
+    _BF16_CACHE.clear()
+
+
+def _e8m0_scale(scale):
+    """uint8 e8m0 -> float32 multiplier (2^(e-127); e == 0 is treated as 0)."""
+    if scale.dtype == torch.float32:
+        return scale
+    e = scale.to(torch.int32)
+    val = torch.pow(2.0, (e - 127).to(torch.float32))
+    return torch.where(e == 0, torch.zeros_like(val), val)
+
+
+def dequant_mxfp8(weight, scale, block=32):
+    """float8_e4m3 weight + e8m0 per-``block`` scale -> bf16, layout aware.
+
+    Supports both the op ABI (weight ``[in, out]`` with scale ``[out, in/block]``) and
+    the checkpoint layout (weight ``[out, in]`` with scale ``[out, in/block]``).
+    """
+    w = weight.to(torch.float32)
+    mult = _e8m0_scale(scale)
+    if mult.shape[-1] * block == w.shape[0] and mult.shape[0] == w.shape[1]:
+        # op ABI: expand the scale down the rows
+        m = mult.t().repeat_interleave(block, dim=0)[: w.shape[0]]
+    else:
+        m = mult.repeat_interleave(block, dim=1)[:, : w.shape[1]]
+    return (w * m).to(torch.bfloat16)
+
+
+def _is_mxfp8(weight, scale, block=32):
+    if weight is None or scale is None:
+        return False
+    if weight.dtype != torch.float8_e4m3fn or weight.dim() != 2 or scale.numel() == 0:
+        return False
+    return scale.shape[-1] * block in (weight.shape[0], weight.shape[1])
+
+
+def ensure_bf16(weight, scale, block=32):
+    """Return (bf16 weight, True) when ``weight`` is MXFP8; cached by identity."""
+    if not _is_mxfp8(weight, scale, block):
+        return weight, False
+    key = (weight.data_ptr(), tuple(weight.shape), scale.data_ptr(), tuple(scale.shape))
+    cached = _BF16_CACHE.get(key)
+    if cached is None:
+        cached = dequant_mxfp8(weight, scale)
+        _BF16_CACHE[key] = cached
+    return cached, True
+
+
 # scale arguments that only make sense for a quantised weight mode
 _WEIGHT_SCALE_ARGS = (
     "dequant_scale_x",
@@ -123,9 +178,15 @@ def infer_weight_quant_mode(weight_uq_qr, weight_scale=None):
 def _forward(*args, **kwargs):
     # torch hands tensors to a library impl positionally: (token_x, weight_dq,
     # weight_uq_qr, ...), while keyword-only arguments arrive as kwargs.
-    weight_uq_qr = kwargs.get("weight_uq_qr")
-    if weight_uq_qr is None and len(args) > 2:
-        weight_uq_qr = args[2]
+    # MXFP8 -> bf16 (the only numerically safe configuration for Hcq=768), cached
+    args = list(args)
+    for w_idx, s_name in ((1, "dequant_scale_w_dq"), (2, "dequant_scale_w_uq_qr"), (4, "dequant_scale_w_dkv_kr")):
+        if w_idx < len(args):
+            converted, done = ensure_bf16(args[w_idx], kwargs.get(s_name))
+            if done:
+                args[w_idx] = converted
+    weight_uq_qr = args[2] if len(args) > 2 else kwargs.get("weight_uq_qr")
+
     mode = infer_weight_quant_mode(weight_uq_qr, kwargs.get("dequant_scale_w_uq_qr"))
     if mode is not None and kwargs.get("weight_quant_mode") != mode:
         kwargs["weight_quant_mode"] = mode
@@ -133,7 +194,6 @@ def _forward(*args, **kwargs):
             for name in _WEIGHT_SCALE_ARGS:
                 kwargs.pop(name, None)
     # the kernel needs FRACTAL_NZ for the three projection matrices
-    args = list(args)
     for idx in (1, 2, 4):  # weight_dq, weight_uq_qr, weight_dkv_kr
         if idx < len(args):
             args[idx] = ensure_nz(args[idx])
