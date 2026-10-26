@@ -288,6 +288,26 @@ search (`mla_prolog_kn_search.h`) returns no candidate for GLM's shapes and whos
 path is gated to DAV_9201.  Bypassing that gate changes nothing in the tiling, which
 confirms the schedule simply is not available for this geometry.
 
+## Clean-build verification (done from an empty build dir)
+
+```
+cmake -DASCEND_HOME_PATH=/usr/local/Ascend/cann-9.1.0 \
+      -DASCEND_INCLUDE_DIR=/usr/local/Ascend/cann-9.1.0/aarch64-linux/include \
+      -DSOC_VERSION=Ascend950PR_9599 -DBUILD_DEEPEP_MODULE=OFF \
+      -DBUILD_KERNELS_MODULE=ON -B /tmp/bk_clean -S .
+cmake --build /tmp/bk_clean --target sgl_kernel_npu -j 16      # rc=0, 0 errors
+```
+
+Verified: configure rc=0, build rc=0, 0 `error:` lines, `libsgl_kernel_npu.so` (3.08 MB)
+produced, and all 12 acceptance checks pass against that fresh binary.
+
+**Build prerequisite (once per CANN installation)**: CANN's
+`.../tikcpp/ascendc_kernel_cmake/legacy_modules/util/merge_obj_text.sh` links device
+objects in place, which breaks on the second build (`unknown file type`).  Run
+`port_scripts/port_fix_merge_script.sh` once (it keeps a `.orig` backup and makes the
+merge idempotent); with it applied, incremental rebuilds work.  A fresh build directory
+always works even without the patch.
+
 ## Acceptance runner
 
 ```bash

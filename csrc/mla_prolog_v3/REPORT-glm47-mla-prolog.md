@@ -9,7 +9,7 @@
 | 项 | 内容 |
 |---|---|
 | 源码 | 从 `/mnt/paas/hxdnpu/ops-transformer/attention/mla_prolog_v3` 完整复制，另加其依赖的 `attention/mla_prolog`（op_host tiling + arch35 kernel） |
-| 构建 | 纳入 sgl-kernel-npu 的 kernels 模块（A5 only），产出 `libsgl_kernel_npu.so` |
+| 构建 | 纳入 sgl-kernel-npu 的 kernels 模块（A5 only），产出 `libsgl_kernel_npu.so`；**空目录全新构建已验证**（configure/build 均 rc=0、0 error、产物 3.08 MB） |
 | 调用 | 三条路径：`torch.ops.npu.mla_prolog_v3`（分配输出）/ `torch.ops.npu.mla_prolog_v3_out`（调用方给缓冲区，解码快 13–14%）/ **PyBind 直调** `libsgl_kernel_npu.mla_prolog_v3_out`（跳过 dispatcher，再快 10%，T=1 = 32.9 µs）|
 | 测试 | `tests/`：冒烟、CPU golden、真实权重、RoPE 标定、bench、profiling |
 
@@ -23,6 +23,10 @@ cmake -DASCEND_HOME_PATH=/usr/local/Ascend/cann-9.1.0 \
       -DBUILD_KERNELS_MODULE=ON -B build -S .
 cmake --build build --target sgl_kernel_npu -j 16
 ```
+
+> 一次性前置：CANN 的 `merge_obj_text.sh` 会原地合并 device object，第二次增量构建会报
+> `unknown file type`。先执行一次 `csrc/mla_prolog_v3/port_scripts/port_fix_merge_script.sh`
+> （保留 `.orig` 备份、使合并幂等）；全新 build 目录则无需该补丁。
 
 ## 2. 为什么需要适配（GLM-4.7-Flash vs 内置 MlaPrologV3）
 
