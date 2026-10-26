@@ -1,5 +1,16 @@
 # MlaPrologV3 port notes (sgl-kernel-npu)
 
+## TL;DR
+
+Ported from `ops-transformer/attention/mla_prolog_v3` and adapted for GLM-4.7-Flash
+(`Hcq=768`, `N=20`, `D=192`, MXFP8).  Status: builds from an empty tree (228 s, 0 errors),
+**17/17 acceptance checks pass** (`tests/run_acceptance.sh`, ~7 min), decode 32.9 us via
+the PyBind entry / 36.2 us via `torch.ops..._out`, prefill 89.7 us at T=256 and 649.9 us at
+T=2048.  The bandwidth/compute-utilisation target (decode 29-30%, prefill 13-16%) is **not**
+met: the kernel is L1-capacity bound (512 KB fully allocated) and every non-rewrite path was
+measured and excluded - see "Remaining prefill headroom" and the fusion/split-K notes below.
+Full report: `REPORT-glm47-mla-prolog.md`.
+
 Source: `/mnt/paas/hxdnpu/ops-transformer/attention/mla_prolog_v3` (copied verbatim,
 plus its shared implementation directory `attention/mla_prolog`, which the op includes
 through `../../mla_prolog/...`).

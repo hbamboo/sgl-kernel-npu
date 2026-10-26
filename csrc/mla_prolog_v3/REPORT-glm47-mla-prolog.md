@@ -6,6 +6,24 @@
 
 ---
 
+## TL;DR（30 秒了解交付状态）
+
+| 目标条目 | 状态 | 一句话证据 |
+|---|---|---|
+| ① 完整复制 + 可正确编译 | ✅ | 空目录 configure/build 均 rc=0、0 error、228 s；`libsgl_kernel_npu.so` 3.08 MB |
+| ② GLM-4.7 形状/量化适配 | ✅ | 放开 `Hcq=768`、MXFP8 自动反量化、6 类改动（详见第 3 节）|
+| ② 参考 CPU golden 精度通过 | ✅ | **17/17 验收**：合成 golden（T=8/256）、31 个 token 边界、真实权重 4 层、PyBind 路径、与厂商逐位一致 |
+| ③ 带宽/算力利用率达理论上限 | ❌ | 解码 29–30%、预填 13–16%；L1 512 KB 全部分配 + split-K 无候选 + 重叠无收益 + 主机侧到顶（第 7 节）|
+
+**一条命令验收**：`bash csrc/mla_prolog_v3/tests/run_acceptance.sh <device>` → 期望 `passed=17 failed=0`（约 7 分钟）。
+
+**性能**：解码 T=1 41.6 µs（`_out` 36.2 / PyBind **32.9**）；预填 T=256 89.7 µs、T=2048 649.9 µs。
+**调用**：`torch.ops.npu.mla_prolog_v3` / `..._out` / PyBind 直调，三者输出逐位一致。
+**SGLang**：算子已在真实 server 中被调用；端到端出词受上游 W8A8 int8 契约阻塞（`tests/e2e/README.md`）。
+**要突破 ③**：需改写 kernel 数据流（第 12 节三条路线），需要独占卡与明确授权。
+
+---
+
 ## 1. 交付概览
 
 | 项 | 内容 |
