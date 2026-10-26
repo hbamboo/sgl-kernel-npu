@@ -414,6 +414,7 @@ __aicore__ inline void MlaPrologVecS1CubS2<MLAPT>::MmParamInit()
     MmQnParamInit();
 }
 
+
 template <typename MLAPT>
 __aicore__ inline void MlaPrologVecS1CubS2<MLAPT>::MmCqParamInit()
 {
