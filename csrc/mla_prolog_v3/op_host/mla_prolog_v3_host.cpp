@@ -182,6 +182,23 @@ bool MlaPrologV3RunTiling(const MlaPrologV3Tensors &tensors, optiling::MlaProlog
     ctx.doRope = &doRope;
     ctx.doRopeValue = doRope;
 
+    // [sgl-kernel-npu port] PA cache stride of dim 0 in elements, i.e. what
+    // ConvertContext would read from the GE tensor descriptor.  The kernel uses it to
+    // address PA blocks, so a zero stride silently breaks every token that spills into
+    // block >= 1.
+    auto stride0 = [](const std::vector<int64_t> &dims) -> uint64_t {
+        if (dims.empty()) {
+            return 0U;
+        }
+        uint64_t s = 1U;
+        for (size_t i = 1U; i < dims.size(); ++i) {
+            s *= static_cast<uint64_t>(dims[i]);
+        }
+        return s;
+    };
+    ctx.kvCacheStride0 = stride0(tensors.kvCache);
+    ctx.krCacheStride0 = stride0(tensors.krCache);
+
     size_t workSpaces[2] = {0U, 0U};
     ctx.workSpaces = workSpaces;
 

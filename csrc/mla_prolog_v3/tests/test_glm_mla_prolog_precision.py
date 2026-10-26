@@ -7,6 +7,8 @@ RoPE (verified by probe, "interleave-half"):
   y[2i]     = x[2i]*cos[i]      - x[2i+1]*sin[i]
   y[2i+32]  = x[2i]*sin[i+32]   + x[2i+1]*cos[i+32]
 """
+import os
+
 import torch
 import torch_npu
 
@@ -15,7 +17,7 @@ torch.ops.load_library(LIB)
 
 dev = "npu:0"
 He, Hcq, Hckv, D, Dr, N = 2048, 768, 512, 192, 64, 20
-T = 8
+T = int(os.environ.get("T", "8"))
 EPS = 1e-5
 torch.manual_seed(3)
 
@@ -50,8 +52,9 @@ sin_half = freq.sin()
 cos = torch.cat([cos_half, cos_half], dim=1).to(torch.bfloat16).to(dev)  # duplicated halves (SGLang style)
 sin = torch.cat([sin_half, sin_half], dim=1).to(torch.bfloat16).to(dev)
 
-kvc = torch.zeros(2, 128, 1, Hckv, dtype=torch.bfloat16, device=dev)
-krc = torch.zeros(2, 128, 1, Dr, dtype=torch.bfloat16, device=dev)
+blocks = (T + 127) // 128 + 1
+kvc = torch.zeros(blocks, 128, 1, Hckv, dtype=torch.bfloat16, device=dev)
+krc = torch.zeros(blocks, 128, 1, Dr, dtype=torch.bfloat16, device=dev)
 idx = torch.arange(T, dtype=torch.int64, device=dev)
 
 Wdq_nz = torch_npu.npu_format_cast(Wdq.clone(), 29)

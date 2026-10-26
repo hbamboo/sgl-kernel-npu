@@ -742,6 +742,13 @@ ge::graphStatus MlaPrologTiling::ProcessBaseInputs()
     if (baseShapeInfo_.dSize != HIGH_THROUGHPUT__D_SIZE && waveBufAllocated) {
         maxStepBatch = 64U;
     }
+    // [sgl-kernel-npu port] tuning knob: per-step token cap (UB-budget bound).
+    if (const char *stepEnv = std::getenv("MLA_PROLOG_V3_MAX_STEP")) {
+        const int step = std::atoi(stepEnv);
+        if (step > 0) {
+            maxStepBatch = static_cast<uint32_t>(step);
+        }
+    }
     stepBatchSize_ = std::min(maxStepBatch, baseShapeInfo_.tSize);
     if (scenarioInfo_.splitMFlag_ == 1U && (stepBatchSize_ > 0U) && (aicNum_ > 0U) && (baseShapeInfo_.tSize > 0U)) {
         mSubSize_ = CeilDiv(baseShapeInfo_.tSize, aicNum_);

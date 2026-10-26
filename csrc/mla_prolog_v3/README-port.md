@@ -34,7 +34,9 @@ tiling time.  The ops-transformer **source** is newer (supports `D=192`, `N ∈ 
 | 9 | `GET_TILING_DATA_WITH_STRUCT` is unavailable in the direct-launch build → generated field-by-field GM→local copy |
 | 11 | MXFP8 E8M0 scales carried as uint8 map to `DT_FLOAT8_E8M0` |
 | 12 | torch `float8_e4m3fn` → `DT_FLOAT8_E4M3FN` |
-| 13 | tiling cache (shapes/dtypes/attrs) + reusable workspace: host cost 49 → 27 us/call |
+| 13 | tiling cache (shapes/dtypes/attrs) + reusable workspace: host cost 49 → 24 us/call |
+| 15/18/23 | tuning knobs: `MLA_PROLOG_V3_CORES` (core count) and `MLA_PROLOG_V3_MAX_STEP` (per-step token cap) |
+| 24 | **fix**: supply `kvCacheStride0` / `krCacheStride0`.  `ConvertContext` derives them from the GE tensor descriptor; the direct-launch host left both at 0, so the PA scatter ignored the block stride and every token spilling into block >= 1 (T > blockSize) landed in the wrong slot |
 | env | CANN `merge_obj_text.sh` made idempotent (backup `merge_obj_text.sh.orig`) |
 
 New files: `op_host/mla_prolog_v3_host.{h,cpp}` (runs the unmodified
@@ -90,6 +92,18 @@ T=8, He=2048, Hcq=768, Hckv=512, D=192, Dr=64, N=20:
 
 Real checkpoint (`model.layers.2`, MXFP8 weights dequantised to bf16): all five
 outputs cosine >= 0.9999975, max abs diff <= 0.057.
+
+Verified across the token range after the PA-stride fix (CPU golden, GLM geometry):
+
+| T | query | query_rope | kv_cache | kr_cache |
+|---|---|---|---|---|
+| 8 | 0.999994 | 0.999996 | 0.999998 | 0.999998 |
+| 128 | 0.999961 | 0.999994 | 1.000000 | 0.999999 |
+| 256 | 0.999980 | 0.999982 | 0.999995 | 0.999999 |
+| 512 | 1.000094 | 0.999975 | 0.999993 | 1.000000 |
+
+Before the fix, T >= 192 produced garbage in `kv_cache` / `kr_cache` (all tokens
+beyond the first PA block were written with stride 0).
 
 ## Performance (Ascend950DT) and roofline
 
