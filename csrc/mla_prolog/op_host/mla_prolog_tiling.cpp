@@ -531,8 +531,10 @@ ge::graphStatus MlaPrologTiling::FillMatmul1Tiling()
         auto dataType = context_->weightDq.desc->GetDataType();
         singlecoreHeadSizeCq_ =
             CalcSingleCoreN(baseShapeInfo_.hcqSize, aicNum_, BLOCK_SIZE / DTYPE_TO_SIZE.at(dataType));
-        // [sgl-kernel-npu port] tunable floor (default 64): how many cores mm1 uses.
-        uint32_t mm1MinTile = 64U;
+        // [sgl-kernel-npu port] tunable floor: how many cores mm1 uses.  Default 32
+        // (upstream 64 caps GLM's Hcq=768 at 12 cores; 32 uses 24 at prefill and
+        // measured ~2% faster there with no decode change).
+        uint32_t mm1MinTile = 32U;
         if (const char *tileEnv = std::getenv("MLA_PROLOG_V3_MM1_MIN_TILE")) {
             const int tile = std::atoi(tileEnv);
             if (tile > 0) {
