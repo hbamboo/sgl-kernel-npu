@@ -85,6 +85,14 @@ ASCEND_RT_VISIBLE_DEVICES=5 python3 csrc/mla_prolog_v3/tests/smoke_mla_prolog_v3
       `torch.ops.npu.mla_prolog_v3`)
 * [x] GLM-4.7-Flash geometry accepted by the tiling (bf16 and MXFP8)
 * [x] bf16 path runs on Ascend950DT and writes `kv_cache` / `kr_cache`
-* [x] MXFP8 path runs, outputs are produced (numerics still to be validated)
-* [ ] CPU golden + precision validation (next)
+* [x] **precision (bf16, first stages)**: `c_Q` and `c_KV` match a CPU reference
+      with cosine 0.999998 / 0.999998 and max abs error 0.013 (bf16 rounding).
+      NOTE: `weight_dq / weight_uq_qr / weight_dkv_kr` must be **FRACTAL_NZ**
+      (`torch_npu.npu_format_cast(w, 29)`); passing ND silently produces garbage.
+* [ ] full CPU golden (q_nope, q_rope, kr_cache, rope convention)
+* [ ] MXFP8 numerics: with E8M0 scales the first GEMM (`c_Q`) matches
+      (cosine 0.9987), but the `weight_uq_qr` dequant path explodes
+      (max |q| ~1e36 = the 0x7F e8m0 byte pattern reinterpreted as float32).
+      Open: expected scale layout / dtype for the mm3 dequant, and whether
+      `smooth_scales_cq` is required.
 * [ ] performance tuning (bandwidth / compute utilisation)

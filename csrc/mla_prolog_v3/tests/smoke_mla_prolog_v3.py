@@ -25,6 +25,12 @@ kvc = torch.zeros(2, 128, 1, Hckv, dtype=torch.bfloat16, device=dev)
 krc = torch.zeros(2, 128, 1, Dr, dtype=torch.bfloat16, device=dev)
 idx = torch.arange(T, dtype=torch.int64, device=dev)
 
+# weights must be FRACTAL_NZ for the kernel matmuls
+Wdq_nd, Wuqqr_nd, Wdkv_nd = Wdq.clone(), Wuqqr.clone(), Wdkv.clone()
+Wdq = torch_npu.npu_format_cast(Wdq, 29)
+Wuqqr = torch_npu.npu_format_cast(Wuqqr, 29)
+Wdkv = torch_npu.npu_format_cast(Wdkv, 29)
+
 print("calling op ...", flush=True)
 q, qr, dqn, qn, dqnorm = torch.ops.npu.mla_prolog_v3(
     x, Wdq, Wuqqr, Wuk, Wdkv, gq, gkv, sin, cos, kvc, krc,
@@ -41,7 +47,7 @@ print("kv_cache nonzero:", int((kvc != 0).sum()), "sum", float(kvc.float().abs()
 print("kr_cache nonzero:", int((krc != 0).sum()), "sum", float(krc.float().abs().sum()))
 
 torch.save(
-    {"x": x.cpu(), "Wdq": Wdq.cpu(), "Wuqqr": Wuqqr.cpu(), "Wuk": Wuk.cpu(), "Wdkv": Wdkv.cpu(),
+    {"x": x.cpu(), "Wdq": Wdq_nd.cpu(), "Wuqqr": Wuqqr_nd.cpu(), "Wuk": Wuk.cpu(), "Wdkv": Wdkv_nd.cpu(),
      "gq": gq.cpu(), "gkv": gkv.cpu(), "sin": sin.cpu(), "cos": cos.cpu(), "idx": idx.cpu(),
      "q": q.cpu(), "qr": qr.cpu(), "qn": qn.cpu(), "kvc": kvc.cpu(), "krc": krc.cpu()},
     "/tmp/mla_prolog_smoke.pt")

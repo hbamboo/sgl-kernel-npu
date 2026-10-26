@@ -33,6 +33,10 @@ swdq = e8m0((Hcq, He // 32))
 swuqqr = e8m0((N * (D + Dr), Hcq // 32))
 swdkv = e8m0((Hckv + Dr, He // 32))
 
+Wdq = torch_npu.npu_format_cast(Wdq, 29)
+Wuqqr = torch_npu.npu_format_cast(Wuqqr, 29)
+Wdkv = torch_npu.npu_format_cast(Wdkv, 29)
+
 print("calling mxfp8 op ...", flush=True)
 q, qr, dqn, qn, dqnorm = torch.ops.npu.mla_prolog_v3(
     x, Wdq, Wuqqr, Wuk, Wdkv, gq, gkv, sin, cos, kvc, krc,
