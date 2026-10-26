@@ -84,6 +84,10 @@ endif()
 if(SGL_KERNEL_ENABLE_A5_ONLY_OPS)
     list(APPEND OP_SRCS
         ${PROJECT_OP_SRC_BASE}/kv_compress_epilog/op_host/kv_compress_epilog.cpp
+        ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/op_host/mla_prolog_v3_host.cpp
+        ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/op_host/mla_prolog_v3_torch.cpp
+        ${PROJECT_OP_SRC_BASE}/mla_prolog/op_host/mla_prolog_tiling.cpp
+        ${PROJECT_OP_SRC_BASE}/mla_prolog/op_host/mla_prolog_tiling_check.cpp
     )
 endif()
 if(BUILD_CATLASS_MODULE)
@@ -205,6 +209,26 @@ if(BUILD_CATLASS_MODULE)
     set(CATLASS_WORKSPACE_KERNEL_TARGETS catlass_workspace_kernel)
 endif()
 
+# A5-only MlaPrologV3 kernel: single named entry, runtime dispatch on tiling key.
+set(A5_ONLY_KERNEL_TARGETS)
+if(SGL_KERNEL_ENABLE_A5_ONLY_OPS)
+    ascendc_library(mla_prolog_v3_kernel STATIC
+        ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/op_kernel/mla_prolog_v3.cpp
+    )
+    ascendc_include_directories(mla_prolog_v3_kernel PRIVATE
+        ${PROJECT_OP_SRC_BASE}/mla_prolog/op_kernel
+        ${PROJECT_OP_SRC_BASE}/mla_prolog/op_kernel/arch35
+        ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/op_kernel
+        ${PROJECT_OP_SRC_BASE}/utils/kernel
+        ${ASCEND_INCLUDE_DIR}
+    )
+    ascendc_compile_definitions(mla_prolog_v3_kernel PRIVATE
+        -DHAVE_WORKSPACE
+        -DHAVE_TILING
+    )
+    list(APPEND A5_ONLY_KERNEL_TARGETS mla_prolog_v3_kernel)
+endif()
+
 # Dedicated A3-only kernel targets. Keep these separate from workspace_kernel:
 # their compiler definitions/options apply to the whole AscendC target.
 set(A3_ONLY_KERNEL_TARGETS)
@@ -252,6 +276,7 @@ add_library(${OP_PLUGIN_NAME} SHARED ${OP_SRCS})
 
 target_link_libraries(${OP_PLUGIN_NAME} PRIVATE
         ${A3_ONLY_KERNEL_TARGETS}
+        ${A5_ONLY_KERNEL_TARGETS}
         workspace_kernel
         no_workspace_kernel
         ${CATLASS_WORKSPACE_KERNEL_TARGETS}
@@ -285,6 +310,11 @@ target_include_directories(${OP_PLUGIN_NAME} PRIVATE
         ${PROJECT_OP_SRC_BASE}/sparse_attn_sharedkv/op_host
         ${PROJECT_OP_SRC_BASE}/sparse_attention_score/op_host
         ${PROJECT_OP_SRC_BASE}/sparse_attention_score/op_host/tiling
+        ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/op_host
+        ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/compat
+        ${PROJECT_OP_SRC_BASE}/mla_prolog/op_host
+        ${PROJECT_OP_SRC_BASE}/mla_prolog/op_kernel
+        ${ASCEND_INCLUDE_DIR}/op_common
         ${TORCH_DIR}/include
         ${TORCH_DIR}/include/torch/csrc/api/include
         ${TORCH_NPU_DIR}/include

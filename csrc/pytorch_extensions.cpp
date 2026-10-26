@@ -216,6 +216,18 @@ TORCH_LIBRARY_FRAGMENT(npu, m)
     m.def(
         "kv_compress_epilog(Tensor(a!) kv_compress_cache, Tensor x, Tensor slot_mapping, "
         "int quant_group_size, int quant_mode, bool round_scale_flag, int layout) -> ()");
+
+    m.def(
+        "mla_prolog_v3(Tensor token_x, Tensor weight_dq, Tensor weight_uq_qr, Tensor weight_uk, Tensor weight_dkv_kr, "
+        "Tensor rmsnorm_gamma_cq, Tensor rmsnorm_gamma_ckv, Tensor rope_sin, Tensor rope_cos, "
+        "Tensor(a!) kv_cache, Tensor(b!) kr_cache, "
+        "*, Tensor? cache_index=None, Tensor? dequant_scale_x=None, Tensor? dequant_scale_w_dq=None, "
+        "Tensor? dequant_scale_w_uq_qr=None, Tensor? dequant_scale_w_dkv_kr=None, Tensor? quant_scale_ckv=None, "
+        "Tensor? quant_scale_ckr=None, Tensor? smooth_scales_cq=None, Tensor? actual_seq_len=None, "
+        "Tensor? k_nope_clip_alpha=None, float rmsnorm_epsilon_cq=1e-05, float rmsnorm_epsilon_ckv=1e-05, "
+        "str? cache_mode=None, bool query_norm_flag=False, int weight_quant_mode=0, int kv_cache_quant_mode=0, "
+        "int query_quant_mode=0, int ckvkr_repo_mode=0, int quant_scale_repo_mode=0, int tile_size=128, "
+        "float qc_qr_scale=1.0, float kc_scale=1.0) -> (Tensor, Tensor, Tensor, Tensor, Tensor)");
 #endif
 
 #ifdef BUILD_CATLASS_MODULE
@@ -354,6 +366,7 @@ TORCH_LIBRARY_IMPL(npu, PrivateUse1, m)
 
 #ifdef SGL_KERNEL_ENABLE_A5_ONLY_OPS
     m.impl("kv_compress_epilog", TORCH_FN(sglang::npu_kernel::kv_compress_epilog));
+    m.impl("mla_prolog_v3", TORCH_FN(sglang::npu_kernel::mla_prolog_v3));
 #endif
 
 #ifdef BUILD_CATLASS_MODULE
