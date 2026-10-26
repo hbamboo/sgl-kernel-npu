@@ -112,6 +112,12 @@ Measured machine limits on this card:
 * HBM bandwidth (256 MiB copy): **3.27 TB/s**
 * bf16 matmul (4096^3): **424 TFLOP/s**
 * machine balance: 424 / 3.27 = **130 FLOP/byte**
+* **PyBind11 fast path**: `import libsgl_kernel_npu as _C; _C.mla_prolog_v3_out(...)`
+  skips the torch dispatcher: T=1 36.7 -> **32.9 us** (-10.4%), T=8 35.4 -> 32.8 us,
+  bit-identical results.  The binding lives in the same `libsgl_kernel_npu.so`
+  (`mla_prolog_v3_pybind.cpp`), and `mla_prolog_v3_compat.direct()` returns it.
+  The caller must pass bf16 FRACTAL_NZ weights - the dtype/format adaptation only
+  happens on the torch.ops path.
 * **framework floor**: any NPU kernel op costs **~23.4 us** per call on this stack,
   broken down as **16.7 us pure torch dispatcher** (measured with a host-only op) +
   **~5.3 us kernel launch** (`aclrtLaunchKernelWithHostArgs` ≈ 3.9 us) + ~1 us glue.
@@ -124,7 +130,7 @@ Latest timings (auto core count: 16 cores for T <= 128, 32 above):
 
 | T | total | kernel (total - 23.4) | roofline floor | kernel / floor |
 |---|---|---|---|---|
-| 1 | 41.6 us (36.3 with `_out`) | 18.2 us | 5.3 us (BW) | 29% |
+| 1 | 41.6 us (36.3 `_out`, **32.9 PyBind**) | 18.2 us | 5.3 us (BW) | 29% |
 | 8 | 41.6 us (36.3 with `_out`) | 18.2 us | 5.4 us (BW) | 30% |
 | 16 | 42.7 us | 19.3 us | 5.6 us (BW) | 29% |
 | 64 | 53.9 us | 30.5 us | 7.4 us (BW) | 24% |

@@ -39,6 +39,7 @@ run "sglang_alias"         $T8 csrc/mla_prolog_v3/tests/test_sglang_alias.py
 run "sglang_nd_weights"    $T8 csrc/mla_prolog_v3/tests/test_sglang_nd_weights.py
 run "sglang_mode_infer"    $T8 csrc/mla_prolog_v3/tests/test_sglang_mode_infer.py
 run "mlapolog_scheme_state" $T8 csrc/mla_prolog_v3/tests/test_mlapolog_scheme_state.py
+run "pybind_fast_path"     $T8 csrc/mla_prolog_v3/tests/test_pybind_path.py
 run "perf_sweep"           $T8 csrc/mla_prolog_v3/tests/bench_mla_prolog.py
 
 echo

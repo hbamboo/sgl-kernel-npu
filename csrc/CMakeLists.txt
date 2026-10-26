@@ -86,6 +86,7 @@ if(SGL_KERNEL_ENABLE_A5_ONLY_OPS)
         ${PROJECT_OP_SRC_BASE}/kv_compress_epilog/op_host/kv_compress_epilog.cpp
         ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/op_host/mla_prolog_v3_host.cpp
         ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/op_host/mla_prolog_v3_torch.cpp
+        ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/op_host/mla_prolog_v3_pybind.cpp
         ${PROJECT_OP_SRC_BASE}/mla_prolog/op_host/mla_prolog_tiling.cpp
         ${PROJECT_OP_SRC_BASE}/mla_prolog/op_host/mla_prolog_tiling_check.cpp
     )
@@ -298,7 +299,11 @@ target_link_directories(${OP_PLUGIN_NAME} PRIVATE
 target_compile_options(${OP_PLUGIN_NAME} PRIVATE -fopenmp)
 target_link_libraries(${OP_PLUGIN_NAME} PRIVATE gomp)
 
+# Python headers for the PyBind11 entry points (mla_prolog_v3_pybind.cpp)
+find_package(Python3 COMPONENTS Interpreter Development.Module QUIET)
+
 target_include_directories(${OP_PLUGIN_NAME} PRIVATE
+        ${Python3_INCLUDE_DIRS}
         ${PROJECT_OP_SRC_BASE}/utils
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_OP_SRC_BASE}/causal_conv1d_update/op_kernel
