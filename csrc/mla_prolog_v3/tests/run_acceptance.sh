@@ -45,6 +45,7 @@ run "sglang_nd_weights"    $T8 csrc/mla_prolog_v3/tests/test_sglang_nd_weights.p
 run "sglang_mode_infer"    $T8 csrc/mla_prolog_v3/tests/test_sglang_mode_infer.py
 run "mlapolog_scheme_state" $T8 csrc/mla_prolog_v3/tests/test_mlapolog_scheme_state.py
 run "pybind_fast_path"     $T8 csrc/mla_prolog_v3/tests/test_pybind_path.py
+run "shape_interleave"     $T8 csrc/mla_prolog_v3/tests/test_shape_interleave.py
 run "perf_sweep"           $T8 csrc/mla_prolog_v3/tests/bench_mla_prolog.py
 
 echo
