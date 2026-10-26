@@ -144,7 +144,7 @@ Latest timings (auto core count: 16 cores for T <= 128, 32 above):
 | 256 | 90.0 us | 66.6 us | 10.4 us (compute) | 16% |
 | 512 | 169.4 us | 146.0 us | 20.8 us (compute) | 14% |
 | 1024 | 329.3 us | 305.9 us | 41.8 us (compute) | 14% |
-| 2048 | 650.9 us | 627.5 us | 83.6 us (compute) | 13% |
+| 2048 | 649.9 us | 626.5 us | 83.6 us (compute) | 13% |
 
 Note: this card occasionally flips into a second stable state (~48.5 us instead of
 ~41.5 us for decode, same binary/config), most likely other tenants on the shared
@@ -155,7 +155,8 @@ down-projection GEMMs (mm1+mm2) account for **~49 us of the ~70 us prefill kerne
 (70%), which is why they are the only meaningful prefill target.
 
 Progression of the decode path: 77.7 us (first working version) -> 48.5 us (tiling +
-workspace cache) -> 45.1 us (hash keys) -> **41.6 us** (core-count heuristic), i.e.
+workspace cache) -> 45.1 us (hash keys) -> 41.6 us (core-count heuristic) -> 36.2 us
+(`_out`) -> **32.9 us** (PyBind), i.e.
 **1.87x** faster than the first working port.
 
 Core-count behaviour (`MLA_PROLOG_V3_CORES` overrides, default is the heuristic):
@@ -353,7 +354,8 @@ bash csrc/mla_prolog_v3/tests/run_acceptance.sh 5    # device id, logs in /tmp/m
 Runs 11 checks in one go (CPU golden at T=8/T=256, real MXFP8 layer-2 weights, bit-exact
 comparison against the vendor operator, the `_out` variant, the four SGLang shim tests,
 the MXFP8 scheme-state reconstruction, and the performance sweep) and prints a summary.
-Last run: 11/11 pass, decode 36.1 us (`_out`), T=2048 650 us.
+Last run: **12/12 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
+T=2048 649.9 us.
 
 ## Status
 
