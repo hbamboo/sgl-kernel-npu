@@ -72,7 +72,7 @@ def host_cost(fn, iters=2000):
     return (t1 - t0) / iters * 1e6
 
 
-noop = host_cost(lambda: _C.noop())
+noop = host_cost(lambda: _C.noop()) if hasattr(_C, "noop") else 0.0
 py = host_cost(lambda: _C.mla_prolog_v3_out(x, Wdq, Wuqqr, Wuk, Wdkv, gq, gkv, sin, cos, kvc, krc,
                                             q, qr, dqn, qn, dqnorm, **common))
 ops = host_cost(lambda: torch.ops.npu.mla_prolog_v3_out(x, Wdq, Wuqqr, Wuk, Wdkv, gq, gkv, sin, cos, kvc, krc,
