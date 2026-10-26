@@ -123,6 +123,11 @@ struct MlaPrologV3TilingResult {
 bool MlaPrologV3RunTiling(const MlaPrologV3Tensors &tensors, optiling::MlaPrologTilingData *tilingData,
                           MlaPrologV3TilingResult *result, std::string *err);
 
+// Same as above but memoised on the full (shape, dtype, attr) configuration:
+// the tiling costs tens of microseconds and only depends on those inputs.
+bool MlaPrologV3RunTilingCached(const MlaPrologV3Tensors &tensors, optiling::MlaPrologTilingData *tilingData,
+                                MlaPrologV3TilingResult *result, std::string *err);
+
 } // namespace npu_kernel
 } // namespace sglang
 

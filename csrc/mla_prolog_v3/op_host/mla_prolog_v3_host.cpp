@@ -12,6 +12,8 @@
 
 #include <cstring>
 #include <deque>
+#include <mutex>
+#include <unordered_map>
 #include <sstream>
 #include <stdexcept>
 
@@ -210,6 +212,125 @@ bool MlaPrologV3RunTiling(const MlaPrologV3Tensors &tensors, optiling::MlaProlog
     tilingData->tplArgs = ctx.tplArgs;
     tilingData->tilingKey = ctx.tilingKey;
     return true;
+}
+
+
+namespace {
+
+void AppendDims(std::string *key, const std::vector<int64_t> &dims)
+{
+    key->append(std::to_string(dims.size()));
+    for (int64_t d : dims) {
+        key->append(",");
+        key->append(std::to_string(d));
+    }
+    key->append(";");
+}
+
+void AppendAttr(std::string *key, double v)
+{
+    key->append(std::to_string(v));
+    key->append(";");
+}
+
+std::string MakeTilingKey(const MlaPrologV3Tensors &t)
+{
+    std::string key;
+    key.reserve(1024);
+    AppendDims(&key, t.tokenX);
+    AppendDims(&key, t.weightDq);
+    AppendDims(&key, t.weightUqQr);
+    AppendDims(&key, t.weightUk);
+    AppendDims(&key, t.weightDkvKr);
+    AppendDims(&key, t.gammaCq);
+    AppendDims(&key, t.gammaCkv);
+    AppendDims(&key, t.ropeSin);
+    AppendDims(&key, t.ropeCos);
+    AppendDims(&key, t.kvCache);
+    AppendDims(&key, t.krCache);
+    AppendDims(&key, t.cacheIndex);
+    AppendDims(&key, t.dequantScaleX);
+    AppendDims(&key, t.dequantScaleWDq);
+    AppendDims(&key, t.dequantScaleWUqQr);
+    AppendDims(&key, t.dequantScaleWDkvKr);
+    AppendDims(&key, t.quantScaleCkv);
+    AppendDims(&key, t.quantScaleCkr);
+    AppendDims(&key, t.smoothScalesCq);
+    AppendDims(&key, t.actualSeqLen);
+    AppendDims(&key, t.kNopeClipAlpha);
+    AppendDims(&key, t.query);
+    AppendDims(&key, t.queryRope);
+    AppendDims(&key, t.queryNorm);
+    AppendDims(&key, t.dequantScaleQNorm);
+    const int dtypes[] = {static_cast<int>(t.tokenXType),   static_cast<int>(t.weightDqType),
+                          static_cast<int>(t.weightUqQrType), static_cast<int>(t.weightUkType),
+                          static_cast<int>(t.weightDkvKrType), static_cast<int>(t.gammaCqType),
+                          static_cast<int>(t.gammaCkvType), static_cast<int>(t.ropeSinType),
+                          static_cast<int>(t.ropeCosType), static_cast<int>(t.kvCacheType),
+                          static_cast<int>(t.krCacheType), static_cast<int>(t.scaleXType),
+                          static_cast<int>(t.scaleWDqType), static_cast<int>(t.scaleWUqQrType),
+                          static_cast<int>(t.scaleWDkvKrType), static_cast<int>(t.scaleQNopeType),
+                          static_cast<int>(t.scaleQNormType), static_cast<int>(t.queryNormType)};
+    for (int d : dtypes) {
+        key.append(std::to_string(d));
+        key.append(",");
+    }
+    key.append(t.cacheMode);
+    key.append(";");
+    AppendAttr(&key, t.rmsEpsCq);
+    AppendAttr(&key, t.rmsEpsCkv);
+    AppendAttr(&key, t.weightQuantMode);
+    AppendAttr(&key, t.kvQuantMode);
+    AppendAttr(&key, t.queryQuantMode);
+    AppendAttr(&key, t.ckvkrRepoMode);
+    AppendAttr(&key, t.quantScaleRepoMode);
+    AppendAttr(&key, t.tileSize);
+    AppendAttr(&key, t.qcQrScale);
+    AppendAttr(&key, t.kcScale);
+    AppendAttr(&key, t.queryNormFlag);
+    AppendAttr(&key, t.doRope);
+    return key;
+}
+
+} // namespace
+
+bool MlaPrologV3RunTilingCached(const MlaPrologV3Tensors &tensors, optiling::MlaPrologTilingData *tilingData,
+                                MlaPrologV3TilingResult *result, std::string *err)
+{
+    struct Entry {
+        optiling::MlaPrologTilingData tilingData;
+        MlaPrologV3TilingResult result;
+        bool ok;
+        std::string err;
+    };
+    static std::mutex mutex;
+    static std::unordered_map<std::string, Entry> cache;
+
+    const std::string key = MakeTilingKey(tensors);
+    {
+        std::lock_guard<std::mutex> guard(mutex);
+        auto it = cache.find(key);
+        if (it != cache.end()) {
+            *tilingData = it->second.tilingData;
+            *result = it->second.result;
+            if (!it->second.ok && err != nullptr) {
+                *err = it->second.err;
+            }
+            return it->second.ok;
+        }
+    }
+
+    Entry entry{};
+    entry.ok = MlaPrologV3RunTiling(tensors, &entry.tilingData, &entry.result, &entry.err);
+
+    std::lock_guard<std::mutex> guard(mutex);
+    auto it = cache.emplace(key, entry).first;
+    *tilingData = it->second.tilingData;
+    *result = it->second.result;
+    if (!it->second.ok && err != nullptr) {
+        *err = it->second.err;
+    }
+    return it->second.ok;
 }
 
 } // namespace npu_kernel

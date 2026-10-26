@@ -217,11 +217,24 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor, at::Tensor> mla_prolo
     optiling::MlaPrologTilingData tilingData{};
     MlaPrologV3TilingResult res;
     std::string err;
-    TORCH_CHECK(MlaPrologV3RunTiling(t, &tilingData, &res, &err), "mla_prolog_v3 tiling failed: ", err);
+    TORCH_CHECK(MlaPrologV3RunTilingCached(t, &tilingData, &res, &err), "mla_prolog_v3 tiling failed: ", err);
 
     const at::Tensor &tiling_tensor = CachedTiling(tilingData);
-    at::Tensor workspace =
-        at::empty({static_cast<int64_t>(res.workspaceSize)}, at::TensorOptions().dtype(at::kByte).device(token_x.device()));
+    // Scratch buffer on the current stream: reuse a per-device allocation instead
+    // of asking the caching allocator on every launch.
+    static std::mutex ws_mutex;
+    static std::unordered_map<int64_t, at::Tensor> ws_cache;
+    at::Tensor workspace;
+    {
+        const int64_t bytes = static_cast<int64_t>(res.workspaceSize);
+        const int64_t dev_index = token_x.device().index();
+        std::lock_guard<std::mutex> guard(ws_mutex);
+        auto &slot = ws_cache[dev_index];
+        if (!slot.defined() || slot.numel() < bytes) {
+            slot = at::empty({bytes}, at::TensorOptions().dtype(at::kByte).device(token_x.device()));
+        }
+        workspace = slot;
+    }
 
     at::Tensor query = EmptyLikeShape({tokens, n_heads, hckv}, at::kBFloat16, token_x);
     at::Tensor query_rope = EmptyLikeShape({tokens, n_heads, dr}, at::kBFloat16, token_x);
