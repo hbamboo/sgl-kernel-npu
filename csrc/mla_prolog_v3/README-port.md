@@ -155,8 +155,17 @@ porting regression); improving it needs kernel work.
 * [x] GLM-4.7-Flash geometry accepted (bf16 and MXFP8)
 * [x] CPU golden + precision pass (bf16), synthetic and real checkpoint weights
 * [x] host overhead reduced (tiling cache + workspace reuse)
-* [ ] native MXFP8 numerics: first GEMM correct, `weight_uq_qr` dequant explodes for
-      `Hcq=768` (24 scale bytes/row, not 32 B aligned) while `Hcq=1536` is fine
+* [ ] native MXFP8 numerics for `Hcq=768` (`test_mxfp8_precision.py`, T=8):
+
+      | path | 16 cores | 32 cores |
+      |---|---|---|
+      | kv_cache / kr_cache (mm2) | cosine 0.9999989 | cosine 0.9999989 |
+      | query / query_rope (mm3+mm4) | cosine 0.981 | garbage (1e37) |
+
+      So the down-projection GEMMs are fine; the `weight_uq_qr` per-32 scale mapping is
+      off by ~2% at 16 cores and reads out of bounds at 32 cores (core-split offset
+      computation with 24 scale bytes per row).  bf16 (dequantised) weights stay the
+      validated path.
 * [x] performance baseline + roofline: host at framework floor (23.4 us), kernel at
       24% (decode) / 13% (prefill) of the measured roofline
 * [x] decode core-count heuristic (16 cores for T <= 128): 45.1 -> 41.6 us
