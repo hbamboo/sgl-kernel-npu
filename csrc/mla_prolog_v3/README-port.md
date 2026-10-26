@@ -95,6 +95,12 @@ outputs cosine >= 0.9999975, max abs diff <= 0.057.
 
 Verified across the token range after the PA-stride fix (CPU golden, GLM geometry):
 
+Real checkpoint, per layer (five outputs, cosine):
+
+| layer | 0 | 1 | 2 | 23 | 46 |
+|---|---|---|---|---|---|
+| worst output | 0.9999969 | 0.9999972 | 0.9999975 | 0.9999949 | 0.9999971 |
+
 | T | query | query_rope | kv_cache | kr_cache |
 |---|---|---|---|---|
 | 8 | 0.999994 | 0.999996 | 0.999998 | 0.999998 |
@@ -374,7 +380,9 @@ the MXFP8 scheme-state reconstruction, and the performance sweep) and prints a s
 It includes a token-boundary sweep (`sweep_tokens.py`): 31 sizes around every internal
 tile boundary (1..1000) all stay >= 0.9995 on the five outputs.
 
-Last run: **13/13 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
+It runs four real-checkpoint layers (0/2/23/46) so the validation is not tied to one layer.
+
+Last run: **16/16 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
 T=2048 649.9 us.
 
 ## Status

@@ -18,7 +18,7 @@ torch.ops.load_library(LIB)
 
 dev = "npu:0"
 He, Hcq, Hckv, D, Dr, N = 2048, 768, 512, 192, 64, 20
-LAYER = 2
+LAYER = int(os.environ.get("LAYER", "2"))
 T = 8
 EPS = 1e-5
 torch.manual_seed(0)
