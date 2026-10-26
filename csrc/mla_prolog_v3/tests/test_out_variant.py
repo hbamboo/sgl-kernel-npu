@@ -52,7 +52,7 @@ for T in (1, 8, 256):
 
     q = torch.empty(T, N, Hckv, dtype=torch.bfloat16, device=dev)
     qr = torch.empty(T, N, Dr, dtype=torch.bfloat16, device=dev)
-    dqn = torch.empty(0, N, 1, dtype=torch.float32, device=dev)
+    dqn = torch.empty(0, dtype=torch.float32, device=dev)
     qn = torch.empty(T, Hcq, dtype=torch.bfloat16, device=dev)
     dqnorm = torch.empty(0, dtype=torch.float32, device=dev)
 

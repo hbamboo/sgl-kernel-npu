@@ -180,9 +180,11 @@ syncs) and only ~15-25% is weight streaming.  Consequences:
   per-phase scalar work), not from shrinking the weights.
 
 aclgraph (`torch.npu.NPUGraph`) capture works and replays bit-exactly, but a
-single-op graph is **slower** than eager on this stack (150 us replay vs 42 us eager:
-graph launch overhead dominates for a one-kernel graph), so graph capture is only
-useful for the whole-model graph SGLang builds, not per op.
+single-op graph is **slower** than eager on this stack: 150 us replay vs 36 us eager
+with `mla_prolog_v3_out` (i.e. it is the graph-launch overhead, not the allocations
+inside capture).  Graph capture is therefore only useful for the whole-model graph
+SGLang builds, not per op; the `_out` entry point still matters there because it gives
+stable buffer addresses.
 
 Steady-state msprof `PipeUtilization` on the decode case (T=1, 16 cores, median task
 duration **18.9 us**): AIC MTE2 **47%**, AIC MTE1 **47%**, MAC 27%, AIC scalar 34%,
