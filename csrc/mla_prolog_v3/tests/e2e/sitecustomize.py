@@ -1,6 +1,8 @@
 """Applied at interpreter start (via PYTHONPATH) to make SGLang use the ported kernel."""
 import os
 
+os.environ.setdefault("DSH_MLA_PROLOG_V3_DEBUG", "1")
+
 if os.environ.get("DSH_MLA_PROLOG_V3_PATCH") == "1":
     try:
         import torch  # noqa: F401

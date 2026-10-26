@@ -41,10 +41,45 @@ curl -s http://127.0.0.1:30111/generate -H "Content-Type: application/json" \
    说明加载器对"BF16 的融合 qkv_a（q_a/kv_a 合并）"的处理与我构造的 overlay 不一致，
    需要继续排查 SGLang 的权重合并/加载路径。
 
+## 第 18 轮更新：算子已在真实 server 中跑通调用
+
+持续调试后的进展（每一轮都在真实 server 上跑，约 4–5 分钟/次）：
+
+1. **`weight_scale` 缺失** → 给 `NPUFusedMLAPreprocess.__init__` 打补丁补占位 scale；
+2. **走错分支** → `forward()` 优先 `forward_mlapo`（int8 路径，需要 `input_offset`），
+   补丁改为：投影权重是 fp8 时强制走 `forward_mlaprolog`；
+3. **权重方向** → 实测该 checkpoint 下
+   * 融合 `qkv_a_proj.weight` 是 **`[1344, 2048]`（`[out, in]`）**，scale_inv `[32, 1344, 2]`
+     —— 未转置；
+   * `q_b_proj.weight` 是 **`[768, 5120]`（`[in, out]`）**，scale_inv `[12, 5120, 2]`
+     —— 已转置；
+   两者方向不同，补丁按 scale 的 `out` 维自动判别并反量化；
+4. **`_WeightHolder` 必须是 `nn.Module`**，否则无法替换子模块属性；
+5. **结果**：`mla_prolog_v3` 在本镜像的 SGLang server 中**调用成功**（不再 tiling 失败），
+   收到的三个投影权重均为 bf16 FRACTAL_NZ（2048×768 / 768×5120 / 2048×576）。
+
+### 现在卡在上游的接口假设：`qr` 必须是 int8
+
+调用成功后，SGLang 自己的收尾代码崩了：
+
+```
+dequant_q_norm = dequant_q_norm.view(hidden_states.shape[0])
+RuntimeError: shape '[1]' is invalid for input of size 0
+```
+
+因为 MLAPO 分支（`npu_mla_preprocess`）把算子返回的 `qr` 当**量化后的 q_lora**
+（int8 + `dynamic_scale`）交给后续 FIA 量化注意力；而 bf16 权重配置下本算子返回的是
+bf16 `query_norm` + 空调度 scale。也就是说：要走通这条路径，`q_b`（以及两个下投影）
+必须是 **int8 量化**（`weight_quant_mode=1/2`），而不是 MXFP8/bf16。
+
 ## 建议的下一步（按代价排序）
 
-1. **在 SGLang 侧**给 MLAPO 路径加一个 MXFP8 分支（读取 `weight_scale_inv`、跳过重复转置、
-   透传两个下投影的 e8m0 scale），然后即可直接使用原 checkpoint —— 这是最干净的方案。
+1. **给 MLAPO 路径加 bf16 支持**（上游改动）：`qr` 以 bf16 返回、`dequant_q_norm` 允许为空，
+   后续 FIA 走非量化注意力。这是唯一能保留 MXFP8/bf16 精度的方案。
+2. **把三个投影重量化成 int8**（`weight_quant_mode=1`）：SGLang 现有代码可直接工作，但需要
+   校准并且精度会低于 MXFP8，与"精度优先"冲突，仅作为兼容选项。
+3. **在 SGLang 侧**给 MLAPO 路径加一个 MXFP8 分支（读取 `weight_scale_inv`、跳过重复转置、
+   透传两个下投影的 e8m0 scale）。
 2. 继续调试 bf16 overlay：对比 `fused_qkv_a_proj_with_mqa.weight` 在加载后与
    `cat(dequant(q_a), dequant(kv_a))` 是否一致，定位合并环节。
 3. 包一层 `forward_mlaprolog`：在调用前把三个权重换成 bf16 NZ、并显式传入 scale，

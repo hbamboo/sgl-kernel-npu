@@ -1,53 +1,45 @@
-"""Drop-in alias so SGLang's MLAPO path can use the ported MlaPrologV3 kernel.
+"""Drop-in support for the ported MlaPrologV3 kernel in SGLang's MLAPO path.
 
 SGLang's NPU MLA preprocess calls ``torch.ops.custom.npu_mla_prolog_v3`` (see
-``sglang/srt/hardware_backend/npu/attention/mla_preprocess.py::forward_mlaprolog``),
-which is provided by the ``custom_ops`` package.  In images where that package does
-not ship the operator, the call fails with
+``sglang/srt/hardware_backend/npu/attention/mla_preprocess.py::forward_mlaprolog``).
+This module makes that call site work with the ported kernel, including for the GLM
+MXFP8 checkpoint, without touching SGLang's code:
 
-    AttributeError: 'OpNamespace' object has no attribute 'npu_mla_prolog_v3'
+1. ``register_custom_alias()`` registers ``custom::npu_mla_prolog_v3`` and forwards it
+   to ``torch.ops.npu.mla_prolog_v3``.
+2. ``enable_mlaprolog()`` makes SGLang actually take the ``forward_mlaprolog`` branch
+   (the modelslim config never fills the ``ignore`` list it looks for) and repairs the
+   MXFP8 assumptions that branch makes:
+   * ``q_b_proj.weight_scale`` is called ``weight_scale_inv`` in the MXFP8 scheme;
+   * the scheme already transposes the fused projection to ``[in, out]``, so the
+     preprocess must not transpose again;
+   * only the q_b scale is forwarded, so the two down projections have to be
+     dequantised at module level.
+3. The forwarding shim also adapts each call: ND -> FRACTAL_NZ for the projection
+   matrices, MXFP8 -> bf16 when e8m0 scales are available, and ``weight_quant_mode``
+   derived from the actual dtypes (SGLang hardcodes 1).
 
-This module registers the same operator name in the ``custom`` namespace and forwards
-it to the ported kernel ``torch.ops.npu.mla_prolog_v3``.  The signatures are
-compatible: SGLang passes exactly ``token_x, weight_dq, weight_uq_qr, weight_uk,
-weight_dkv_kr, rmsnorm_gamma_cq, rmsnorm_gamma_ckv, rope_sin, rope_cos, kv_cache,
-kr_cache, cache_index, dequant_scale_w_uq_qr, rmsnorm_epsilon_cq, rmsnorm_epsilon_ckv,
-cache_mode, query_norm_flag, weight_quant_mode`` and unpacks five outputs in the same
-order (q_nope, q_pe, dequant_scale_q_nope, qr, dequant_q_norm).
+Usage (before the model is loaded)::
 
-Usage (before the model is loaded, e.g. in the launcher or a sitecustomize):
-
-    import sgl_kernel_npu  # loads libsgl_kernel_npu.so -> torch.ops.npu.*
+    import sgl_kernel_npu
     from sgl_kernel_npu.mla_prolog_v3_compat import register_custom_alias, enable_mlaprolog
-    register_custom_alias()   # 让 custom::npu_mla_prolog_v3 解析到本实现
-    enable_mlaprolog()        # 让 SGLang 真正走 forward_mlaprolog 分支
+    register_custom_alias()
+    enable_mlaprolog()
 
-Notes
------
-* The kernel needs FRACTAL_NZ for the three projection matrices.  SGLang only NZ-casts
-  the fused qkv_a projection and hands over ``q_b_proj.weight`` / ``w_kc`` in ND (the
-  MXFP8 scheme keeps them ND on purpose), and ND weights make the kernel produce
-  garbage (cosine 0.005).  The shim therefore casts ND -> NZ on the fly and caches the
-  result (weights are static after loading; ``clear_format_cache()`` drops it).
-* SGLang hardcodes ``weight_quant_mode=1`` in ``forward_mlaprolog``.  The shim derives
-  the mode from the actual dtypes (float weights -> 0, fp8 + e8m0 scale -> 3, int8 ->
-  keep the caller's 1/2) and drops the scale arguments the derived mode does not use,
-  so a dequantised-to-bf16 GLM checkpoint works through the unmodified call site.
-* The ported kernel handles ``weight_quant_mode`` 0/1/2 natively; its native MXFP8 path
-  (mode 3) mis-maps the ``weight_uq_qr`` per-32 scales at ``Hcq=768``.  The shim therefore
-  dequantises float8_e4m3 weights + e8m0 scales to bf16 on first use (cached, both the
-  op's ``[in, out]`` and the checkpoint's ``[out, in]`` scale orientations) and switches
-  the call to mode 0, so the MXFP8 checkpoint can be passed through unchanged.
-  ``clear_dequant_cache()`` drops the cache.
-* ``mla_prolog_v3_out`` (also exported here) accepts caller-provided output buffers
-  and is 13-14% faster at decode; a serving stack that can pre-allocate per-layer
-  buffers should call it instead.
+``mla_prolog_v3_out`` (exported here) is the caller-buffered variant, 13-14% faster at
+decode; a serving stack that can pre-allocate per-layer buffers should prefer it.
+Also set ``SGLANG_NPU_USE_MLAPO=1`` to keep SGLang's MLAPO switch on.
 """
 
+import os
 import re
 
 import torch
 import torch_npu  # noqa: F401  (registers the PrivateUse1 dispatch key)
+
+_ND_FORMAT = 2
+_NZ_FORMAT = 29
+_DEBUG = lambda: os.environ.get("DSH_MLA_PROLOG_V3_DEBUG") == "1"  # noqa: E731
 
 _SCHEMA = (
     "npu_mla_prolog_v3(Tensor token_x, Tensor weight_dq, Tensor weight_uq_qr, Tensor weight_uk, "
@@ -63,50 +55,61 @@ _SCHEMA = (
 )
 
 _libs = []
-
-# FRACTAL_NZ format enum for torch_npu
-_NZ_FORMAT = 29
-
-# ND -> NZ conversions, keyed by (data_ptr, shape, dtype, device).  The projection
-# weights are static after loading, so one conversion per tensor is enough; call
-# clear_format_cache() if a weight is re-loaded in place.
 _NZ_CACHE = {}
+_BF16_CACHE = {}
+
+_WEIGHT_SCALE_ARGS = (
+    "dequant_scale_x",
+    "dequant_scale_w_dq",
+    "dequant_scale_w_uq_qr",
+    "dequant_scale_w_dkv_kr",
+)
+
+
+# --------------------------------------------------------------------------- formats
+def _format_of(t):
+    try:
+        return torch_npu.get_npu_format(t)
+    except Exception:  # noqa: BLE001 - not an NPU tensor
+        return None
 
 
 def clear_format_cache():
-    """Drop the cached NZ conversions (call after re-loading weights in place)."""
     _NZ_CACHE.clear()
+
+
+def clear_dequant_cache():
+    _BF16_CACHE.clear()
+
+
+def to_nd(t):
+    """Return ``t`` in ACL_FORMAT_ND (no-op when already ND or not an NPU tensor)."""
+    if t is None:
+        return None
+    fmt = _format_of(t)
+    if fmt is None or fmt == _ND_FORMAT:
+        return t
+    return torch_npu.npu_format_cast(t, _ND_FORMAT)
 
 
 def ensure_nz(t):
     """Return ``t`` in FRACTAL_NZ, converting and caching it if needed."""
     if t is None:
         return None
-    try:
-        fmt = torch_npu.get_npu_format(t)
-    except Exception:  # noqa: BLE001 - not an NPU tensor / unknown format
-        return t
-    if fmt == _NZ_FORMAT:
-        return t
-    key = (t.data_ptr(), tuple(t.shape), t.dtype, t.device.index)
-    cached = _NZ_CACHE.get(key)
-    if cached is not None:
-        return cached
-    converted = torch_npu.npu_format_cast(t, _NZ_FORMAT)
-    _NZ_CACHE[key] = converted
-    return converted
+    if _format_of(t) != _NZ_FORMAT:
+        key = (t.data_ptr(), tuple(t.shape), t.dtype, t.device.index)
+        cached = _NZ_CACHE.get(key)
+        if cached is not None:
+            return cached
+        converted = torch_npu.npu_format_cast(t, _NZ_FORMAT)
+        _NZ_CACHE[key] = converted
+        return converted
+    return t
 
 
-_BF16_CACHE = {}
-
-
-def clear_dequant_cache():
-    """Drop the cached MXFP8 -> bf16 dequantised weights."""
-    _BF16_CACHE.clear()
-
-
+# -------------------------------------------------------------------------- numerics
 def _e8m0_scale(scale):
-    """uint8 e8m0 -> float32 multiplier (2^(e-127); e == 0 is treated as 0)."""
+    """uint8 e8m0 -> float32 multiplier (2^(e-127); e == 0 is treated as zero)."""
     if scale.dtype == torch.float32:
         return scale
     e = scale.to(torch.int32)
@@ -117,13 +120,12 @@ def _e8m0_scale(scale):
 def dequant_mxfp8(weight, scale, block=32):
     """float8_e4m3 weight + e8m0 per-``block`` scale -> bf16, layout aware.
 
-    Supports both the op ABI (weight ``[in, out]`` with scale ``[out, in/block]``) and
-    the checkpoint layout (weight ``[out, in]`` with scale ``[out, in/block]``).
+    Handles both the kernel ABI (weight ``[in, out]`` with scale ``[out, in/block]``)
+    and the checkpoint layout (weight ``[out, in]`` with the same scale shape).
     """
     w = weight.to(torch.float32)
     mult = _e8m0_scale(scale)
     if mult.shape[-1] * block == w.shape[0] and mult.shape[0] == w.shape[1]:
-        # op ABI: expand the scale down the rows
         m = mult.t().repeat_interleave(block, dim=0)[: w.shape[0]]
     else:
         m = mult.repeat_interleave(block, dim=1)[:, : w.shape[1]]
@@ -145,27 +147,26 @@ def ensure_bf16(weight, scale, block=32):
     key = (weight.data_ptr(), tuple(weight.shape), scale.data_ptr(), tuple(scale.shape))
     cached = _BF16_CACHE.get(key)
     if cached is None:
-        cached = dequant_mxfp8(weight, scale)
+        cached = dequant_mxfp8(to_nd(weight), scale)
         _BF16_CACHE[key] = cached
     return cached, True
 
 
-# scale arguments that only make sense for a quantised weight mode
-_WEIGHT_SCALE_ARGS = (
-    "dequant_scale_x",
-    "dequant_scale_w_dq",
-    "dequant_scale_w_uq_qr",
-    "dequant_scale_w_dkv_kr",
-)
+def _scale_from_inv(scale_inv, out_dim, in_dim, block=32):
+    """Rebuild ``[out, in/block]`` e8m0 scales from the MXFP8 ``[in/2b, out, 2]`` view."""
+    if scale_inv is None:
+        return None
+    scale = scale_inv
+    if scale.dim() == 3:
+        scale = scale.permute(1, 0, 2) if scale.shape[1] == out_dim else scale
+    scale = scale.reshape(out_dim, -1)
+    if scale.shape[1] != in_dim // block:
+        return None
+    return scale.contiguous()
 
 
 def infer_weight_quant_mode(weight_uq_qr, weight_scale=None):
-    """Derive the weight quant mode from the projection dtypes, or None if unknown.
-
-    * float16/32/bfloat16 weights                  -> 0 (no quant)
-    * float8_e4m3fn weights with an e8m0 scale     -> 3 (MXFP8 full quant)
-    * int8 weights                                 -> None (the caller's 1/2 decides)
-    """
+    """Derive ``weight_quant_mode`` from the projection dtypes (None when unknown)."""
     if weight_uq_qr is None:
         return None
     if weight_uq_qr.dtype in (torch.bfloat16, torch.float16, torch.float32):
@@ -175,11 +176,24 @@ def infer_weight_quant_mode(weight_uq_qr, weight_scale=None):
     return None
 
 
+# ------------------------------------------------------------------------- forwarding
+def _dump_args(args, kwargs):
+    names = ["token_x", "weight_dq", "weight_uq_qr", "weight_uk", "weight_dkv_kr",
+             "rmsnorm_gamma_cq", "rmsnorm_gamma_ckv", "rope_sin", "rope_cos", "kv_cache", "kr_cache"]
+    for i, a in enumerate(args):
+        if isinstance(a, torch.Tensor):
+            print("[dsh-shim] %-18s %-22s %-16s fmt=%s"
+                  % (names[i] if i < len(names) else "arg%d" % i, tuple(a.shape),
+                     str(a.dtype).replace("torch.", ""), _format_of(a)), flush=True)
+    for k, v in sorted(kwargs.items()):
+        if isinstance(v, torch.Tensor):
+            print("[dsh-shim] %-24s %-22s %s" % (k, tuple(v.shape), str(v.dtype).replace("torch.", "")),
+                  flush=True)
+
+
 def _forward(*args, **kwargs):
-    # torch hands tensors to a library impl positionally: (token_x, weight_dq,
-    # weight_uq_qr, ...), while keyword-only arguments arrive as kwargs.
-    # MXFP8 -> bf16 (the only numerically safe configuration for Hcq=768), cached
     args = list(args)
+    # 1) MXFP8 -> bf16 when the caller provided e8m0 scales (cached)
     for w_idx, s_name in ((1, "dequant_scale_w_dq"), (2, "dequant_scale_w_uq_qr"), (4, "dequant_scale_w_dkv_kr")):
         if w_idx < len(args):
             converted, done = ensure_bf16(args[w_idx], kwargs.get(s_name))
@@ -187,25 +201,29 @@ def _forward(*args, **kwargs):
                 args[w_idx] = converted
     weight_uq_qr = args[2] if len(args) > 2 else kwargs.get("weight_uq_qr")
 
+    # 2) derive the quant mode from the actual dtypes (SGLang hardcodes 1)
     mode = infer_weight_quant_mode(weight_uq_qr, kwargs.get("dequant_scale_w_uq_qr"))
     if mode is not None and kwargs.get("weight_quant_mode") != mode:
         kwargs["weight_quant_mode"] = mode
         if mode == 0:
             for name in _WEIGHT_SCALE_ARGS:
                 kwargs.pop(name, None)
-    # the kernel needs FRACTAL_NZ for the three projection matrices
-    for idx in (1, 2, 4):  # weight_dq, weight_uq_qr, weight_dkv_kr
+
+    # 3) the kernel wants FRACTAL_NZ for the three projection matrices
+    for idx in (1, 2, 4):
         if idx < len(args):
             args[idx] = ensure_nz(args[idx])
-    return torch.ops.npu.mla_prolog_v3(*args, **kwargs)
+
+    try:
+        return torch.ops.npu.mla_prolog_v3(*args, **kwargs)
+    except Exception:
+        if _DEBUG():
+            _dump_args(args, kwargs)
+        raise
 
 
 def register_custom_alias(force: bool = False) -> bool:
-    """Register ``custom::npu_mla_prolog_v3`` if nothing else provides it.
-
-    Returns True when this call registered the alias, False when the operator was
-    already available (the real ``custom_ops`` package takes precedence).
-    """
+    """Register ``custom::npu_mla_prolog_v3`` when nothing else provides it."""
     if not force:
         try:
             torch.ops.custom.npu_mla_prolog_v3
@@ -222,6 +240,92 @@ def register_custom_alias(force: bool = False) -> bool:
     return True
 
 
+def mla_prolog_v3_out(*args, **kwargs):
+    """Forward to the caller-buffered variant of the ported kernel."""
+    return torch.ops.npu.mla_prolog_v3_out(*args, **kwargs)
+
+
+# ------------------------------------------------------------- SGLang module patching
+class _WeightHolder(torch.nn.Module):
+    """Minimal stand-in exposing ``.weight`` (what forward_mlaprolog reads).
+
+    Derives from ``nn.Module`` because it replaces a child module attribute.
+    """
+
+    def __init__(self, weight):
+        super().__init__()
+        self.weight = weight
+
+
+def prepare_mlapolog_bf16_weights(module):
+    """Recompute the module's three projections as bf16 FRACTAL_NZ, in place.
+
+    Works from whatever the module actually holds (fp8 + ``weight_scale_inv`` for an
+    MXFP8 checkpoint, or plain bf16), so it does not depend on SGLang's
+    ``mlaprolog_preprocess_weight`` output.
+    """
+    fused = getattr(module, "qkv_a_proj", None)
+    q_b = getattr(module, "q_b_proj", None)
+    fused_w = getattr(fused, "weight", None) if fused is not None else None
+    q_b_w = getattr(q_b, "weight", None) if q_b is not None else None
+    hcq = getattr(module, "q_lora_rank", None)
+
+    if _DEBUG():
+        print("[dsh-prep] fused: type=%s weight=%s %s scale_inv=%s" % (
+            type(fused).__name__, tuple(fused_w.shape) if fused_w is not None else None,
+            str(fused_w.dtype).replace("torch.", "") if fused_w is not None else "-",
+            tuple(getattr(fused, "weight_scale_inv").shape) if getattr(fused, "weight_scale_inv", None) is not None else None),
+            flush=True)
+        print("[dsh-prep] q_b:   type=%s weight=%s %s scale_inv=%s" % (
+            type(q_b).__name__, tuple(q_b_w.shape) if q_b_w is not None else None,
+            str(q_b_w.dtype).replace("torch.", "") if q_b_w is not None else "-",
+            tuple(getattr(q_b, "weight_scale_inv").shape) if getattr(q_b, "weight_scale_inv", None) is not None else None),
+            flush=True)
+
+    # --- fused q/kv down projection -> split into q_a and kv_a
+    if fused_w is not None and hcq:
+        nd = dequant_to_in_out(fused_w, getattr(fused, "weight_scale_inv", None))
+        if nd is None:
+            plain = to_nd(fused_w)
+            nd = plain if plain is not None and plain.dtype == torch.bfloat16 else None
+        if nd is not None and nd.dim() == 2 and nd.shape[1] > hcq:
+            module.q_a_proj_weight = torch_npu.npu_format_cast(nd[:, :hcq].contiguous(), _NZ_FORMAT)
+            module.kv_a_proj_weight = torch_npu.npu_format_cast(nd[:, hcq:].contiguous(), _NZ_FORMAT)
+
+    # --- q_b up projection -> bf16 NZ behind a holder (the call site reads .weight)
+    if q_b_w is not None:
+        nd = dequant_to_in_out(q_b_w, getattr(q_b, "weight_scale_inv", None))
+        if nd is None:
+            plain = to_nd(q_b_w)
+            nd = plain if plain is not None and plain.dtype == torch.bfloat16 else None
+        if nd is not None:
+            module.q_b_proj = _WeightHolder(torch_npu.npu_format_cast(nd, _NZ_FORMAT))
+    return module
+
+
+def dequant_to_in_out(weight, scale_inv):
+    """FP8 weight (+ MXFP8 ``weight_scale_inv``) -> bf16 ``[in, out]``, or None.
+
+    Detects the weight orientation from the scale's output dimension, so it handles
+    both the scheme's transposed ``[in, out]`` and a plain ``[out, in]`` weight.
+    """
+    if weight is None or scale_inv is None or weight.dtype != torch.float8_e4m3fn:
+        return None
+    nd = to_nd(weight)
+    if scale_inv.dim() != 3:
+        return None
+    out_dim = scale_inv.shape[1]
+    if nd.shape[1] == out_dim:               # [in, out]
+        scale = _scale_from_inv(scale_inv, out_dim, nd.shape[0])
+        return dequant_mxfp8(nd, scale) if scale is not None else None
+    if nd.shape[0] == out_dim:               # [out, in] -> transpose
+        scale = _scale_from_inv(scale_inv, out_dim, nd.shape[1])
+        if scale is None:
+            return None
+        return dequant_mxfp8(nd, scale).t().contiguous()
+    return None
+
+
 def with_kv_b_proj_ignored(ignore):
     """Return ``ignore`` with the marker SGLang's ``_is_mlaprolog`` looks for."""
     ignore = list(ignore or [])
@@ -231,141 +335,71 @@ def with_kv_b_proj_ignored(ignore):
 
 
 def enable_mlaprolog() -> bool:
-    """Make SGLang route the attention prologue through ``forward_mlaprolog``.
-
-    ``mla_preprocess`` decides with
-    ``any(re.fullmatch(r".*kv_b_proj", l) for l in quant_config.ignore)``, but the
-    modelslim config fills ``ignore`` from an ``"ignore"`` key (absent in the GLM
-    ``quant_model_description.json``), so ``ignore == []`` and the fused path is never
-    taken even though ``kv_b_proj`` *is* stored as FLOAT.  Patch
-    ``ModelSlimConfig.__init__`` to append the marker.
-
-    Returns True when sglang was importable and the patch is in place.
-    """
+    """Make SGLang route the attention prologue through ``forward_mlaprolog``."""
     try:
         from sglang.srt.layers.quantization.modelslim import modelslim as _modelslim
-    except Exception:  # noqa: BLE001 - sglang not importable in this process
+    except Exception:  # noqa: BLE001
         return False
+
     cls = _modelslim.ModelSlimConfig
-    if getattr(cls, "_mlaprolog_patched", False):
-        return True
-    orig_init = cls.__init__
+    if not getattr(cls, "_mlaprolog_patched", False):
+        orig_init = cls.__init__
 
-    def patched_init(self, *args, **kwargs):
-        orig_init(self, *args, **kwargs)
-        self.ignore = with_kv_b_proj_ignored(getattr(self, "ignore", None))
+        def patched_init(self, *args, **kwargs):
+            orig_init(self, *args, **kwargs)
+            self.ignore = with_kv_b_proj_ignored(getattr(self, "ignore", None))
 
-    cls.__init__ = patched_init
+        cls.__init__ = patched_init
+        cls._mlaprolog_patched = True
 
-    # MXFP8 checkpoints have no `q_b_proj.weight_scale` (the scheme renames it to
-    # weight_scale_inv), so NPUFusedMLAPreprocess.__init__ raises.  Provide an empty
-    # placeholder: the ported kernel never consumes it (the shim works in bf16).
     try:
         from sglang.srt.hardware_backend.npu.attention import mla_preprocess as _mla
     except Exception:  # noqa: BLE001
-        _mla = None
-    if _mla is not None and not getattr(_mla.NPUFusedMLAPreprocess, "_mlaprolog_ctor_patched", False):
-        mla_cls = _mla.NPUFusedMLAPreprocess
-        ctor = mla_cls.__init__
+        return True
 
-        def patched_ctor(self, *args, **kwargs):
-            try:
-                ctor(self, *args, **kwargs)
-            except AttributeError as exc:
-                if "weight_scale" not in str(exc):
-                    raise
-                q_b = kwargs.get("q_b_proj")
-                if q_b is None and len(args) > 3:
-                    q_b = args[3]
-                if q_b is not None:
-                    q_b.weight_scale = torch.empty(0, dtype=torch.float32)
-                ctor(self, *args, **kwargs)
+    mla_cls = _mla.NPUFusedMLAPreprocess
+    if getattr(mla_cls, "_mlaprolog_ctor_patched", False):
+        return True
 
-        mla_cls.__init__ = patched_ctor
-        mla_cls._mlaprolog_ctor_patched = True
+    ctor = mla_cls.__init__
 
-    cls._mlaprolog_patched = True
+    def patched_ctor(self, *args, **kwargs):
+        try:
+            ctor(self, *args, **kwargs)
+        except AttributeError as exc:
+            if "weight_scale" not in str(exc):
+                raise
+            q_b = kwargs.get("q_b_proj") or (args[3] if len(args) > 3 else None)
+            if q_b is not None:
+                q_b.weight_scale = torch.empty(0, dtype=torch.float32)
+            ctor(self, *args, **kwargs)
+
+    mla_cls.__init__ = patched_ctor
+    mla_cls._mlaprolog_ctor_patched = True
+
+    preprocess = mla_cls.mlaprolog_preprocess_weight
+
+    def patched_preprocess(self, *args, **kwargs):
+        out = preprocess(self, *args, **kwargs)
+        try:
+            prepare_mlapolog_bf16_weights(self)
+        except Exception as exc:  # noqa: BLE001
+            print("[dsh-patch] prepare_mlapolog_bf16_weights failed:", exc, flush=True)
+        return out
+
+    mla_cls.mlaprolog_preprocess_weight = patched_preprocess
+
+    orig_forward = mla_cls.forward
+
+    def patched_forward(self, positions, hidden_states, forward_batch, zero_allocator):
+        # forward() prefers the int8 forward_mlapo whenever the quant method reports
+        # modelslim - MXFP8 also does - but that path needs W8A8 `input_offset`s.
+        for attr in ("qkv_a_proj", "q_b_proj"):
+            mod = getattr(self, attr, None)
+            w = getattr(mod, "weight", None)
+            if w is not None and w.dtype == torch.float8_e4m3fn:
+                return self.forward_mlaprolog(positions, hidden_states, forward_batch)
+        return orig_forward(self, positions, hidden_states, forward_batch, zero_allocator)
+
+    mla_cls.forward = patched_forward
     return True
-
-
-def _scale_from_inv(scale_inv, out_dim, in_dim, block=32):
-    """Rebuild the [out, in/block] e8m0 scale from the MXFP8 scheme's [in/2b, out, 2] view."""
-    if scale_inv is None:
-        return None
-    if scale_inv.dim() == 3:
-        # [in/2b, out, 2] (or [out, in/2b, 2] for an unprocessed module)
-        if scale_inv.shape[1] == out_dim:
-            scale = scale_inv.permute(1, 0, 2).reshape(out_dim, -1)
-        else:
-            scale = scale_inv.reshape(out_dim, -1)
-    else:
-        scale = scale_inv.reshape(out_dim, -1)
-    want = in_dim // block
-    if scale.shape[1] != want:
-        return None
-    return scale.contiguous()
-
-
-def _dequant_nz(fp8_weight, scale, block=32):
-    """fp8 (any format) + [out, in/block] e8m0 scale -> bf16 FRACTAL_NZ."""
-    if fp8_weight is None or scale is None:
-        return None
-    nd = fp8_weight
-    fmt = None
-    try:
-        fmt = torch_npu.get_npu_format(nd)
-    except Exception:  # noqa: BLE001
-        fmt = None
-    if fmt is not None and fmt != 2:  # 2 == ACL_FORMAT_ND
-        nd = torch_npu.npu_format_cast(nd, 2)
-    bf16 = dequant_mxfp8(nd, scale)
-    return torch_npu.npu_format_cast(bf16, _NZ_FORMAT)
-
-
-class _WeightHolder:
-    """Minimal stand-in exposing ``.weight`` (what forward_mlaprolog reads)."""
-
-    def __init__(self, weight):
-        self.weight = weight
-
-
-def prepare_mlapolog_bf16_weights(module):
-    """Convert an ``NPUFusedMLAPreprocess``'s three projections to bf16 NZ in place.
-
-    Must run after ``mlaprolog_preprocess_weight()`` (which produces
-    ``q_a_proj_weight`` / ``kv_a_proj_weight``) and after the quant scheme's
-    ``process_weights_after_loading`` (which produces ``weight_scale_inv``).
-    """
-    fused = getattr(module, "qkv_a_proj", None)
-    q_b = getattr(module, "q_b_proj", None)
-
-    # down projections: q_a -> [He, Hcq], kv_a -> [He, Hckv+Dr], split by q_lora_rank
-    fused_scale = getattr(fused, "weight_scale_inv", None) if fused is not None else None
-    if fused_scale is not None and fused_scale.dim() == 3 and fused_scale.shape[1] > 0:
-        out_total = fused_scale.shape[1]
-        in_dim = fused_scale.shape[0] * 64
-        scale_fused = _scale_from_inv(fused_scale, out_total, in_dim)
-        if scale_fused is not None:
-            hcq = module.q_lora_rank
-            q_a = _dequant_nz(module.q_a_proj_weight, scale_fused[:hcq].contiguous())
-            kv_a = _dequant_nz(module.kv_a_proj_weight, scale_fused[hcq:].contiguous())
-            if q_a is not None:
-                module.q_a_proj_weight = q_a
-            if kv_a is not None:
-                module.kv_a_proj_weight = kv_a
-
-    # q_b: [in, out] already transposed by the MXFP8 scheme
-    if q_b is not None and getattr(q_b, "weight", None) is not None:
-        w = q_b.weight
-        if w.dtype == torch.float8_e4m3fn:
-            out_dim, in_dim = w.shape[1], w.shape[0]
-            scale = _scale_from_inv(getattr(q_b, "weight_scale_inv", None), out_dim, in_dim)
-            bf16 = _dequant_nz(w, scale)
-            if bf16 is not None:
-                module.q_b_proj = _WeightHolder(bf16)
-    return module
-
-
-def mla_prolog_v3_out(*args, **kwargs):
-    """Forward to the caller-buffered variant of the ported kernel."""
-    return torch.ops.npu.mla_prolog_v3_out(*args, **kwargs)
