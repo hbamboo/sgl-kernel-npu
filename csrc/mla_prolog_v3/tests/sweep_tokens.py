@@ -23,9 +23,17 @@ print("%6s %10s %10s %10s %10s" % ("T", "query", "q_rope", "kv_cache", "kr_cache
 for t in TESTS:
     env = dict(ENV)
     env["T"] = str(t)
-    out = subprocess.run([sys.executable, "csrc/mla_prolog_v3/tests/test_glm_mla_prolog_precision.py"],
-                         capture_output=True, text=True, env=env)
-    text = out.stdout + out.stderr
+    # A subprocess can transiently fail to acquire the device when many are spawned in a
+    # row ("rtSetDevice ... device retain error").  Retry only on that, never on a kernel
+    # fault (507015) or a numerical failure.
+    for attempt in range(3):
+        out = subprocess.run([sys.executable, "csrc/mla_prolog_v3/tests/test_glm_mla_prolog_precision.py"],
+                             capture_output=True, text=True, env=env)
+        text = out.stdout + out.stderr
+        device_flake = ("rtSetDevice" in text or "device retain" in text) and "507015" not in text
+        if out.returncode == 0 or not device_flake:
+            break
+        print("  (retry T=%d, device busy)" % t)
     if out.returncode != 0:
         print("%6d FAILED (rc=%d)" % (t, out.returncode))
         failures.append((t, "rc"))
