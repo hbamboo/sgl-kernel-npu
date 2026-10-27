@@ -60,6 +60,7 @@ kernel 里只发一次 `MatmulSplitN`，输出落到同一块 workspace 的相�
 |---|---|
 | 改动点（共 7 处） | ① tiling 新增 `fusedDownN` 字段与该分支；② `mmCqParam_.orgKc` 用 `fusedDownN`；③ `AicProcess` 在 fused 模式下跳过第二次 `MatmulSplitN`；④ `RmsNormCq` 的 `rmsNormCqOffset += fusedDownN`；⑤ ckv/kr 侧读取的基址 `+Hcq`、跨度 `fusedDownN`；⑥ workspace 尺寸按 `[T, fusedDownN]`；⑦ host 侧拼接 `[He, 1344]` 权重并缓存 |
 | 新增 tiling 字段 | `fusedDown`（0/1）、`fusedDownN`（1344）|
+| 额外的形状推导覆盖 | tiling 是**从 `weightDkvKr` 自身的 N 维反推 `Hckv`** 的（`mla_prolog_tiling.cpp:346-352`：`hckvSize = weightDkvKr.dim(1) - drSize`）。若把融合权重放进该槽位，必须同时把 `hckvSize` 改为从 `kvCache.dim(3)` 取、`drSize` 从 `ropeCos.dim(-1)` 取，并逐项核对依赖 `hckvSize` 的检查（gamma_ckv、kr_cache、workspace 等）。这是第 8/9 处改动，也是本方案最容易出错的地方 |
 | 同步影响 | **无**：阶段数从 2 变 1，现有 flag 序列不变（第二个 `MatmulSplitN` 直接跳过，其后 flag 仍由所有 block 执行）|
 | 数值可行性 | **已验证**：`probe_fused_down.py` 在 m=1/8/64/128/256 上比较 `x·[W_dq|W_dkv]` 与两次独立 GEMM，结果**逐位相同**（max\|d\| = 0.00e+00）——融合不引入任何数值差异 |
 | 收益预期 | **8–13% 预填**（按上面的成本分解：每 128-token 步的 mm1+mm2 ≈24.5 µs，融合若能省掉一个阶段的固定开销即为 7–12 µs/步）。这个区间仍是估计，最终以改完后同场 A/B 实测为准；早先的"3–6%"与"50%"两个说法都已作废（前者基于 mm2 扩核实验的外推，后者是 `torch.matmul` 调用开销造成的假象）|
