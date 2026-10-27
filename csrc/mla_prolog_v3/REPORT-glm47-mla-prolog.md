@@ -322,3 +322,47 @@ T=1024 329.3 µs、T=2048 **650.0 µs**。
 | C. 换 K 切分 | 让每核拿满 N、只切 K（cluster/workspace 归约） | 预填 mm1+mm2 有望 −30% | 高：kernel 侧 3510 无现成实现 |
 
 三条都需要改 kernel 数据流，不属于调参范围；当前交付基线为"精度全部验证通过 + 比厂商快 + 解码 2.36x"。
+
+---
+
+## 13. SGLang 接入落地（2026-10-27 更新，取代第 8.2 节的"端到端阻塞"）
+
+在 SGLang 仓（`/sgl-workspace/sglang`）新建分支 **`feat/glm47_mlaprolog`**（基线为干净 `v0.5.19`，commit `5ac6236`），
+把本算子正式接进 MLA prologue，不再用 `sitecustomize` monkeypatch。
+
+**开关**：`SGLANG_NPU_USE_MLAPO=1 SGLANG_NPU_USE_MLAPO_V3=1`（A 臂 `SGLANG_NPU_USE_MLAPO=0`）。
+
+**改动（2 个文件、约 150 行）**
+
+- `hardware_backend/npu/attention/mla_preprocess.py`
+  - 新开关 `is_mlaprolog_v3_enabled()`；`is_mla_preprocess_enabled()` 在 v3 打开时也为真（复用 MLAPO 的
+    `save_kv_cache=False` 契约）；
+  - `__init__` 兼容 `weight_scale_inv`（MXFP8）——原来是 `weight_scale` 硬编码，MXFP8 checkpoint 必崩；
+  - `_mlaprolog_v3_preprocess_weight()`：融合的 `qkv_a`（fp8 + per-32 e8m0）反量化一次后按输出维切分，
+    `q_a`/`kv_a`/`q_b` 转 bf16 FRACTAL_NZ，`w_kc` 直接复用；
+  - `forward_mlaprolog_v3()`：每层一次 `torch.ops.npu.mla_prolog_v3`，直写 kv/kr cache（PA_BSND），
+    返回 8 元组（`q_norm` / `dynamic_scale` 仅供 DSA indexer，本模型为 `None`）。
+- `hardware_backend/npu/modules/deepseek_v2_attention_mla_npu.py`
+  - 修既有 bug：`forward_mla_prepare_npu` 构造 `NPUFusedMLAPreprocess` 时漏传 `v_head_dim`，导致
+    `quant_config` 被当成 `v_head_dim`、`self.quant_config=None`；
+  - MLA-prolog 的 8 元组解包（原来直接 `too many values to unpack`）；
+  - 分支判定复用 `uses_mlaprolog()`。
+
+**这就解掉了第 8.2 节的阻塞**：GLM-4.7（`glm4_moe_lite`）没有 DSA indexer，`qr`（= `query_norm`）与
+`dynamic_scale` 根本不被消费，因此不需要上游那条"qr 必须是 int8"的假设；真正需要补的只是
+"调用方按 `uses_mlaprolog()` 解 7 或 8 个返回值"。
+
+**实测（GLM-4.7-Flash MXFP8，Ascend950DT 单卡，SGLang v0.5.19）**
+
+| 项 | A（原 6 算子） | B（MlaPrologV3） |
+|---|---|---|
+| GSM8K 1319，5-shot | 0.875 / 0.873 | **0.878 / 0.879** |
+| 解码 ITL p50 bs8 / bs32 / bs64 | 15.06 / 19.34 / 25.69 ms | **13.58 / 17.91 / 24.19 ms**（−9.8% / −7.4% / −5.8%）|
+| 输出吞吐 bs8 / bs32 / bs64 | 410 / 1533 / 2229 tok/s | **555 / 1639 / 2336 tok/s**（+35% / +6.9% / +4.8%）|
+| 预填 TTFT p50（bs64，in1024） | 827 ms | 834 ms（持平）|
+| server 内层覆盖 | — | **47/47 层**全部走本算子，无 tiling 报错 |
+
+细节、原始日志与脚本：`/mnt/sfs_turbo/hxd/work_glm47_ab`（git 仓，`RESULTS.md`）。
+
+**注意**：预填阶段本算子并不更快（T=4096 单层 1353 µs vs 6 算子链 366 µs，见第 7 节），
+端到端收益全部来自解码态（T≤128）和"6 个算子合成 1 个"的 launch/中间张量开销。
