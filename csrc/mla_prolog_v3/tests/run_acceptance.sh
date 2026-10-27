@@ -50,6 +50,7 @@ run "python_api_real_weights" $T8 csrc/mla_prolog_v3/tests/test_python_api.py
 run "shim_ckpt_orientation" $T8 csrc/mla_prolog_v3/tests/test_shim_ckpt_orientation.py
 run "example_three_paths" $T8 csrc/mla_prolog_v3/tests/e2e/example_call.py
 run "pure_logic_unit_tests" $T8 csrc/mla_prolog_v3/tests/test_pure_logic.py
+run "multi_stream"          $T8 csrc/mla_prolog_v3/tests/test_multistream.py
 run "perf_sweep"           $T8 csrc/mla_prolog_v3/tests/bench_mla_prolog.py
 
 echo

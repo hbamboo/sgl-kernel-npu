@@ -129,6 +129,10 @@ Measured machine limits on this card:
 * HBM bandwidth (256 MiB copy): **3.27 TB/s**
 * bf16 matmul (4096^3): **424 TFLOP/s**
 * machine balance: 424 / 3.27 = **130 FLOP/byte**
+* **Per-stream scratch buffer**: SGLang issues the prologue on a side stream, so the same
+  thread can have two in-flight launches with identical shapes.  The workspace slot is
+  keyed by (tiling, device, stream) so they cannot share scratch memory; a two-stream
+  test verifies both results stay identical to sequential execution.
 * **High-level Python entry** `sgl_kernel_npu.mla_prolog_v3` / `..._out`: accepts the
   checkpoint's fp8 weights *plus* their e8m0 scales in the original `[out, in]` ND layout and
   does the dequantisation, reorientation, NZ cast and quant-mode resolution itself (verified
@@ -397,7 +401,7 @@ tile boundary (1..1000) all stay >= 0.9995 on the five outputs.
 
 It runs four real-checkpoint layers (0/2/23/46) so the validation is not tied to one layer, and repeats layer 2 through the PyBind entry (`PYBIND=1`), which reproduces the torch.ops numbers exactly - the fast path is verified against the golden on real weights, not only bit-identical against the torch path.
 
-Last run: **22/22 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
+Last run: **23/23 pass**, decode 36.2 us (`_out`) / 32.9 us (PyBind), T=256 89.8 us,
 T=2048 649.9 us.
 
 ## Status
