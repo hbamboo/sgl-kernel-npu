@@ -35,6 +35,7 @@ fp8 权重 + e8m0 scale（原始 `[out,in]` ND 布局），自动反量化/转�
 | 来源 | `/mnt/paas/hxdnpu/ops-transformer/attention/mla_prolog_v3` 完整复制，并补入其依赖 `attention/mla_prolog` |
 | 构建 | 纳入 sgl-kernel-npu 的 kernels 模块（A5 only），产出 `libsgl_kernel_npu.so`；**空目录全新构建已验证**（configure/build 均 rc=0、0 error、产物 3.08 MB） |
 | 调用路径 | ① `torch.ops.npu.mla_prolog_v3`（分配输出）② `torch.ops.npu.mla_prolog_v3_out`（调用方给缓冲）③ **PyBind 直调** `libsgl_kernel_npu.mla_prolog_v3_out`（跳过 dispatcher）；三条路径对同一输入输出**逐位一致**，且都已用真实权重对过 golden |
+| 稳态吞吐 | 47 层背靠背（一次 decode step）：**18.6 µs/层**（T=1）→ **0.87 ms/step**；T=64 时 31.1 µs → 1.46 ms。此时三条入口无差别，成本由 kernel 决定（主机优化只降单次延迟）|
 | 验收 | `bash csrc/mla_prolog_v3/tests/run_acceptance.sh 5` → **12/12 通过** |
 | 平台 | Ascend950DT（DAV_3510），CANN 9.1.0，torch_npu 2.10 |
 
