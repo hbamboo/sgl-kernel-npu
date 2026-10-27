@@ -206,6 +206,16 @@ bool MlaPrologV3RunTiling(const MlaPrologV3Tensors &tensors, optiling::MlaProlog
 
     optiling::MlaPrologTiling tiling;
     const ge::graphStatus st = tiling.RunBigKernelTiling(ctx, tilingData);
+    if (std::getenv("DSH_MLA_V3_DUMP") != nullptr) {
+        const auto *b = &tilingData->baseParams;
+        std::fprintf(stderr,
+                     "[dsh-dump] step=%u vecBlocks=%u | mm1 %u x %u | mm2 %u x %u | mm3 %u x %u | "
+                     "mm4 %u x %u | Cq=%u Ckv=%u X=%u N=%u groups(m1 %u/%u m2 %u/%u)\n",
+                     b->stepBatchSize, b->vectorBlockNum, b->mm1BlockNum, b->mm1SingleCoreN, b->mm2BlockNum,
+                     b->mm2SingleCoreN, b->mm3BlockNum, b->mm3SingleCoreN, b->mm4BlockNum,
+                     b->mm4SingleCoreBatch, b->headSizeCq, b->headSizeCkv, b->headSizeX, b->numHeadSize,
+                     b->mm1NGroup, b->mm1KGroup, b->mm2NGroup, b->mm2KGroup);
+    }
     if (st != ge::GRAPH_SUCCESS && std::getenv("DSH_MLA_V3_DEBUG") != nullptr) {
         auto dump = [](const char *name, const std::vector<int64_t> &d) {
             std::fprintf(stderr, "[dsh-v3] %-22s", name);
