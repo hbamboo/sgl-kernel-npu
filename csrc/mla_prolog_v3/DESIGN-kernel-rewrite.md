@@ -70,7 +70,21 @@ kernel 里只发一次 `MatmulSplitN`，输出落到同一块 workspace 的相�
 
 ---
 
-## 方案 B：解码态持久 kernel（收益最大，解码 18.2 → 8~10 µs）
+## 方案 B′（首要）：解码态"少阶段"kernel —— 针对同步延迟，而非带宽
+
+**先决事实**（`PERF-COUNTEREVIDENCE.md` §1d）：解码耗时与权重字节数无关（3.75→16.5 MB 时延不变，
+斜率 0.02 µs/MB），也与核数、量化模式无关；18.2 µs 基本是 **4 个阶段各自的跨核 barrier 往返**。
+
+因此改写要点不是"用 AIV 做 GEMV"（那是带宽视角），而是**减少阶段数与 barrier 次数**：
+
+| 现在 | 目标 | 手段 |
+|---|---|---|
+| mm1 → 向量(rmsnorm/quant) → mm3(mmQcQr) → mm4(mmQn) → 向量(rope/scatter) = 4–5 段 | 2 段 | ① 把 ckv/kr 的 rmsnorm 与 cq 的 rmsnorm 合并到同一次向量段；② 把 mm3 与 mm4 之间用"单核内串行 + 一次 barrier"替代逐段 barrier；③ 全 T≤16 时只用 16 个 block，减少 barrier 参与方 |
+
+验收门与回退条件同下（golden 五路 ≥0.9999、T≥64 走旧路径且必须逐位一致、失败即回退）。
+预期：4 段 → 2 段 ⇒ 18.2 → 10–12 µs，稳态 18.6 → ~12 µs/call，每 step 约省 0.3 ms。
+
+## 方案 B：解码态持久 kernel（若带宽成为瓶颈再做）
 
 **为什么可行**：解码时 m=T≤16，cube 的 GEMV 效率只有 ~29%，而权重必须整块流过 L1。
 把 m 方向交给向量单元（AIV）做 FMA、把权重用 MTE2 顺序流式送入 UB，就能把"每 128 列一次
