@@ -9,7 +9,7 @@ the PyBind entry / 36.2 us via `torch.ops..._out`, prefill 89.7 us at T=256 and 
 T=2048.  The bandwidth/compute-utilisation target (decode 29-30%, prefill 13-16%) is **not**
 met: the kernel is L1-capacity bound (512 KB fully allocated) and every non-rewrite path was
 measured and excluded - see "Remaining prefill headroom" and the fusion/split-K notes below.
-Full report: `REPORT-glm47-mla-prolog.md`; maintenance: `MAINTENANCE.md`; why the target is not met: `PERF-COUNTEREVIDENCE.md`; how to go further: `DESIGN-kernel-rewrite.md`.
+**Delivery summary: `DELIVERY.md`.** Full report: `REPORT-glm47-mla-prolog.md`; maintenance: `MAINTENANCE.md`; why the target is not met: `PERF-COUNTEREVIDENCE.md`; how to go further: `DESIGN-kernel-rewrite.md`.
 
 Source: `/mnt/paas/hxdnpu/ops-transformer/attention/mla_prolog_v3` (copied verbatim,
 plus its shared implementation directory `attention/mla_prolog`, which the op includes
