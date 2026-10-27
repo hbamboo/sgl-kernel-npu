@@ -67,3 +67,4 @@ python/sgl_kernel_npu/sgl_kernel_npu/config.ini
 
 # leftover build tree from before the port (kept by another user, ignore in git)
 build.hostbuild.bak/
+python/sgl_kernel_npu/dist/
