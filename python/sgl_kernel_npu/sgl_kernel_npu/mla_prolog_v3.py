@@ -31,7 +31,7 @@ from .mla_prolog_v3_compat import (
     reorient_to_abi,
 )
 
-__all__ = ["mla_prolog_v3", "mla_prolog_v3_out"]
+__all__ = ["mla_prolog_v3", "mla_prolog_v3_out", "allocate_outputs"]
 
 _WEIGHT_SCALE_ARGS = (
     "dequant_scale_x",
@@ -80,6 +80,32 @@ def _alloc(token_x, n_heads, hckv, dr, hcq, weight_quant_mode, query_norm_flag, 
     else:
         dq_norm = torch.empty(tokens, 1, dtype=torch.float32, device=dev)
     return q, q_rope, dq_nope, q_norm, dq_norm
+
+
+def allocate_outputs(
+    token_x,
+    weight_dq,
+    weight_uk,
+    rope_sin,
+    *,
+    query_norm_flag: bool = False,
+    weight_quant_mode: int = 0,
+    kv_cache_quant_mode: int = 0,
+):
+    """Allocate the five buffers ``mla_prolog_v3_out`` expects.
+
+    The shapes are not obvious (an empty 1-D tensor where nothing is quantised, ``[T, Hcq/32]``
+    for an MXFP8 query scale, ...), and the kernel validates them, so use this helper instead
+    of hand-rolling them:
+
+        q, q_rope, dq_nope, q_norm, dq_norm = allocate_outputs(
+            x, w_dq, w_uk, sin, query_norm_flag=True, weight_quant_mode=0)
+        mla_prolog_v3_out(..., q, q_rope, dq_nope, q_norm, dq_norm, ...)
+    """
+    n_heads, hckv = weight_uk.shape[0], weight_uk.shape[2]
+    dr = rope_sin.shape[-1]
+    hcq = weight_dq.shape[-1]
+    return _alloc(token_x, n_heads, hckv, dr, hcq, weight_quant_mode, query_norm_flag, kv_cache_quant_mode)
 
 
 def mla_prolog_v3_out(
