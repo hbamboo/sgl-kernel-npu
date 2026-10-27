@@ -31,9 +31,11 @@ kernel 里只发一次 `MatmulSplitN`，输出落到同一块 workspace 的相�
 |---|---|
 | 涉及文件 | `op_host/mla_prolog_tiling.cpp`（新增 `mm1N` = Hcq+Hckv+Dr 的 fill 分支）、`op_kernel/arch35/kernel_mla_prolog_split_n_arch35.h`（`AicProcess` 去掉第二次 `MatmulSplitN`）、`op_host/mla_prolog_v3_host.{h,cpp}`（新增 fused 权重入参或把拼接放在 host 侧缓存）|
 | 新增 tiling 字段 | `fusedDown`（0/1）、`mm12SingleCoreN`、`mm12BlockNum` |
-| 验收门 | 现有 22 项全过（尤其 T=8/256 golden 与厂商逐位）；预填 T=256 预期 89.7 → 86~87 µs |
-| 回退条件 | 任一 golden cosine 下降或 T=256 未降 ≥2% 即回退 |
-| 风险 | 低（无新同步），但要保证向量侧读取偏移对两段都正确 |
+| 数值可行性 | **已验证**：`probe_fused_down.py` 在 m=1/8/64/128/256 上比较 `x·[W_dq|W_dkv]` 与两次独立 GEMM，结果**逐位相同**（max\|d\| = 0.00e+00）——融合不引入任何数值差异 |
+| 收益预期 | **未知，需实测**。早先"3–6%"的估计建立在 mm2 扩核实验（<1%）上，但该实验只改了一个阶段内部的分核，不能推出"少一个阶段"的收益；`probe_fused_down.py` 的 50% 差距来自 `torch.matmul` 的调用开销（单次 ≈24 µs，比整个 kernel 阶段还大），不能用来估计 kernel 收益。真实收益只能靠改完后测 |
+| 验收门 | 现有 22 项全过（尤其 T=8/256 golden 与厂商逐位）；预填 T=256 需要比 89.7 µs 有可复现下降（同场 A/B，≥2%）|
+| 回退条件 | 任一项验收失败或无可复现下降即回退 |
+| 风险 | 低（无新同步，且数值已证明逐位等价），但要保证向量侧读取偏移对两段都正确 |
 
 ---
 
