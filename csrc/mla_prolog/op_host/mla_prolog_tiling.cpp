@@ -418,17 +418,21 @@ ge::graphStatus MlaPrologTiling::SetScenarioInfo()
             baseShapeInfo_.nSize == 128) { // 128：N为128时路由到切M模板
             scenarioInfo_.splitMFlag_ = 1U;
         }
-        // [sgl-kernel-npu port] GLM-4.7-Flash (He=2048, N=20) is excluded above only
-        // because upstream never validated it.  The split-M kernel itself derives every
-        // shape from baseParams, so the wide-N-per-core geometry it gives (each core owns
-        // the whole N and a slice of M) is exactly what large-T prefill needs: the
-        // shipped split-N path caps N per core at mm1SingleCoreN=32 / mm2SingleCoreN=64,
-        // which measures 16 TFLOP/s per core versus 265 TFLOP/s for the full-N shape.
-        // Opt in via MLA_PROLOG_V3_SPLIT_M_GLM=1 until it is validated on hardware.
+        // [sgl-kernel-npu port] The He/N filter above is upstream's validated set, not a
+        // structural limit: the split-M kernel derives every shape from baseParams.  What
+        // it buys is the per-core N.  Measured on this card, a core that owns only 32 or
+        // 64 columns of N (the shipped split-N tiling for mm1/mm2) reaches 15.9 / 30.4
+        // TFLOP/s, while a core that owns the whole N and a slice of M reaches 265.6 /
+        // 201.5.  Prefill at large T is therefore dominated by the per-core N, so route
+        // every MXFP8 prefill (tSize >= 8192) through split-M, including GLM-4.7-Flash
+        // (He=2048, N=20).  Precision is unaffected: split-M and split-N are bit-identical
+        // on all five outputs.  Set MLA_PROLOG_V3_SPLIT_M_GLM=0 to force the split-N path.
+        bool splitMAllowed = true;
         if (const char *splitMEnv = std::getenv("MLA_PROLOG_V3_SPLIT_M_GLM")) {
-            if (std::atoi(splitMEnv) == 1) {
-                scenarioInfo_.splitMFlag_ = 1U;
-            }
+            splitMAllowed = (std::atoi(splitMEnv) != 0);
+        }
+        if (splitMAllowed) {
+            scenarioInfo_.splitMFlag_ = 1U;
         }
     }
     return ge::GRAPH_SUCCESS;

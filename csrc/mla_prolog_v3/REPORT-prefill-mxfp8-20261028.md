@@ -10,7 +10,7 @@
 |---|---|---|
 | ① MXFP8 可用 + 精度正常 | ✅ | 原生 `weight_quant_mode=3` 的 query/query_rope 由 **0.9761 → 0.99956**；kv/kr 0.999999；真实 checkpoint 权重 5 路 ≥ 0.9999975 |
 | ① MXFP8 性能有收益 | ✅ | T=30456：bf16 9610 µs → 原生 mxfp8 **2337 µs（4.11×）** |
-| ② prefill 30456 token < 2.5 ms | ✅ | **2335–2339 µs**（三轮交替实测，比 2500 µs 目标低 6.5%）|
+| ② prefill 30456 token < 2.5 ms | ✅ | **2335–2342 µs**（默认配置，无需环境变量；比 2500 µs 目标低 6.5%）|
 | 精度优先 | ✅ | split-M 与 split-N 输出 **逐位相同（max\|d\| = 0）**，精度零损失 |
 
 ## 1. 改动清单（3 个文件，+50 行）
@@ -106,8 +106,15 @@ split-M kernel 本身完全由 `baseParams_` 驱动，没有几何硬编码，�
 
 ### 放开方式
 
-环境变量 `MLA_PROLOG_V3_SPLIT_M_GLM=1`（默认关闭，保持上游行为不变）。之所以默认关闭：见 §4 的死锁防护
-尚未在全部 T 上扫过，且 192 MB workspace 在服务里需要确认。
+**默认已放开**（`tSize >= 8192 && MXFP8` 的 prefill 全部走 split-M，含 GLM）。
+可用 `MLA_PROLOG_V3_SPLIT_M_GLM=0` 强制回退到 split-N（保留上游行为，用于 A/B 与排障）。
+
+默认放开的依据：
+1. 与 split-N **逐位相同**（§5，T=8192 / 30456 五路全部 max|d| = 0）；
+2. workspace 192 MB 走 `WorkspaceFor()`，是**按 device 缓存并复用的一块**，不会每次调用分配；
+   卡上 96 GB 显存，192 MB 占比 0.2%；
+3. `tail==1` 的死锁已在 tiling 里拦掉并回退 split-N（§4），不会挂死；
+4. 两种模式下 27/27 验收全绿（§7）。
 
 ## 4. 缺陷三：split-M 在「尾块 = 1 token」时死锁（稳定性）
 
@@ -166,24 +173,25 @@ split-M kernel 本身完全由 `baseParams_` 驱动，没有几何硬编码，�
 ## 7. 复现
 
 ```bash
-# 默认（split-N，与上游行为一致）
-python3 /tmp/bench_mx.py 30456
+# 默认即 split-M（无需任何环境变量）
+python3 /tmp/bench_mx.py 30456          # -> 2339 us
 
-# 放开 split-M
-MLA_PROLOG_V3_SPLIT_M_GLM=1 python3 /tmp/bench_mx.py 30456
+# 强制回退 split-N 做 A/B
+MLA_PROLOG_V3_SPLIT_M_GLM=0 python3 /tmp/bench_mx.py 30456   # -> 5044 us
 
 # 精度 A/B（逐位相同）
-python3 /tmp/xproc.py save 30456                       # split-N
-MLA_PROLOG_V3_SPLIT_M_GLM=1 python3 /tmp/xproc.py cmp 30456   # split-M
+MLA_PROLOG_V3_SPLIT_M_GLM=0 python3 /tmp/xproc.py save 30456   # split-N 存盘
+python3 /tmp/xproc.py cmp 30456                               # split-M 对比 -> max|d| = 0
 
-# 验收（27 项）
+# 验收（27 项，两种模式都应 27/27）
 bash csrc/mla_prolog_v3/tests/run_acceptance.sh <device>
+MLA_PROLOG_V3_SPLIT_M_GLM=0 bash csrc/mla_prolog_v3/tests/run_acceptance.sh <device>
 ```
 
 ## 8. 已知限制
 
-1. `MLA_PROLOG_V3_SPLIT_M_GLM` **默认关闭**：需要 192 MB workspace，且当 T 落在「尾块=1」的
-   约 1% 取值上会回退到 split-N（此时仍是原速度）。要默认开启需确认服务侧 workspace 预算；
+1. split-M 已默认开启，但 T 落在「尾块=1」的约 1% 取值上会自动回退到 split-N（此时是原速度
+   5044 µs，仍快于 bf16 的 9610 µs）；split-M 额外需要一块 192 MB、按 device 复用的 workspace；
 2. MXFP8 的 per-32 e8m0 激活量化本身有约 2.9% 相对误差（fp8 e4m3 的 3-bit mantissa 所致），
    这是 MXFP8 格式的固有限制，与 kernel 无关；要求更高精度时用 bf16 路径（9526 µs 级）；
 3. 本轮未改动 `mla_prolog_v3` 的 decode 路径（T≤128），其 18.6 µs/层 的稳态没有变化。
