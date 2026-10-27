@@ -377,8 +377,37 @@ void mla_prolog_v3_out(const at::Tensor &token_x, const at::Tensor &weight_dq, c
                        double kc_scale)
 {
     const Baseline b = DeriveBaseline(token_x, weight_dq, weight_uk, rope_sin, weight_quant_mode);
-    TORCH_CHECK(query.numel() == b.tokens * b.n_heads * b.hckv, "query out buffer has the wrong size");
-    TORCH_CHECK(query_rope.numel() == b.tokens * b.n_heads * b.dr, "query_rope out buffer has the wrong size");
+    // Validate every output buffer: the kernel writes them without bounds checks, so a
+    // caller-provided buffer that is too small would corrupt device memory.
+    TORCH_CHECK(query.numel() == b.tokens * b.n_heads * b.hckv,
+                "mla_prolog_v3_out: query buffer has ", query.numel(), " elements, expected ",
+                b.tokens * b.n_heads * b.hckv);
+    TORCH_CHECK(query_rope.numel() == b.tokens * b.n_heads * b.dr,
+                "mla_prolog_v3_out: query_rope buffer has ", query_rope.numel(), " elements, expected ",
+                b.tokens * b.n_heads * b.dr);
+    const int64_t expect_nope = (kv_cache_quant_mode == 1) ? b.tokens * b.n_heads : 0;
+    TORCH_CHECK(dequant_q_nope.numel() == expect_nope,
+                "mla_prolog_v3_out: dequant_scale_q_nope buffer has ", dequant_q_nope.numel(),
+                " elements, expected ", expect_nope, " (kv_cache_quant_mode=", kv_cache_quant_mode, ")");
+    int64_t expect_norm = 0;
+    if (query_norm_flag) {
+        expect_norm = b.tokens * b.hcq;
+        if (weight_quant_mode == 1 || weight_quant_mode == 2) {
+            expect_norm = b.tokens * b.hcq; // int8 q_norm keeps one element per value
+        }
+    }
+    TORCH_CHECK(query_norm.numel() == expect_norm,
+                "mla_prolog_v3_out: query_norm buffer has ", query_norm.numel(), " elements, expected ", expect_norm,
+                " (query_norm_flag=", query_norm_flag, ", weight_quant_mode=", weight_quant_mode, ")");
+    int64_t expect_norm_scale = 0;
+    if (query_norm_flag && weight_quant_mode == 3) {
+        expect_norm_scale = b.tokens * (b.hcq / 32);
+    } else if (query_norm_flag && (weight_quant_mode == 1 || weight_quant_mode == 2)) {
+        expect_norm_scale = b.tokens;
+    }
+    TORCH_CHECK(dequant_q_norm.numel() == expect_norm_scale,
+                "mla_prolog_v3_out: dequant_scale_q_norm buffer has ", dequant_q_norm.numel(),
+                " elements, expected ", expect_norm_scale);
 
     OptionalInputs opt{cache_index, dequant_scale_x, dequant_scale_w_dq, dequant_scale_w_uq_qr,
                        dequant_scale_w_dkv_kr, quant_scale_ckv, quant_scale_ckr, smooth_scales_cq,

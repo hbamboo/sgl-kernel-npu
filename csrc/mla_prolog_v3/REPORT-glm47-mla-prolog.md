@@ -12,14 +12,14 @@
 |---|---|---|
 | ① 完整复制 + 可正确编译 | ✅ | 空目录 configure/build 均 rc=0、0 error、228 s；`libsgl_kernel_npu.so` 3.08 MB |
 | ② GLM-4.7 形状/量化适配 | ✅ | 放开 `Hcq=768`、MXFP8 自动反量化、6 类改动（详见第 3 节）|
-| ② 参考 CPU golden 精度通过 | ✅ | **24/24 验收**：合成 golden（T=8/256）、31 个 token 边界、真实权重 4 层、PyBind 路径、与厂商逐位一致 |
+| ② 参考 CPU golden 精度通过 | ✅ | **25/25 验收**：合成 golden（T=8/256）、31 个 token 边界、真实权重 4 层、PyBind 路径、与厂商逐位一致 |
 | ③ 带宽/算力利用率达理论上限 | ❌ | 解码 29–30%、预填 13–16%；L1 512 KB 全部分配 + split-K 无候选 + 重叠无收益 + 主机侧到顶（第 7 节）|
 
 **接入指南**：`tests/e2e/INTEGRATION.md` + 可运行示例 `tests/e2e/example_call.py`。
 **Python API**：`from sgl_kernel_npu.mla_prolog_v3 import mla_prolog_v3` —— 直接吃 checkpoint 的
 fp8 权重 + e8m0 scale（原始 `[out,in]` ND 布局），自动反量化/转向/NZ/模式推断。
 
-**一条命令验收**：`bash csrc/mla_prolog_v3/tests/run_acceptance.sh <device>` → 期望 `passed=24 failed=0`（约 7 分钟）。
+**一条命令验收**：`bash csrc/mla_prolog_v3/tests/run_acceptance.sh <device>` → 期望 `passed=25 failed=0`（约 7 分钟）。
 
 **性能**：解码 T=1 41.6 µs（`_out` 36.2 / PyBind **32.9**）；预填 T=256 89.7 µs、T=2048 649.9 µs。
 **调用**：`torch.ops.npu.mla_prolog_v3` / `..._out` / PyBind 直调，三者输出逐位一致。
