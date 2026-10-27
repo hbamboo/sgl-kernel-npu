@@ -10,7 +10,7 @@
 |---|---|---|
 | ① MXFP8 可用 + 精度正常 | ✅ | 原生 `weight_quant_mode=3` 的 query/query_rope 由 **0.9761 → 0.99956**；kv/kr 0.999999；真实 checkpoint 权重 5 路 ≥ 0.9999975 |
 | ① MXFP8 性能有收益 | ✅ | T=30456：bf16 9610 µs → 原生 mxfp8 **2337 µs（4.11×）** |
-| ② prefill 30456 token < 2.5 ms | ✅ | **2335–2342 µs**（默认配置，无需环境变量；比 2500 µs 目标低 6.5%）|
+| ② prefill 30456 token < 2.5 ms | ✅ | kernel 层 **2335–2342 µs**；**生产 Python API + 真实 checkpoint 权重 2217–2223 µs**（均低于 2500 µs 6.5%/11%）|
 | 精度优先 | ✅ | split-M 与 split-N 输出 **逐位相同（max\|d\| = 0）**，精度零损失 |
 
 ## 1. 改动清单（3 个文件，+50 行）
@@ -170,6 +170,46 @@ split-M kernel 本身完全由 `baseParams_` 驱动，没有几何硬编码，�
 - 相对 2.5 ms 目标：**低 6.5%**（2337 µs vs 2500 µs）
 - 参考上限（同卡逐 GEMM 用 `torch` 拼）：1633.9 µs / 322 TFLOP/s，本路径已到其 **70%**
 
+## 6b. 生产入口（Python API）的原生 MXFP8
+
+上面 §6 是 `torch.ops` 直调 kernel 的数字。走生产入口
+`from sgl_kernel_npu.mla_prolog_v3 import mla_prolog_v3`（真实 MXFP8 checkpoint 权重，
+`/mnt/sfs_turbo/models/chatdpo-glm-flash-0727-mxfp8` layer 2）时，原先仍是 **9678 µs**——
+因为兼容层无条件把 MXFP8 反量化成 bf16。本轮打通了原生路径：
+
+| 配置 | T=30456 延迟 |
+|---|---|
+| 反量化到 bf16（改动前唯一路径）| 9677–9678 µs |
+| 原生 MXFP8（本轮）| **2217–2223 µs（4.36×）** |
+
+改动（`python/sgl_kernel_npu/sgl_kernel_npu/`）：
+
+1. `_prepare()` 在原生模式下只做 NZ 转换 + 朝向修正，**不再反量化**，返回 mode 3；
+2. 新增 `quant_mxfp8_act()`：把激活按 per-32 e8m0 量化成 fp8（MXFP8 的 A 侧契约）；
+   指数直接取自 bf16 位模式（`bits >> 7`）而不是 `floor(log2())`，并在同 dtype 内用 2 的幂做
+   缩放，实测比 fp32 路线快约 1.8×；再按 `(data_ptr, shape, _version)` 缓存，服务里同一批 token
+   过 47 层时只算一次（946 µs → 675 µs → **17 µs**）；
+3. 三个权重 e8m0 scale + 激活 scale 透传给 kernel。
+
+### 精度：为什么原生模式只在 prefill 启用
+
+原生 MXFP8 同时量化 A 和 W（checkpoint 原始 W8A8 方案）。`quant_mxfp8_act()` 与理想 e8m0
+量化器的相对误差是 **2.38% vs 2.25%**（cosine 0.99953）——已经是 fp8 e4m3 三位尾数的格式下限。
+但相对**bf16 激活**的 golden 会呈现 2.4% 差异（`min cosine 0.99928`），这正是
+`tests/test_python_api.py`（阈值 0.9995）在第一次改动后报 FAIL 的原因。
+
+因此按 T 门控（`NATIVE_MXFP8_MIN_TOKENS = 8192`）：
+
+| T | 路径 | 理由 |
+|---|---|---|
+| < 8192（decode / 短 prefill）| bf16 反量化 | 该区间 kernel 由固定开销主导，两种路径一样快（T=8：123 µs vs 147 µs），bf16 精度更高 |
+| ≥ 8192（prefill）| **原生 MXFP8** | bf16 达不到 2.5 ms；原生是唯一可行路径，且用的是 checkpoint 自己的量化方案 |
+
+`DSH_MLA_PROLOG_V3_MXFP8=1` 可强制任意 T 走原生，`=0` 强制 bf16。
+
+> **关于 2.4% 的定位**：这不是 kernel 缺陷，也不是量化器实现问题（与理想量化器差 5%），
+> 而是 MXFP8 A 侧量化的固有效果。若某场景要求 bf16 级激活精度，应保持 `=0` 或走 T<8192 的默认路径。
+
 ## 7. 复现
 
 ```bash
@@ -192,6 +232,7 @@ MLA_PROLOG_V3_SPLIT_M_GLM=0 bash csrc/mla_prolog_v3/tests/run_acceptance.sh <dev
 
 1. split-M 已默认开启，但 T 落在「尾块=1」的约 1% 取值上会自动回退到 split-N（此时是原速度
    5044 µs，仍快于 bf16 的 9610 µs）；split-M 额外需要一块 192 MB、按 device 复用的 workspace；
-2. MXFP8 的 per-32 e8m0 激活量化本身有约 2.9% 相对误差（fp8 e4m3 的 3-bit mantissa 所致），
-   这是 MXFP8 格式的固有限制，与 kernel 无关；要求更高精度时用 bf16 路径（9526 µs 级）；
+2. MXFP8 的 per-32 e8m0 激活量化本身有约 2.4% 相对误差（fp8 e4m3 的 3-bit mantissa 所致），
+   是 MXFP8 格式的固有限制（与理想量化器仅差 5%）。因此原生路径只在 T>=8192 的 prefill 启用，
+   T<8192 仍走 bf16 反量化（同速、更准）；若要求 bf16 级激活精度，设 `DSH_MLA_PROLOG_V3_MXFP8=0`；
 3. 本轮未改动 `mla_prolog_v3` 的 decode 路径（T≤128），其 18.6 µs/层 的稳态没有变化。

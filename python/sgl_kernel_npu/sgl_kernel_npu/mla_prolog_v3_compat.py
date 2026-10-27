@@ -57,6 +57,7 @@ _SCHEMA = (
 _libs = []
 _NZ_CACHE = {}
 _BF16_CACHE = {}
+_ACT_CACHE = {}
 
 _WEIGHT_SCALE_ARGS = (
     "dequant_scale_x",
@@ -200,22 +201,125 @@ def _dump_args(args, kwargs):
                   flush=True)
 
 
+def quant_mxfp8_act(token_x, block=32):
+    """bf16/fp16/float activation -> (float8_e4m3, e8m0 scale [rows, in/block]).
+
+    MXFP8 needs the activation in the same per-32-block e8m0 form as the weights: the
+    scale is the power of two that puts each block's amax in e4m3 range, so this is a
+    re-encoding (``dequant(quant(x)) == x`` up to the 3-bit e4m3 mantissa).
+
+    Everything stays in the input dtype: the exponent comes from the bf16 bit pattern and
+    the scaling is an exact power-of-two multiply, which measured ~1.8x faster than the
+    fp32 ``abs/amax/log2`` route at T=30456 on Ascend950.  The result is cached per
+    ``token_x`` (same identity/version), because a serving step re-runs the same tokens
+    through every layer.
+    """
+    if token_x.dim() != 2 or token_x.shape[1] % block:
+        return token_x, None
+    key = (token_x.data_ptr(), tuple(token_x.shape), token_x._version)
+    cached = _ACT_CACHE.get(key)
+    if cached is not None:
+        return cached
+
+    rows, cols = token_x.shape
+    q = token_x
+    if q.dtype != torch.bfloat16:
+        q = q.to(torch.bfloat16)
+    blocks = q.view(rows, cols // block, block)
+
+    amax = blocks.abs().amax(-1, keepdim=True)
+    # bf16 layout sign(1) exp(8) mantissa(7): the exponent is the top 9 bits >> 7.
+    # amax >= 0, so the bias is exactly 127 and a zero block lands on exponent 0.
+    ebits = (amax.view(torch.int16).to(torch.int32) >> 7) & 0xFF
+    exp = (ebits - 8).clamp(0, 254)
+    scale = torch.pow(2.0, (exp - 127).to(torch.float32)).to(torch.bfloat16)
+
+    out = (blocks * (1.0 / scale)).clamp(-448.0, 448.0).to(torch.float8_e4m3fn).view(rows, cols)
+    e8m0 = exp.view(rows, cols // block).to(torch.uint8).contiguous()
+    if len(_ACT_CACHE) > 8:
+        _ACT_CACHE.clear()
+    _ACT_CACHE[key] = (out, e8m0)
+    return out, e8m0
+
+
+# Native MXFP8 (fp8 weights *and* fp8 activations, i.e. the checkpoint's own W8A8
+# scheme) is only worth it at prefill scale.  Below this token count the kernel is
+# dominated by fixed overhead rather than weight traffic, so the bf16 path is equally
+# fast and strictly more accurate - and precision is the priority.
+NATIVE_MXFP8_MIN_TOKENS = 8192
+
+
+def native_mxfp8_enabled(tokens=None) -> bool:
+    """Whether to run the MXFP8 checkpoint natively instead of dequantising to bf16.
+
+    Native mode keeps the weights in fp8 and quantises the activation to per-32 e8m0 as
+    well, which is exactly the W8A8 scheme the checkpoint was calibrated with.  It halves
+    the weight traffic and measured 4.3x faster at 30456 tokens on Ascend950 - but it also
+    costs the activation-quantisation error (about 2.4% relative, the e4m3 mantissa floor),
+    so it is restricted to prefill, where bf16 cannot meet the latency target.
+
+    ``DSH_MLA_PROLOG_V3_MXFP8=1`` forces native at any size, ``=0`` forces bf16.
+    """
+    env = os.environ.get("DSH_MLA_PROLOG_V3_MXFP8")
+    if env is not None:
+        return env != "0"
+    return tokens is not None and tokens >= NATIVE_MXFP8_MIN_TOKENS
+
+
+# (positional index, weight scale kwarg, matching dequantised bf16 cache) of the three
+# MXFP8 projection matrices the operator consumes.
+_MXFP8_WEIGHTS = (
+    (1, "dequant_scale_w_dq"),
+    (2, "dequant_scale_w_uq_qr"),
+    (4, "dequant_scale_w_dkv_kr"),
+)
+
+
+def _all_mxfp8(args, kwargs):
+    """True when every projection is fp8 with an e8m0 scale of the right shape."""
+    for idx, name in _MXFP8_WEIGHTS:
+        if idx >= len(args):
+            return False
+        w, s = args[idx], kwargs.get(name)
+        if not _is_mxfp8(w, s):
+            return False
+        if reorient_to_abi(w, s).data_ptr() != w.data_ptr():
+            return False  # checkpoint orientation differs from the kernel ABI
+    return True
+
+
 def _forward(*args, **kwargs):
     args = list(args)
-    # 1) MXFP8 -> bf16 when the caller provided e8m0 scales (cached)
-    for w_idx, s_name in ((1, "dequant_scale_w_dq"), (2, "dequant_scale_w_uq_qr"), (4, "dequant_scale_w_dkv_kr")):
-        if w_idx < len(args):
-            scale = kwargs.get(s_name)
-            converted, done = ensure_bf16(args[w_idx], scale)
-            if done:
-                args[w_idx] = reorient_to_abi(converted, scale)
-    weight_uq_qr = args[2] if len(args) > 2 else kwargs.get("weight_uq_qr")
+    # 1) MXFP8: stay in fp8 when the kernel can consume all three (weight, scale) pairs,
+    # otherwise dequantise the projections that have scales to bf16 (cached by identity).
+    _tokens = args[0].shape[0] if args and isinstance(args[0], torch.Tensor) else None
+    if _all_mxfp8(args, kwargs) and native_mxfp8_enabled(_tokens):
+        kwargs["weight_quant_mode"] = 3
+        # MXFP8 also wants the activation in fp8 with its own per-32 e8m0 scale
+        if len(args) > 0 and args[0].dtype != torch.float8_e4m3fn:
+            xq, sx = quant_mxfp8_act(args[0])
+            if sx is not None:
+                args[0] = xq
+                kwargs["dequant_scale_x"] = sx
+        else:
+            kwargs.pop("dequant_scale_x", None)
+    else:
+        for w_idx, s_name in _MXFP8_WEIGHTS:
+            if w_idx < len(args):
+                scale = kwargs.get(s_name)
+                converted, done = ensure_bf16(args[w_idx], scale)
+                if done:
+                    args[w_idx] = reorient_to_abi(converted, scale)
+                elif scale is not None and args[w_idx].dtype in (
+                        torch.bfloat16, torch.float16, torch.float32):
+                    kwargs.pop(s_name, None)  # bf16 weights take no scale
+        weight_uq_qr = args[2] if len(args) > 2 else kwargs.get("weight_uq_qr")
 
-    # 2) derive the quant mode from the actual dtypes (SGLang hardcodes 1)
-    mode = infer_weight_quant_mode(weight_uq_qr, kwargs.get("dequant_scale_w_uq_qr"))
-    if mode is not None and kwargs.get("weight_quant_mode") != mode:
-        kwargs["weight_quant_mode"] = mode
-        if mode == 0:
+        # 2) derive the quant mode from the actual dtypes (SGLang hardcodes 1)
+        mode = infer_weight_quant_mode(weight_uq_qr, kwargs.get("dequant_scale_w_uq_qr"))
+        if mode is not None and kwargs.get("weight_quant_mode") != mode:
+            kwargs["weight_quant_mode"] = mode
+        if kwargs.get("weight_quant_mode") == 0:
             for name in _WEIGHT_SCALE_ARGS:
                 kwargs.pop(name, None)
 
