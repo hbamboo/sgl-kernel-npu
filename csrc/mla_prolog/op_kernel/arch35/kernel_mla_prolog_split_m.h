@@ -458,6 +458,17 @@ __aicore__ inline void MlaPrologV3SplitM<MLAPT>::MmQcQrParamInit()
         mmQcQrParam_.baseN = 128;
     }
     mmQcQrParam_.stepK = 4;
+    // [sgl-kernel-npu port] mmCq/mmCkvKr already fall back to stepK = 3 when K is not a
+    // multiple of baseK * 4 (see MmCqParamInit).  mm3 needs the same guard: the FP8
+    // per-32 scale offset in MatmulL1 is derived as kL1 * kScale / kL1Loops, which only
+    // lands on the true scale block when K divides evenly.  With Hcq = 768
+    // (GLM-4.7-Flash) and baseK = 128 the old code produced kL1StepSize = 512 and
+    // kL1Loops = 2, so the second K block read its scales 16 blocks too early
+    // (192 instead of 256) and the query output decorrelated to cosine ~0.976.
+    // Hcq 1536 / 2048 happen to divide evenly, which is why only 768 was broken.
+    if ((mmQcQrParam_.k / mmQcQrParam_.baseK) % mmQcQrParam_.stepK != 0) {
+        mmQcQrParam_.stepK = 3; // K = 768 with baseK = 128: 6 / 3 == 0, kL1StepSize = 384
+    }
     mmQcQrParam_.kL1StepSize = mmQcQrParam_.baseK * mmQcQrParam_.stepK;
     mmQcQrParam_.kScale = mmQcQrParam_.k / FP8_E4M3_BLOCK_SIZE;
 }

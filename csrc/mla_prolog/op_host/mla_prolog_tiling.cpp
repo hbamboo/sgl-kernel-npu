@@ -418,6 +418,18 @@ ge::graphStatus MlaPrologTiling::SetScenarioInfo()
             baseShapeInfo_.nSize == 128) { // 128：N为128时路由到切M模板
             scenarioInfo_.splitMFlag_ = 1U;
         }
+        // [sgl-kernel-npu port] GLM-4.7-Flash (He=2048, N=20) is excluded above only
+        // because upstream never validated it.  The split-M kernel itself derives every
+        // shape from baseParams, so the wide-N-per-core geometry it gives (each core owns
+        // the whole N and a slice of M) is exactly what large-T prefill needs: the
+        // shipped split-N path caps N per core at mm1SingleCoreN=32 / mm2SingleCoreN=64,
+        // which measures 16 TFLOP/s per core versus 265 TFLOP/s for the full-N shape.
+        // Opt in via MLA_PROLOG_V3_SPLIT_M_GLM=1 until it is validated on hardware.
+        if (const char *splitMEnv = std::getenv("MLA_PROLOG_V3_SPLIT_M_GLM")) {
+            if (std::atoi(splitMEnv) == 1) {
+                scenarioInfo_.splitMFlag_ = 1U;
+            }
+        }
     }
     return ge::GRAPH_SUCCESS;
 }
@@ -768,6 +780,22 @@ ge::graphStatus MlaPrologTiling::ProcessBaseInputs()
         mSubSize_ = CeilDiv(baseShapeInfo_.tSize, aicNum_);
         // idx为[0, mSubCoreNum_]的核分到mSubSize_，其余核分到mSubSize_ - 1
         mSubCoreNum_ = baseShapeInfo_.tSize - (mSubSize_ - 1U) * aicNum_;
+        // [sgl-kernel-npu port] The split-M kernel walks each core's token slice in
+        // stepBatchSize-sized steps and puts a cube/vector cross-core barrier inside that
+        // loop, so every core must run the same number of steps.  That only breaks for a
+        // tail token of exactly 1: either a core's slice is 1 mod stepBatchSize (then the
+        // slice's last step carries a single token while its peers' last step is full), or
+        // the tail cores get mSubSize - 1 tokens which is a multiple of stepBatchSize while
+        // the full cores need one more step.  Measured on the GLM geometry with
+        // stepBatchSize = 128: tail = 1 hangs (device timeout after 300 s) while tail =
+        // 2/4/8/16/32/64 all pass, and T = 30456 (tail = 56) is unaffected.  Fall back to
+        // the split-N path for the tail-1 sizes instead of hanging.
+        if (mSubSize_ % stepBatchSize_ == 1U || (mSubCoreNum_ < aicNum_ &&
+                                                 (mSubSize_ - 1U) % stepBatchSize_ == 0U)) {
+            scenarioInfo_.splitMFlag_ = 0U;
+            mSubSize_ = 0U;
+            mSubCoreNum_ = 0U;
+        }
     }
     if (baseShapeInfo_.dSize == HIGH_THROUGHPUT__D_SIZE) {
         stepNumHeadDequant_ = std::min(64U, baseShapeInfo_.nSize);
