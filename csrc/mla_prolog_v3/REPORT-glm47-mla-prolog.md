@@ -24,7 +24,7 @@ fp8 权重 + e8m0 scale（原始 `[out,in]` ND 布局），自动反量化/转�
 **性能**：解码 T=1 41.6 µs（`_out` 36.2 / PyBind **32.9**）；预填 T=256 89.7 µs、T=2048 649.9 µs。
 **调用**：`torch.ops.npu.mla_prolog_v3` / `..._out` / PyBind 直调，三者输出逐位一致。
 **SGLang**：算子已在真实 server 中被调用；端到端出词受上游 W8A8 int8 契约阻塞（`tests/e2e/README.md`）。
-**要突破 ③**：需改写 kernel 数据流（第 12 节三条路线），需要独占卡与明确授权。逐条反证与源码级证据见 `PERF-COUNTEREVIDENCE.md`。
+**要突破 ③**：需改写 kernel 数据流（第 12 节三条路线），需要独占卡与明确授权。逐条反证与源码级证据见 `PERF-COUNTEREVIDENCE.md`，改写方案（含文件/字段/验收门/回退条件）见 `DESIGN-kernel-rewrite.md`。
 
 ---
 
