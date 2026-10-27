@@ -89,6 +89,13 @@
 `ceil(step/vectorBlockNum)` 个 token 的 UB，UB 预算只放得下 2 个 —— 这与 N、mm1 的 A 侧 L1（m=192 时
 仅 96 KB，未超 128 KB）都无关，因此**根因在向量段的 UB 分配**，不是 cube。
 
+**已排除的嫌疑**（用新加的 `DSH_MLA_V3_DUMP=1` 逐项比对 step=128 与 144）：
+cube 的分核与瓦片完全相同（mm1 24×32、mm2 9×64、mm3 32×160、mm4 20×1），向量块数相同（64）；
+workspace 正常增长（20.92 MB → 21.44 MB，≈32 KB/token）；UB 的常量部分只有约 9 KB
+（gamma 1.5K+1K、dequant scale ≈4.8K、sincos 1.5K），`shareBuffer_ = 192 KB − usedBytes` 不会回绕。
+即：**tiling、workspace、UB 预算三项都自洽，唯独"每核 3 个 token"必崩**，说明约束藏在向量段
+按 token 组织的循环/偏移里（不是容量问题）。定位它需要读向量段的逐 token 偏移计算，属于持续投入。
+
 **但放开它没有收益**：把 T 扫描按"每步 token 数"归一后可以看到，
 `t ≈ 9.4 µs（kernel 固定）+ 0.31 µs/token`，即每步的成本**基本与 token 数成正比**；
 step=256 只是把两步合成一步，步内成本翻倍，总时长不变（T=256 现在 89.7 µs，两步骤 10+2×39.9）。

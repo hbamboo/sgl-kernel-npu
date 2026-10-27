@@ -215,6 +215,7 @@ bool MlaPrologV3RunTiling(const MlaPrologV3Tensors &tensors, optiling::MlaProlog
                      b->mm2SingleCoreN, b->mm3BlockNum, b->mm3SingleCoreN, b->mm4BlockNum,
                      b->mm4SingleCoreBatch, b->headSizeCq, b->headSizeCkv, b->headSizeX, b->numHeadSize,
                      b->mm1NGroup, b->mm1KGroup, b->mm2NGroup, b->mm2KGroup);
+        std::fprintf(stderr, "[dsh-dump] workspace(bytes)=%zu\n", workSpaces[0]);
     }
     if (st != ge::GRAPH_SUCCESS && std::getenv("DSH_MLA_V3_DEBUG") != nullptr) {
         auto dump = [](const char *name, const std::vector<int64_t> &d) {
