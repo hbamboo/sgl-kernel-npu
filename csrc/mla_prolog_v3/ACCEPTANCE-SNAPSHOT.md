@@ -7,11 +7,11 @@
 
 | 项 | 值 |
 |---|---|
-| git HEAD | `4ff9f5d`（验收后未改动代码） |
+| git HEAD | `d8c7be9`（验收后未改动代码） |
 | 设备 | Ascend950DT（DAV_3510），容器 `hxd-test`，CANN 9.1.0，torch_npu 2.10，device 5 |
-| 构建 | 全新目录 `/tmp/bk_snap2`，`cmake --build ... -j 16`，**219 s**、**0 error** |
-| 产物 | `python/sgl_kernel_npu/sgl_kernel_npu/lib/libsgl_kernel_npu.so`，md5 `ea1dee2934542e5906d4a4f7a1d5fae2` |
-| 验收 | `bash csrc/mla_prolog_v3/tests/run_acceptance.sh 5`，**501 s**、**23/23 通过** |
+| 构建 | 全新目录 `/tmp/bk_final`，`cmake --build ... -j 16`，**239 s**、**0 error** |
+| 产物 | `python/sgl_kernel_npu/sgl_kernel_npu/lib/libsgl_kernel_npu.so`，md5 `a7ffb32f8bd5b4b7f18cae55d8d6a39b` |
+| 验收 | `bash csrc/mla_prolog_v3/tests/run_acceptance.sh 5`，**553 s**、**26/26 通过** |
 
 ## 验收项与结果
 
@@ -19,22 +19,27 @@
 |---|---|---|
 | 1–2 | CPU golden（T=8 / T=256） | 五路 cosine：0.999994 / 0.999996 / 0.999998 / 0.999998 / 0.999998（T=8）；T=256 通过 |
 | 3–7 | 真实权重 layer 2 / 0 / 23 / 46 / PyBind 路径 | 五路 ≥ 0.9999949；PyBind 与 torch.ops 完全相同 |
-| 8 | token 边界扫描（31 个尺寸，1…1000） | 全部 ≥ 0.9995 |
+| 8 | token 边界扫描（31 个尺寸 1…1000） | 全部 ≥ 0.9995 |
 | 9 | 与厂商内置算子（DeepSeek 几何） | 五路 **max abs diff = 0.00000**（逐位一致） |
-| 10 | `_out` 变体 | 与分配版逐位一致，解码 −13% |
+| 10 | `_out` 变体 | 与分配版逐位一致 |
 | 11 | MXFP8 原始 fp8 权重直喂（自动反量化） | 五路 ≥ 0.9999976 |
 | 12–14 | SGLang 别名 / ND→NZ / 模式推断 | 均逐位一致 |
 | 15 | MXFP8 scheme 状态重建 | 五路 ≥ 0.9999970 |
-| 16 | PyBind 快路径 | 与 torch.ops 逐位一致，解码 −10% |
+| 16 | PyBind 快路径 | 与 torch.ops 逐位一致 |
 | 17 | 性能扫描 | 见下表 |
 | 18 | 高层 Python API（真实权重、checkpoint 朝向） | 五路 ≥ 0.9999974 |
 | 19 | torch.ops shim 吃 checkpoint 朝向 | 五路 ≥ 0.9999970 |
 | 20 | 三路径示例（e2e） | 三条入口逐位一致 |
 | 21 | 纯逻辑单测（19 条，无设备） | 全部通过 |
-| 22 | 形状交替鲁棒性（11 个尺寸 × 2，两入口） | 0 mismatch |
-| 23 | 双 stream 并发 | 两条流结果均与顺序执行逐位一致 |
+| 22 | 形状交替鲁棒性（11 尺寸 × 2，两入口） | 0 mismatch |
+| 23 | 双 stream 并发 | 两条流均与顺序执行逐位一致 |
+| 24 | 分配版 ACL graph 捕获 + 重放 | 重放与 eager 逐位一致 |
+| 25 | 输出缓冲区边界校验 | 三种"传小"均抛清晰错误，正常尺寸通过 |
+| 26 | `allocate_outputs()` 形状助手 | 5 种量化组合形状正确，结果与分配版逐位一致 |
 
-## 性能（默认配置，`bench_mla_prolog.py`）
+## 性能
+
+**安静窗口实测（device 独占时，多次复现）**：
 
 | T | 1 | 16 | 64 | 256 | 512 | 1024 | 2048 |
 |---|---|---|---|---|---|---|---|
@@ -42,10 +47,15 @@
 | 算力 (TFLOP/s) | — | 6.63 | 20.9 | 49.3 | 52.1 | 53.8 | 54.5 |
 | roofline 占比 | 30% | 30% | 24% | 16% | 14% | 14% | 13% |
 
-附加路径：`_out` 版解码 36.2 µs（−13%）；PyBind 直调 **32.9 µs**（−21%）。
+调用路径（T=1）：分配版 41.6 µs、`_out` 36.2 µs（−13%）、**PyBind 32.9 µs（−21%）**。
+
+> **测量条件提醒**：本轮（第 53 轮）收尾时该卡已被其它租户占用（device 5 显存 92 GB、
+> 利用率 ~100%），同一份二进制实测 T=256 98.6 µs、T=2048 663.6 µs（比安静时慢约 10%），
+> 三条路径的对比也出现抖动。**任何性能结论都必须在卡空闲时同场 A/B 复测**；精度检查不受影响
+> （结果是确定的）。
 
 ## 未达成项
 
 `带宽/算力利用率达到理论上限` —— 解码 kernel 29–30%、预填 13–16%。原因与排除记录见
 `PERF-COUNTEREVIDENCE.md`（12 组假设逐条实测 + L1 容量源码级证明），成本分解与改写路线见
-`DESIGN-kernel-rewrite.md`。
+`DESIGN-kernel-rewrite.md`（方案 A 已证数值逐位等价，改动点已列全，预期预填 8–13%）。
