@@ -45,15 +45,27 @@
 **做法**：加载期把 `W_DQ [He, Hcq]` 与 `W_DKV/KR [He, Hcq+Dr]` 沿 N 拼成 `[He, 1344]`，
 kernel 里只发一次 `MatmulSplitN`，输出落到同一块 workspace 的相邻两段。
 
+### 工作区布局（本轮核实，决定了改动的真实规模）
+
+之前我担心"工作区是每 block 一段的 slab，融合会让向量侧寻址错乱"。读了 kernel 后确认**不是**：
+
+* cube 侧：`aicOffset.cqResOffset = mm1SingleCoreN * blockIdx_` 只是**列偏移**，行跨度由
+  `mmCqParam_.orgKc = headSizeCq` 决定 → 工作区是 **`[T, Hcq]` 行主序**；
+* 向量侧：`RmsNormCq` 里每 token 只把偏移 `+= headSizeCq`（`kernel_mla_prolog_split_n_arch35.h:1412`），
+  同样按 `[T, Hcq]` 行主序读；mm3 的 A 矩阵 `orgKa = headSizeCq` 也一致。
+
+所以融合只需把"行跨度"从 `Hcq` 换成 `Hcq+Hckv+Dr = 1344`，**不需要重排工作区、不需要新的同步**。
+
 | 项 | 内容 |
 |---|---|
-| 涉及文件 | `op_host/mla_prolog_tiling.cpp`（新增 `mm1N` = Hcq+Hckv+Dr 的 fill 分支）、`op_kernel/arch35/kernel_mla_prolog_split_n_arch35.h`（`AicProcess` 去掉第二次 `MatmulSplitN`）、`op_host/mla_prolog_v3_host.{h,cpp}`（新增 fused 权重入参或把拼接放在 host 侧缓存）|
-| 新增 tiling 字段 | `fusedDown`（0/1）、`mm12SingleCoreN`、`mm12BlockNum` |
+| 改动点（共 7 处） | ① tiling 新增 `fusedDownN` 字段与该分支；② `mmCqParam_.orgKc` 用 `fusedDownN`；③ `AicProcess` 在 fused 模式下跳过第二次 `MatmulSplitN`；④ `RmsNormCq` 的 `rmsNormCqOffset += fusedDownN`；⑤ ckv/kr 侧读取的基址 `+Hcq`、跨度 `fusedDownN`；⑥ workspace 尺寸按 `[T, fusedDownN]`；⑦ host 侧拼接 `[He, 1344]` 权重并缓存 |
+| 新增 tiling 字段 | `fusedDown`（0/1）、`fusedDownN`（1344）|
+| 同步影响 | **无**：阶段数从 2 变 1，现有 flag 序列不变（第二个 `MatmulSplitN` 直接跳过，其后 flag 仍由所有 block 执行）|
 | 数值可行性 | **已验证**：`probe_fused_down.py` 在 m=1/8/64/128/256 上比较 `x·[W_dq|W_dkv]` 与两次独立 GEMM，结果**逐位相同**（max\|d\| = 0.00e+00）——融合不引入任何数值差异 |
 | 收益预期 | **8–13% 预填**（按上面的成本分解：每 128-token 步的 mm1+mm2 ≈24.5 µs，融合若能省掉一个阶段的固定开销即为 7–12 µs/步）。这个区间仍是估计，最终以改完后同场 A/B 实测为准；早先的"3–6%"与"50%"两个说法都已作废（前者基于 mm2 扩核实验的外推，后者是 `torch.matmul` 调用开销造成的假象）|
 | 验收门 | 现有 22 项全过（尤其 T=8/256 golden 与厂商逐位）；预填 T=256 需要比 89.7 µs 有可复现下降（同场 A/B，≥2%）|
 | 回退条件 | 任一项验收失败或无可复现下降即回退 |
-| 风险 | 低（无新同步，且数值已证明逐位等价），但要保证向量侧读取偏移对两段都正确 |
+| 风险 | 低：无新同步、数值已证逐位等价、工作区布局无需重排；主要风险是 7 处偏移里漏改一处（会被 golden 立刻发现）|
 
 ---
 
