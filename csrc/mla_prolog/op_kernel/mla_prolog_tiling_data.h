@@ -72,6 +72,13 @@ struct MlaPrologBaseParams {
     uint16_t mm2NGroup;      // MM2切KN: N分组数(=1 未切KN, 走原路径)
     uint16_t mm2KGroup;      // MM2切KN: K分组数(=1 未切KN, 走原路径)
     uint32_t mm2SingleCoreK; // MM2切KN: 每K组的K深 = CeilDiv(headSizeX, mm2KGroup)
+    // [sgl-kernel-npu port] L0 tile depth for one-byte (fp8/int8) weights.
+    // 0 means "use the upstream defaults" (baseK 256 / baseN 128).
+    uint32_t mxfp8MmBaseK;
+    uint32_t mxfp8MmBaseN;
+    // [sgl-kernel-npu port] when 1, the split-M kernel uses the step-256 tile recipe
+    // (baseN 64 everywhere, baseK 128/128/64) so a step of 256 tokens fits L0A/L0B/L0C.
+    uint32_t step256Recipe;
     uint64_t kvCacheStride0; // kv cache first-axis stride in elements
     uint64_t krCacheStride0; // kr cache first-axis stride in elements
 };

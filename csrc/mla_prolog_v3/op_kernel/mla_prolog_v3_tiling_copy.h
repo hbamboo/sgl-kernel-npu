@@ -65,6 +65,9 @@ __aicore__ inline void CopyMlaPrologTilingDataFromGm(__gm__ uint8_t *tilingGmPtr
     db->mm2NGroup = sb->mm2NGroup;
     db->mm2KGroup = sb->mm2KGroup;
     db->mm2SingleCoreK = sb->mm2SingleCoreK;
+    db->mxfp8MmBaseK = sb->mxfp8MmBaseK;
+    db->mxfp8MmBaseN = sb->mxfp8MmBaseN;
+    db->step256Recipe = sb->step256Recipe;
     db->kvCacheStride0 = sb->kvCacheStride0;
     db->krCacheStride0 = sb->krCacheStride0;
     const __gm__ MlaPrologTplArgs *st = &src->tplArgs;

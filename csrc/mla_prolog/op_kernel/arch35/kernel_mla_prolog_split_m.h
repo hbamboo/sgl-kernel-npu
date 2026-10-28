@@ -405,9 +405,17 @@ __aicore__ inline void MlaPrologV3SplitM<MLAPT>::MmCqParamInit()
     mmCqParam_.orgKa = mmCqParam_.k;
     mmCqParam_.orgKb = mmCqParam_.k;
     mmCqParam_.orgKc = baseParams_->headSizeCq; // 1536
-    mmCqParam_.baseK =
-        (sizeof(mmInputType) == ONE_BYTE_TYPE_SIZE) ? 256 : 128; // 128KB / (128 max baseN * 4 stepK * sizeof(type))
-    mmCqParam_.baseN = (std::is_same<mmInputType, FP8E4M3>::value && isFp8E8m0) ? 64 : 128;
+    // [sgl-kernel-npu port] mSize = Align(step,16), so L0A = mSize*baseK*esz.  Upstream
+    // baseK 256 gives 128*256 = 32768 exactly at step 128 and 144*256 = 36864 at step 129 -
+    // which is the entire 128-token ceiling, pure byte arithmetic.  baseK 128 leaves room
+    // through step 256 (256*128 = 32768).
+    if (baseParams_->step256Recipe != 0U) {
+        mmCqParam_.baseK = 128;
+        mmCqParam_.baseN = 64;
+    } else {
+        mmCqParam_.baseK = (sizeof(mmInputType) == ONE_BYTE_TYPE_SIZE) ? 256 : 128;
+        mmCqParam_.baseN = (std::is_same<mmInputType, FP8E4M3>::value && isFp8E8m0) ? 64 : 128;
+    }
     mmCqParam_.stepK = 4;
     if ((mmCqParam_.k / mmCqParam_.baseK) % mmCqParam_.stepK != 0) {
         mmCqParam_.stepK = 3; // support k = 7680, mmInputType int8, no tail
@@ -428,9 +436,13 @@ __aicore__ inline void MlaPrologV3SplitM<MLAPT>::MmCkvKrParamInit()
     mmCkvKrParam_.orgKa = mmCkvKrParam_.k;
     mmCkvKrParam_.orgKb = mmCkvKrParam_.k;
     mmCkvKrParam_.orgKc = (baseParams_->headSizeCkv + baseParams_->dimHeadRope); // 576
-    mmCkvKrParam_.baseK =
-        (sizeof(mmInputType) == sizeof(int8_t)) ? 256 : 128; // 128KB / (128 max baseN * 4 stepK * sizeof(type))
-    mmCkvKrParam_.baseN = (std::is_same<mmInputType, FP8E4M3>::value && isFp8E8m0) ? 64 : 128;
+    if (baseParams_->step256Recipe != 0U) {
+        mmCkvKrParam_.baseK = 128;
+        mmCkvKrParam_.baseN = 64;
+    } else {
+        mmCkvKrParam_.baseK = (sizeof(mmInputType) == sizeof(int8_t)) ? 256 : 128;
+        mmCkvKrParam_.baseN = (std::is_same<mmInputType, FP8E4M3>::value && isFp8E8m0) ? 64 : 128;
+    }
     mmCkvKrParam_.stepK = 4;
     if ((mmCkvKrParam_.k / mmCkvKrParam_.baseK) % mmCkvKrParam_.stepK != 0) {
         mmCkvKrParam_.stepK = 3; // support k = 7680, mmInputType int8, no tail
@@ -455,7 +467,8 @@ __aicore__ inline void MlaPrologV3SplitM<MLAPT>::MmQcQrParamInit()
     if constexpr (MLAPT::enableGroupComputeOpt) {
         mmQcQrParam_.baseN = 128;
     } else {
-        mmQcQrParam_.baseN = 128;
+        // L0C = mSize*baseN*4 <= 64 KB -> baseN 64 at step 256.
+        mmQcQrParam_.baseN = (baseParams_->step256Recipe != 0U) ? 64 : 128;
     }
     mmQcQrParam_.stepK = 4;
     // [sgl-kernel-npu port] mmCq/mmCkvKr already fall back to stepK = 3 when K is not a
@@ -489,9 +502,17 @@ __aicore__ inline void MlaPrologV3SplitM<MLAPT>::MmQnParamInit()
     }
     mmQnParam_.orgKb = baseParams_->dimHeadSizeQc;
     mmQnParam_.orgKc = baseParams_->headSizeCkv * baseParams_->numHeadSize;
-    mmQnParam_.baseN = 128;
-    mmQnParam_.baseK = 128;
-    mmQnParam_.stepK = 1;
+    // [sgl-kernel-npu port] mmQn's A tile is bf16: L0A = mSize*baseK*2, so baseK 64 keeps
+    // 256*64*2 = 32768 at step 256.  stepK 2 preserves the L1 K-step of 128.
+    if (baseParams_->step256Recipe != 0U) {
+        mmQnParam_.baseN = 64;
+        mmQnParam_.baseK = 64;
+        mmQnParam_.stepK = 2;
+    } else {
+        mmQnParam_.baseN = 128;
+        mmQnParam_.baseK = 128;
+        mmQnParam_.stepK = 1;
+    }
     if ((mmQnParam_.k > mmQnParam_.baseK) && (mmQnParam_.k % mmQnParam_.baseK != 0)) {
         mmQnParam_.baseK = 64;
         mmQnParam_.stepK = 3; // support D = 192

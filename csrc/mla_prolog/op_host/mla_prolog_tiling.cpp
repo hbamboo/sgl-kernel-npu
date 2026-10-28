@@ -847,6 +847,42 @@ ge::graphStatus MlaPrologTiling::FillTiling()
     baseParams_->dimHeadRope = baseShapeInfo_.drSize;
     baseParams_->blockNum = baseShapeInfo_.blockNum;
     baseParams_->blockSize = baseShapeInfo_.blockSize;
+    // [sgl-kernel-npu port] L0 depth knobs for the split-M vector investigation.
+    baseParams_->mxfp8MmBaseK = 256U;
+    baseParams_->mxfp8MmBaseN = 128U;
+    if (const char *bkEnv = std::getenv("MLA_PROLOG_V3_MM_BASEK")) {
+        const int bk = std::atoi(bkEnv);
+        if (bk > 0 && bk % 32 == 0) {
+            baseParams_->mxfp8MmBaseK = static_cast<uint32_t>(bk);
+        }
+    }
+    if (const char *bnEnv = std::getenv("MLA_PROLOG_V3_MM_BASEN")) {
+        const int bn = std::atoi(bnEnv);
+        if (bn > 0 && bn % 32 == 0) {
+            baseParams_->mxfp8MmBaseN = static_cast<uint32_t>(bn);
+        }
+    }
+    // [sgl-kernel-npu port] step-256 tile recipe, see MlaPrologBaseParams.
+    baseParams_->step256Recipe = 0U;
+    if (const char *rEnv = std::getenv("MLA_PROLOG_V3_STEP256")) {
+        baseParams_->step256Recipe = (std::atoi(rEnv) != 0) ? 1U : 0U;
+    }
+    if (baseParams_->step256Recipe != 0U) {
+        stepBatchSize_ = std::min(256U, baseShapeInfo_.tSize);
+        vectorBlockNum_ = std::min(stepBatchSize_, aivNum_);
+        if (scenarioInfo_.splitMFlag_ == 1U && (baseShapeInfo_.tSize > 0U)) {
+            mSubSize_ = CeilDiv(baseShapeInfo_.tSize, aicNum_);
+            mSubCoreNum_ = baseShapeInfo_.tSize - (mSubSize_ - 1U) * aicNum_;
+            // tail==1 would desync the cross-core barrier (see the guard above)
+            if (mSubSize_ % stepBatchSize_ == 1U || (mSubCoreNum_ < aicNum_ &&
+                                                     (mSubSize_ - 1U) % stepBatchSize_ == 0U)) {
+                scenarioInfo_.splitMFlag_ = 0U;
+                mSubSize_ = 0U;
+                mSubCoreNum_ = 0U;
+                baseParams_->step256Recipe = 0U;
+            }
+        }
+    }
     baseParams_->kvCacheStride0 = context_->kvCacheStride0;
     baseParams_->krCacheStride0 = context_->krCacheStride0;
     baseParams_->reciprocalCq = reciprocalCq_;
