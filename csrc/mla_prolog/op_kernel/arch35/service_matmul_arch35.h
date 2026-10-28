@@ -969,9 +969,15 @@ __aicore__ inline void MatmulSplitMKOuter(const GlobalTensor<O>& tensorCGm, cons
             fixParams.dstStride = para.orgKc;
             fixParams.ndNum = 1;
             fixParams.unitFlag = UNIT_FLAG_DISABLE;
-            SetAtomicAdd<float>();
-            Fixpipe(tensorCGm[nb * para.baseN], cL0, fixParams);
-            SetAtomicNone();
+            // The first K slice initializes C; later slices accumulate into it.
+            // This removes the vector-side zero DMA and its cross-core handshake.
+            if (kL1 == 0) {
+                Fixpipe(tensorCGm[nb * para.baseN], cL0, fixParams);
+            } else {
+                SetAtomicAdd<float>();
+                Fixpipe(tensorCGm[nb * para.baseN], cL0, fixParams);
+                SetAtomicNone();
+            }
 
             SetFlag<HardEvent::FIX_M>(L0C_EVENT0 + (bufParam.cL0BufIter & 1u));
             bufParam.cL0BufIter++;

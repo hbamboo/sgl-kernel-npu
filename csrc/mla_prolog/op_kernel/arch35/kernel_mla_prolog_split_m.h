@@ -765,34 +765,6 @@ __aicore__ inline void MlaPrologV3SplitM<MLAPT>::Process()
             (maxMOffset - mOffset) < baseParams_->stepBatchSize ? (maxMOffset - mOffset) : baseParams_->stepBatchSize;
 
         UpdateStepBatchParams(curMSize);
-        // AIV核用MTE3 DMA清零对应的AIC workspace (UB→GM仅AIV的MTE3支持)
-        if ASCEND_IS_AIV {
-            if (cubeBlockIdx_ < baseParams_->mm1BlockNum && (blockIdx_ % cvRatio_ == 0)) {
-                int64_t stepBS = static_cast<int64_t>(baseParams_->stepBatchSize);
-                int64_t cbIdx = static_cast<int64_t>(cubeBlockIdx_);
-                LocalTensor<float> zeroSrc = zeroBuf_.Get<float>();
-                constexpr int64_t zeroChunk = 512;
-                Duplicate(zeroSrc, static_cast<float>(0), zeroChunk);
-
-                int64_t cqN = stepBS * static_cast<int64_t>(baseParams_->headSizeCq);
-                int64_t ckvN = stepBS * static_cast<int64_t>(baseParams_->headSizeCkv + baseParams_->dimHeadRope);
-
-                SetFlag<HardEvent::V_MTE3>(EVENT_ID0);
-                WaitFlag<HardEvent::V_MTE3>(EVENT_ID0);
-                for (int64_t off = 0; off < cqN; off += zeroChunk) {
-                    int64_t len = (cqN - off < zeroChunk) ? (cqN - off) : zeroChunk;
-                    DataCopy(mmCqResGm_[cbIdx * cqN + off], zeroSrc, static_cast<uint16_t>(len));
-                }
-                for (int64_t off = 0; off < ckvN; off += zeroChunk) {
-                    int64_t len = (ckvN - off < zeroChunk) ? (ckvN - off) : zeroChunk;
-                    DataCopy(mmCkvKrResGm_[cbIdx * ckvN + off], zeroSrc, static_cast<uint16_t>(len));
-                }
-                SetFlag<HardEvent::MTE3_V>(EVENT_ID0);
-                WaitFlag<HardEvent::MTE3_V>(EVENT_ID0);
-            }
-            CrossCoreSetFlag<SYNC_MODE_CUBE_VEC, PIPE_MTE3>(SYNC_MODE_CUBE_VEC);
-        }
-
         if ASCEND_IS_AIC {
             AicProcess<needQnDynamicQuant>(aicOffset, mOffset, mmQnLoops);
         }
@@ -827,8 +799,6 @@ __aicore__ inline void MlaPrologV3SplitM<MLAPT>::AicProcess(AicOffset& aicOffset
     aicOffset.weightDqOffset = 0;
     aicOffset.dequantScaleWDqOffset = 0;
     aicOffset.cqResOffset = baseParams_->stepBatchSize * baseParams_->headSizeCq * cubeBlockIdx_;
-
-    CrossCoreWaitFlag<SYNC_MODE_CUBE_VEC, PIPE_FIX>(SYNC_MODE_CUBE_VEC);
 
     // MatmulCq ──> RmsNorm(Cq)  [K-outer: kL1→nb→stepK]
     if constexpr (std::is_same<mmInputType, FP8E4M3>::value && isFp8E8m0) {
@@ -1018,7 +988,8 @@ __aicore__ inline void MlaPrologV3SplitM<MLAPT>::MatmulQcQr(AicOffset& aicOffset
     // [32, 1536] * [1536, 32*(128+64)] = [32, 32*192]
     constexpr uint32_t smMSize =
         (sizeof(mmQcQrInputType) == sizeof(int8_t)) ? INT8_AFULLLOAD_MAX_MSIZE : BF16_AFULLLOAD_MAX_MSIZE;
-    bool smIsAFullLoad = (mmQcQrParam_.m <= smMSize) ? true : false;
+    bool smIsAFullLoad = (static_cast<uint64_t>(Align(mmQcQrParam_.m, BLOCK_CUBE_SIZE)) *
+        mmQcQrParam_.k * sizeof(mmQcQrInputType) <= L1_A_SIZE);
 
     uint32_t smNInput = mmQcQrParam_.n;
     uint32_t smNL1SplitSize = mmQcQrParam_.baseN;
