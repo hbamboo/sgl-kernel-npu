@@ -3,7 +3,14 @@
 > 前置：`BASELINE-SNAPSHOT-20261028.md`（基线 `3ae0be3`，prefill 2336 µs / API 2230 µs）。
 > 本文件是**动代码之前**的施工清单，需确认后再实施。
 
-## 0. 为什么是这个改动
+## 0. 状态：本计划已被 REPORT-1ms-accounting-20261028.md 修正
+
+核算后发现"权重常驻 L1"不可实现（权重 1.1–3.8 MB vs L1_B 256 KB），且
+"passes = mSubSize/step" 的真正机制是**每 step 重读权重**（B 占搬运量 97.8%），
+不是 A 侧的读放大。修正后的结论与更聚焦的下一步见该文档。
+本文件保留作为原始计划记录。
+
+## 0b. 为什么是这个改动
 
 已实测确定（第 5 轮）：`stepBatchSize ≤ 128` 是全路径硬边界，改 baseK/baseN/stepK 都解不开。
 而 split-M 的时间与 pass 数线性：
