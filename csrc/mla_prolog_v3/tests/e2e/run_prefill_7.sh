@@ -1,4 +1,6 @@
 #!/bin/bash
+# Set ENABLE_ASCEND_FLASH_MLA_PREFILL=0 and SGLANG_NPU_USE_MLAPO_V3_PREFILL=1
+# to keep the prologue enabled with FIA prefill. Decode remains FlashMLA.
 set -eo pipefail
 ROOT=$(cd "$(dirname "$0")/../../../.." && pwd)
 source /mnt/sfs_turbo/hxd/pkgs/flash_mla_delivery/env.sh
@@ -7,7 +9,8 @@ export PYTHONPATH="$ROOT/python/sgl_kernel_npu:${PYTHONPATH:-}"
 export ASCEND_RT_VISIBLE_DEVICES=7
 export SGLANG_NPU_MLA_UNIFIED_KV=1
 export ENABLE_ASCEND_FLASH_MLA=1
-export ENABLE_ASCEND_FLASH_MLA_PREFILL=1
+export ENABLE_ASCEND_FLASH_MLA_PREFILL=${ENABLE_ASCEND_FLASH_MLA_PREFILL:-1}
+export SGLANG_NPU_USE_MLAPO_V3_PREFILL=${SGLANG_NPU_USE_MLAPO_V3_PREFILL:-0}
 export SGLANG_NPU_USE_MLAPO=1
 export SGLANG_NPU_USE_MLAPO_V3=1
 export SGLANG_NPU_MLAPO_V3_PREFILL_BF16_NATIVE=${SGLANG_NPU_MLAPO_V3_PREFILL_BF16_NATIVE:-1}

@@ -5,7 +5,7 @@ This is a numerical stability check, not a substitute for model quality evaluati
 import os,json,time,urllib.request,math
 from pathlib import Path
 from transformers import AutoTokenizer
-base='http://127.0.0.1:19002'
+base='http://127.0.0.1:'+os.environ.get('PORT','19002')
 p=Path(os.environ['READY_LOG'])
 for _ in range(180):
     if p.exists() and 'The server is fired up and ready to roll!' in p.read_text():break
