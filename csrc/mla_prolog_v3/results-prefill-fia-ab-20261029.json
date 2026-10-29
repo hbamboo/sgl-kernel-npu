@@ -1,0 +1,176 @@
+{
+  "num_prompts": 2000,
+  "request_rate": "26",
+  "device": 7,
+  "prolog": "BF16 prepared v3",
+  "decode": "FlashMLA",
+  "variants": {
+    "flashmla": {
+      "completed": 2000,
+      "duration": 245.5675024089869,
+      "total_input_tokens": 7566887,
+      "total_output_tokens": 57990,
+      "request_throughput": 8.144400135931043,
+      "output_throughput": 236.14688194132063,
+      "total_throughput": 31050.024637628747,
+      "mean_ttft_ms": 84956.34975082992,
+      "mean_tpot_ms": 179.56594578031775
+    },
+    "fia": {
+      "completed": 2000,
+      "duration": 438.9447072609328,
+      "total_input_tokens": 7566887,
+      "total_output_tokens": 57990,
+      "request_throughput": 4.556382539569136,
+      "output_throughput": 132.11231173480712,
+      "total_throughput": 17370.92821458115,
+      "mean_ttft_ms": 184847.304332398,
+      "mean_tpot_ms": 302.1872493818563
+    }
+  },
+  "quality": {
+    "cases": 64,
+    "tokens": 16320,
+    "flashmla_nll": 12.644713884175701,
+    "fia_nll": 12.644700995494393,
+    "delta_nll": -1.2888681307998695e-05,
+    "ppl_relative_change": -1.288859824921662e-05,
+    "next_token_matches": 56
+  },
+  "fia_throughput_relative_change": -0.44055025986904517,
+  "configuration": {
+    "server": "root@113.46.12.25",
+    "container": "hxd-test",
+    "sglang_commit": "3dc7468816",
+    "scripts_commit": "4be3263",
+    "model": "/mnt/sfs_turbo/models/chatdpo-glm-flash-0727-mxfp8",
+    "radix_cache": false,
+    "max_running_requests": 92,
+    "max_prefill_tokens": 32768,
+    "chunked_prefill_size": 32768,
+    "context_length": 32768,
+    "seed": 42,
+    "prefill_quant_mode": 0,
+    "log_directory": "/tmp/mla_v3_round12/ab/20261029_123116",
+    "shared_flags": {
+      "SGLANG_NPU_USE_MLAPO_V3_PREFILL": 1,
+      "SGLANG_NPU_MLAPO_V3_PREFILL_BF16_NATIVE": 1,
+      "ENABLE_ASCEND_FLASH_MLA": 1,
+      "SGLANG_NPU_MLA_UNIFIED_KV": 1
+    },
+    "flashmla_prefill_flags": {
+      "flashmla": 1,
+      "fia": 0
+    }
+  },
+  "attention_reference_checks": [
+    {
+      "query_lens": [
+        5,
+        7
+      ],
+      "kv_lens": [
+        5,
+        7
+      ],
+      "heads": 20,
+      "cosine": 0.9999989206752488,
+      "relative_l2": 0.0014694167270303234,
+      "max_abs": 0.0014452040195465088
+    },
+    {
+      "query_lens": [
+        3,
+        2
+      ],
+      "kv_lens": [
+        5,
+        4
+      ],
+      "heads": 20,
+      "cosine": 0.9999981464611779,
+      "relative_l2": 0.001925388334467146,
+      "max_abs": 0.0014280378818511963
+    },
+    {
+      "query_lens": [
+        33,
+        17
+      ],
+      "kv_lens": [
+        145,
+        257
+      ],
+      "heads": 20,
+      "cosine": 0.9999977274070978,
+      "relative_l2": 0.0021319441045384692,
+      "max_abs": 0.0002750903367996216
+    },
+    {
+      "query_lens": [
+        257,
+        129
+      ],
+      "kv_lens": [
+        320,
+        200
+      ],
+      "heads": 20,
+      "cosine": 0.999997742746679,
+      "relative_l2": 0.002124736125758965,
+      "max_abs": 0.00035347044467926025
+    },
+    {
+      "query_lens": [
+        1,
+        0,
+        9
+      ],
+      "kv_lens": [
+        129,
+        511,
+        260
+      ],
+      "heads": 20,
+      "cosine": 0.9999977811293949,
+      "relative_l2": 0.0021065936131262294,
+      "max_abs": 0.00017329305410385132
+    },
+    {
+      "query_lens": [
+        3
+      ],
+      "kv_lens": [
+        129
+      ],
+      "heads": 32,
+      "cosine": 0.9999977687929823,
+      "relative_l2": 0.002112475338551548,
+      "max_abs": 0.0002442002296447754
+    },
+    {
+      "query_lens": [
+        3
+      ],
+      "kv_lens": [
+        7
+      ],
+      "heads": 1,
+      "cosine": 0.9999978434451041,
+      "relative_l2": 0.0020792305909805107,
+      "max_abs": 0.0009642541408538818
+    },
+    {
+      "query_lens": [
+        2051
+      ],
+      "kv_lens": [
+        4097
+      ],
+      "heads": 1,
+      "cosine": 0.9999976573180311,
+      "relative_l2": 0.0021645830322777173,
+      "max_abs": 5.0162896513938904e-05
+    }
+  ]
+}
