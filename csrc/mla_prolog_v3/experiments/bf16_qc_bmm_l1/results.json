@@ -1,0 +1,124 @@
+{
+  "device": 7,
+  "soc": "Ascend950PR_9599",
+  "cann": "9.1.0",
+  "dtype": "BF16",
+  "activation_quantization": false,
+  "adopted": false,
+  "production_routing_modified": false,
+  "reference_library_sha256": "cbeafbedc8fd2649accc6f05dca231f84f55a60432c1cece47cce08edc40d33f",
+  "method": "5 warmups, 5 complete calls per NPUGraph, median of 21 event pairs; packed weights excluded",
+  "recipes": [
+    {
+      "M": 128,
+      "N": 192,
+      "K": 64,
+      "order": "N-outer",
+      "timings": [
+        {
+          "tokens": 8192,
+          "native_us": 228.8666009902954,
+          "fused_l1_us": 571.4292049407959
+        },
+        {
+          "tokens": 32768,
+          "native_us": 894.7888374328613,
+          "fused_l1_us": 1429.0340423583984
+        }
+      ]
+    },
+    {
+      "M": 128,
+      "N": 96,
+      "K": 128,
+      "order": "N-outer",
+      "timings": [
+        {
+          "tokens": 8192,
+          "native_us": 228.6881923675537,
+          "fused_l1_us": 802.0168304443359
+        },
+        {
+          "tokens": 32768,
+          "native_us": 894.9215888977051,
+          "fused_l1_us": 2006.026840209961
+        }
+      ]
+    },
+    {
+      "M": 128,
+      "N": 64,
+      "K": 256,
+      "order": "K-outer",
+      "timings": [
+        {
+          "tokens": 8192,
+          "native_us": 228.6057949066162,
+          "fused_l1_us": 671.1964130401611
+        },
+        {
+          "tokens": 32768,
+          "native_us": 894.7059631347656,
+          "fused_l1_us": 1679.2552947998047
+        }
+      ]
+    }
+  ],
+  "full_pipeline": [
+    {
+      "tokens": 8192,
+      "native_pipeline_us": 405.8055877685547,
+      "fused_l1_pipeline_us": 744.2577838897705
+    },
+    {
+      "tokens": 32768,
+      "native_pipeline_us": 1573.0217933654785,
+      "fused_l1_pipeline_us": 2080.902671813965
+    }
+  ],
+  "actual_precision": {
+    "output_checks": 14,
+    "all_bit_exact": true
+  },
+  "full_precision": {
+    "output_checks": 10,
+    "all_bit_exact": true
+  },
+  "random_boundaries": {
+    "tokens": [
+      1,
+      2,
+      7,
+      15,
+      16,
+      17,
+      31,
+      32,
+      33,
+      63,
+      64,
+      65,
+      92,
+      127,
+      128,
+      129,
+      255,
+      256,
+      257,
+      4095,
+      4096,
+      4097
+    ],
+    "output_checks": 44,
+    "all_bit_exact": true
+  },
+  "profile": {
+    "total_us": 1427.857,
+    "mac_us": 862.879,
+    "mte1_us": 1082.237,
+    "mte2_us": 799.382,
+    "fixpipe_us": 574.729,
+    "overlapping": true
+  },
+  "logs": "/tmp/mla_v3_round11"
+}
