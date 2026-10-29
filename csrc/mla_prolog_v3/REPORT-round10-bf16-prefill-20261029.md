@@ -166,7 +166,7 @@ with exactly 32768 new tokens. The request input distribution was identical.
 | Mean E2E latency (ms) | 129890.12 | 86864.58 |
 | Mean TPOT (ms) | 260.806 | 179.557 |
 
-Total throughput improves by 30.68%; run duration decreases by 23.47%.
+Total throughput improves by 30.67%; run duration decreases by 23.47%.
 At offered rate 26, both single-card servers accumulate a queue; these TTFT/E2E
 numbers include queue time. Rates 28 through 40 were not run in this comparison.
 The server processes started by this test were terminated after completion.
