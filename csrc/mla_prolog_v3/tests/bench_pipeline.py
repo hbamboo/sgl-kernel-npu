@@ -1,4 +1,4 @@
-"""GLM MXFP8 baseline/candidate harness; run on an idle visible device.
+"""GLM baseline/candidate harness (BF16 by default, MODE=mxfp8); run on an idle visible device.
 
 LIB=... OUT=... TOKENS=1,32,92,32768 python3 bench_pipeline.py
 REF=... compares deterministic output rows (all rows for decode) bit for bit.
@@ -21,6 +21,10 @@ source = source.replace('torch.ops.load_library(LIB)', 'torch.ops.load_library(o
 source = source.replace('query_norm_flag=False', 'query_norm_flag=True')
 source = source.replace('q, qr, dqn, qn, dqnorm = torch.ops.npu.mla_prolog_v3(', 'def call():\n    return torch.ops.npu.mla_prolog_v3(')
 source = source.replace('torch_npu.npu.synchronize()', '')
+if os.environ.get('MODE', 'bf16') == 'bf16':
+    source = source.replace('.to(torch.float8_e4m3fn)', '')
+    source = source.replace('weight_quant_mode=3', 'weight_quant_mode=0')
+    source = source.replace('    dequant_scale_x=sx, dequant_scale_w_dq=sdq, dequant_scale_w_uq_qr=suq, dequant_scale_w_dkv_kr=sdkv)', ')')
 out = Path(os.environ.get('OUT', '/tmp/mla_v3_pipeline'))
 out.mkdir(parents=True, exist_ok=True)
 results = []
@@ -69,7 +73,7 @@ for t in map(int, os.environ.get('TOKENS', '1,32,92,8192,30456,32768').split(','
         b.record()
     torch.npu.synchronize()
     times = [a.elapsed_time(b)*1000/n for a,b in events]
-    result = dict(tokens=t, median_us=statistics.median(times), min_us=min(times), max_us=max(times), max_abs_diffs=diffs)
+    result = dict(tokens=t, mode=os.environ.get('MODE', 'bf16'), median_us=statistics.median(times), min_us=min(times), max_us=max(times), max_abs_diffs=diffs)
     results.append(result)
     print(json.dumps(result), flush=True)
     (out/'timing.json').write_text(json.dumps(results, indent=2))
