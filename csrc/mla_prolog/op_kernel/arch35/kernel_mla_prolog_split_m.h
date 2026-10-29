@@ -1179,9 +1179,13 @@ __aicore__ inline void MlaPrologV3SplitM<MLAPT>::RmsNormCq(int64_t tokenIndex, i
     }
 
     uint64_t dequantScaleCqElementNum = dequantScaleCqSize_ / sizeof(dequantScaleType);
+    const bool batchNorm = std::is_same<mmCqOutputType, float>::value &&
+        std::is_same<rmsNormCqOutputType, FP8E4M3>::value && isFp8E8m0 &&
+        baseParams_->headSizeCq == 768U && curVecToken >= 8;
+    const uint32_t normRows = batchNorm ? 16U : 1U;
     LocalTensor<rmsNormCqOutputType> outputLocal = shareBuffer_.Get<rmsNormCqOutputType>();
     LocalTensor<dequantScaleType> dequantScaleQcQr =
-        outputLocal[baseParams_->headSizeCq].template ReinterpretCast<dequantScaleType>();
+        outputLocal[normRows * baseParams_->headSizeCq].template ReinterpretCast<dequantScaleType>();
     LocalTensor<float> dequantScaleXLocal =
         dequantScaleQcQr[curVecToken * dequantScaleCqElementNum].template ReinterpretCast<float>();
 
@@ -1192,12 +1196,52 @@ __aicore__ inline void MlaPrologV3SplitM<MLAPT>::RmsNormCq(int64_t tokenIndex, i
     uint64_t dequantScaleXElementNum = Align(dequantScaleXSize, BYTE_BLOCK) / sizeof(float);
     LocalTensor<uint8_t> shareTmpUb = dequantScaleXLocal[dequantScaleXElementNum].template ReinterpretCast<uint8_t>();
     int64_t smStepTokenIndex = tokenIndex;
+    if constexpr (std::is_same<mmCqOutputType, float>::value &&
+        std::is_same<rmsNormCqOutputType, FP8E4M3>::value && isFp8E8m0) {
+        if (batchNorm) {
+            for (int64_t row = 0; row < curVecToken; row += normRows) {
+                uint32_t rows = static_cast<uint32_t>(curVecToken - row);
+                rows = rows < normRows ? rows : normRows;
+                uint32_t col = baseParams_->headSizeCq;
+                uint32_t cnt = rows * col;
+                SetFlag<HardEvent::V_MTE2>(EVENT_ID1);
+                WaitFlag<HardEvent::V_MTE2>(EVENT_ID1);
+                auto norm = shareTmpUb.template ReinterpretCast<float>();
+                RmsNormParam params = {baseParams_->reciprocalCq, baseParams_->epsilonCq,
+                    rows, col, baseParams_->qcQrScale, baseParams_->isQcQrScaleEnable};
+                RmsNormNormal<mmCqOutputType, rmsNormGammaType, float, float, dequantScaleType>(
+                    norm, mmCqResGm_[rmsNormCqOffset + row * col], rmsnormGammaCqLocal_,
+                    dequantScaleWDqLocal_, dequantScaleXLocal, shareTmpUb[cnt * sizeof(float)], params);
+                PipeBarrier<PIPE_V>();
+                auto bf16 = norm[cnt].template ReinterpretCast<bfloat16_t>();
+                Cast(bf16, norm, RoundMode::CAST_ROUND, cnt);
+                PipeBarrier<PIPE_V>();
+                auto quantTmp = bf16[cnt].template ReinterpretCast<uint8_t>();
+                for (uint32_t r = 0; r < rows; ++r) {
+                    auto out = outputLocal[r*col].template ReinterpretCast<int8_t>();
+                    auto scales = dequantScaleQcQr[(row+r)*dequantScaleCqElementNum].template ReinterpretCast<uint16_t>();
+                    DynamicQuantPerBlockMxfp8Vf<bfloat16_t, fp8_e4m3fn_t>(
+                        out, scales, bf16[r*col], quantTmp, 1, col);
+                    PipeBarrier<PIPE_V>();
+                }
+                SetFlag<HardEvent::V_MTE3>(EVENT_ID0);
+                WaitFlag<HardEvent::V_MTE3>(EVENT_ID0);
+                DataCopy(rmsNormCqResGm_[rmsNormCqResOffset + row*col], outputLocal, cnt);
+                SetFlag<HardEvent::MTE3_V>(EVENT_ID0);
+                WaitFlag<HardEvent::MTE3_V>(EVENT_ID0);
+                SetFlag<HardEvent::MTE3_MTE2>(EVENT_ID0);
+                WaitFlag<HardEvent::MTE3_MTE2>(EVENT_ID0);
+            }
+        }
+    }
+    if (!batchNorm) {
     for (int64_t curVecTokenIdx = 0; curVecTokenIdx < curVecToken; curVecTokenIdx++) {
         RmsNormCqProcess(outputLocal, dequantScaleQcQr, dequantScaleXLocal, shareTmpUb, tokenIndex, rmsNormCqOffset,
                          rmsNormCqResOffset, curVecTokenIdx, dequantScaleCqElementNum);
         rmsNormCqOffset += baseParams_->headSizeCq;
         rmsNormCqResOffset += baseParams_->headSizeCq;
         tokenIndex++;
+    }
     }
 
     if constexpr (std::is_same<rmsNormCqOutputType, FP8E4M3>::value && isFp8E8m0) {

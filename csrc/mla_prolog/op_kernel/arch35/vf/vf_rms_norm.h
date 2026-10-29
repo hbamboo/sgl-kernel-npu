@@ -24,6 +24,7 @@ template <typename InType, typename GammaType, typename C, typename OutType>
 __simd_vf__ void RmsNormVFImpl(__ubuf__ InType* inputBuf, __ubuf__ GammaType* gammaBuf, __ubuf__ OutType* outputBuf,
                                uint32_t cnt, uint32_t repeatTimes, const RmsNormParam rmsNormParams)
 {
+    for (uint32_t row = 0; row < rmsNormParams.row; ++row) {
     Reg::RegTensor<C> vregSum;
     Reg::RegTensor<C> vregSumReduce;
     Reg::RegTensor<C> vregDiv;
@@ -42,7 +43,7 @@ __simd_vf__ void RmsNormVFImpl(__ubuf__ InType* inputBuf, __ubuf__ GammaType* ga
         Reg::RegTensor<C> vregXSquare;
         uint64_t loopOffset = i * FLOAT_REP_SIZE;
 
-        Reg::LoadAlign<C, Reg::LoadDist::DIST_NORM>(vregXCast, inputBuf + loopOffset);
+        Reg::LoadAlign<C, Reg::LoadDist::DIST_NORM>(vregXCast, inputBuf + row * rmsNormParams.col + loopOffset);
         Reg::Mul<C, Reg::MaskMergeMode::ZEROING>(vregXSquare, vregXCast, vregXCast, pregAll);
         Reg::Add<C, Reg::MaskMergeMode::ZEROING>(vregSum, vregXSquare, vregSum, pregAll);
     }
@@ -59,14 +60,15 @@ __simd_vf__ void RmsNormVFImpl(__ubuf__ InType* inputBuf, __ubuf__ GammaType* ga
         Reg::RegTensor<C> vregGammaCast;
         uint16_t loopOffset = i * FLOAT_REP_SIZE;
 
-        Reg::LoadAlign<C, Reg::LoadDist::DIST_NORM>(vregXCast, inputBuf + loopOffset);
+        Reg::LoadAlign<C, Reg::LoadDist::DIST_NORM>(vregXCast, inputBuf + row * rmsNormParams.col + loopOffset);
         Reg::LoadAlign<GammaType, Reg::LoadDist::DIST_UNPACK_B16>(vregGamma, gammaBuf + loopOffset);
         Reg::Cast<C, GammaType, castTraitB162B32>(vregGammaCast, vregGamma, pregAll);
 
         Reg::Div<C, Reg::MaskMergeMode::ZEROING>(vregXCast, vregXCast, vregDiv, pregAll);
         Reg::Mul<C, Reg::MaskMergeMode::ZEROING>(vregXCast, vregXCast, vregGammaCast, pregAll);
 
-        Reg::StoreAlign<OutType, Reg::StoreDist::DIST_NORM>(outputBuf + loopOffset, vregXCast, pregAll);
+        Reg::StoreAlign<OutType, Reg::StoreDist::DIST_NORM>(outputBuf + row * rmsNormParams.col + loopOffset, vregXCast, pregAll);
+    }
     }
 }
 
@@ -86,7 +88,7 @@ __aicore__ inline void RmsNormVF(const LocalTensor<OutType>& outputLocal, const 
                                  const LocalTensor<GammaType>& gammaLocal, const RmsNormParam rmsNormParams)
 {
     uint32_t cnt = rmsNormParams.row * rmsNormParams.col;
-    uint32_t repeatTimes = (cnt + FLOAT_REP_SIZE - 1) / FLOAT_REP_SIZE;
+    uint32_t repeatTimes = (rmsNormParams.col + FLOAT_REP_SIZE - 1) / FLOAT_REP_SIZE;
 
     __ubuf__ InType* inputBuf = (__ubuf__ InType*)inputLocal.GetPhyAddr();
     __ubuf__ GammaType* gammaBuf = (__ubuf__ GammaType*)gammaLocal.GetPhyAddr();

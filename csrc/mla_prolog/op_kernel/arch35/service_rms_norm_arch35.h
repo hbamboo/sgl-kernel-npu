@@ -50,7 +50,7 @@ __aicore__ inline void RmsNormNormal(const LocalTensor<O>& outputLocal, const Gl
     LocalTensor<C> xFp32Local = shareTmpUb.ReinterpretCast<C>();
 
     // load input [1, col]
-    DataCopyExtParams copyParams{1, static_cast<uint32_t>(rmsNormParams.col * sizeof(T)), 0, 0, 0};
+    DataCopyExtParams copyParams{1, static_cast<uint32_t>(cnt * sizeof(T)), 0, 0, 0};
     DataCopyPadExtParams<T> padParams{false, 0, 0, 0};
 
     if constexpr (std::is_same<T, float>::value && std::is_same<U, FP8E8M0>::value) {
