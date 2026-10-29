@@ -1,5 +1,8 @@
 # Round 10: actual BF16 prefill on physical device 7
 
+Implementation commits: kernel repository 85309c8 (plus 45071ed / 2bf9753),
+SGLang repository 2e06d20952.
+
 Status: experimental prefill path, opt-in in SGLang. The 32768-token result is
 about 1.58 ms in a graph benchmark and 1.64 ms in the framework device timeline.
 **A complete 32768-token BF16 prologue below 1 ms has not been demonstrated.**
@@ -91,6 +94,9 @@ Greedy generation is repeatable within each version, but is not bit-exact
 between versions. Explicit stream synchronization and contiguous outputs did
 not remove the differences. Do not describe end-to-end output equality as passed.
 
+Acceptance uses operator numerical error and model-quality metrics; greedy
+generation bitwise equality is not required.
+
 Teacher-forced check on 64 strided real CHAT inputs, last up to 256 tokens each:
 16320 valid log probabilities, baseline mean NLL=12.6444216204, candidate
 NLL=12.6447138842, delta=+0.000292264. Relative perplexity change=+0.02923%.
@@ -143,6 +149,34 @@ this does not imply the standalone decode kernel changed by the same amount.
 This is not the full 2000-prompt, all-rate production benchmark. Its monitoring
 helper npu_stats.py was absent, so the client skipped NPU usage statistics.
 
+## Original benchmark client: full 2000 prompts at rate 26
+
+Both runs completed all 2000 requests successfully. Input tokens=7566887 and
+output tokens=57990 in each run. No cache hits were used. Both runs reached
+92 concurrent requests, and each had 264 prefill steps including 214 steps
+with exactly 32768 new tokens. The request input distribution was identical.
+
+| Metric | Raw BF16 v3 | Candidate |
+| --- | ---: | ---: |
+| Duration (s) | 321.866 | 246.314 |
+| Request throughput (req/s) | 6.214 | 8.120 |
+| Total token throughput (token/s) | 23689.634 | 30955.970 |
+| Output throughput (token/s) | 180.168 | 235.432 |
+| Mean TTFT (ms) | 122589.024 | 81837.986 |
+| Mean E2E latency (ms) | 129890.12 | 86864.58 |
+| Mean TPOT (ms) | 260.806 | 179.557 |
+
+Total throughput improves by 30.68%; run duration decreases by 23.47%.
+At offered rate 26, both single-card servers accumulate a queue; these TTFT/E2E
+numbers include queue time. Rates 28 through 40 were not run in this comparison.
+The server processes started by this test were terminated after completion.
+
+Run the same controlled raw/candidate pair on an idle device 7:
+
+```bash
+OUT=/tmp/new_bf16_bench python3 csrc/mla_prolog_v3/tests/e2e/bench_glm_7.py
+```
+
 ## Reproduction
 
 From /mnt/paas/hxdnpu/sgl-kernel-npu inside hxd-test:
@@ -192,7 +226,8 @@ All captured inputs, experiment libraries and logs live under
 Joint DQ/DKV and merged QC/QR native GEMMs are slower (1.75-1.96 ms for their
 complete serialized compositions). Standalone custom BF16 BMM variants are exact
 but slower than native transpose-batch-matmul (~440 us): N128/K96 ~498 us,
-N256/K64 ~593 us. Experimental vector fusion was also slower. None is enabled.
+N256/K64 ~593 us. Unrolling N remains ~496 us; a double-buffered full-A
+M80 variant remains ~502 us. Experimental vector fusion was also slower. None is enabled.
 
 Removing the BF16 large-M PIPE_M barrier preserved all actual 32768-token
 outputs bit-exact but left the raw latency at 10.34 ms. It was reverted.
@@ -201,5 +236,6 @@ Further improvement must address dense BF16 compute and L1/L0 reuse. The raw
 NO_QUANT operator uses MlaPrologVecS1CubS2 (Split-N), whereas MXFP8 uses Split-M.
 Raw BF16 profiling shows ~19% MAC ratio and ~60% MTE1 ratio; MXFP8-only tiling
 changes should not be treated as optimization of the real BF16 prefill path.
-The <1 ms target, full-rate benchmark and downstream task-quality acceptance
-remain open.
+The <1 ms target and remaining rate settings remain open. Numerical acceptance
+and the sampled model probability metric pass the agreed checks; broader task
+quality evaluation is outside the coverage of this sample.
