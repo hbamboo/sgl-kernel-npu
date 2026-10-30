@@ -81,6 +81,9 @@ struct MlaPrologBaseParams {
     uint32_t step256Recipe;
     uint64_t kvCacheStride0; // kv cache first-axis stride in elements
     uint64_t krCacheStride0; // kr cache first-axis stride in elements
+    // Zero keeps the packed-cache addressing used before direct cache writes.
+    uint64_t kvCacheRowStride;
+    uint64_t krCacheRowStride;
 };
 
 // 2. 完整分块数据结构体（对应 MlaPrologTilingData 宏定义，嵌套基础参数）

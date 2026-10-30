@@ -60,6 +60,20 @@ public:
     MMParams mmQcQrParam_;
     MMParams mmQnParam_;
 
+    __aicore__ inline int64_t KvRowStride() const {
+        return baseParams_->kvCacheRowStride
+            ? static_cast<int64_t>(baseParams_->kvCacheRowStride) : static_cast<int64_t>(baseParams_->headSizeCkv);
+    }
+    __aicore__ inline int64_t KvTokenStride() const {
+        return baseParams_->kvCacheRowStride
+            ? static_cast<int64_t>(baseParams_->kvCacheRowStride) : static_cast<int64_t>(baseParams_->dtileSize);
+    }
+    __aicore__ inline int64_t KrRowStride() const {
+        return baseParams_->krCacheRowStride
+            ? static_cast<int64_t>(baseParams_->krCacheRowStride) : static_cast<int64_t>(baseParams_->dimHeadRope);
+    }
+
+
     __aicore__ inline MlaPrologVecS1CubS2(TPipe* pipe, const optiling::MlaPrologTilingData* __restrict tilingData,
                                           const optiling::MlaPrologBaseParams* __restrict baseParams)
         : pipe_(pipe),
@@ -1564,11 +1578,11 @@ __aicore__ inline void MlaPrologVecS1CubS2<MLAPT>::ComputeBlkScatterOffsets(Glob
 
     // --- Materialize for RMSNorm/CKV ---
     MaterializeOffsetsWithHeadSize<kvCacheType, (MLAPT::cacheMode == CACHE_MODE::PA_BLK_NZ)>(
-        paBlkIdx, tokenOffInPage, curRows, needSpill, nextBlkId, baseParams_->headSizeCkv, baseParams_->kvCacheStride0,
+        paBlkIdx, tokenOffInPage, curRows, needSpill, nextBlkId, KvRowStride(), baseParams_->kvCacheStride0,
         rmsNormAndScatterCkvParams);
 
     MaterializeOffsetsWithHeadSize<krCacheType, (MLAPT::cacheMode == CACHE_MODE::PA_BLK_NZ)>(
-        paBlkIdx, tokenOffInPage, curRows, needSpill, nextBlkId, baseParams_->dimHeadRope, baseParams_->krCacheStride0,
+        paBlkIdx, tokenOffInPage, curRows, needSpill, nextBlkId, KrRowStride(), baseParams_->krCacheStride0,
         ropeAndScatterKrParams);
 }
 
@@ -1679,7 +1693,7 @@ __aicore__ inline void MlaPrologVecS1CubS2<MLAPT>::ScatterCkv(LocalTensor<kvCach
         ScatterCache<kvCacheType, (MLAPT::cacheMode == CACHE_MODE::PA_NZ)>(
             kvCacheGm_, outputLocal,
             ScatterCacheParams{baseParams_->blockSize, paTokenIdx, vectorRow_, baseParams_->headSizeCkv,
-                               baseParams_->dtileSize, static_cast<int64_t>(baseParams_->kvCacheStride0)});
+                               KvTokenStride(), static_cast<int64_t>(baseParams_->kvCacheStride0)});
         // 刷新量化scale
         if (isPertile && baseParams_->quantScaleRepoMode == 1U) {
             // BSND:
@@ -1705,7 +1719,7 @@ __aicore__ inline void MlaPrologVecS1CubS2<MLAPT>::ScatterCkv(LocalTensor<kvCach
         ScatterCacheMultiRows<kvCacheType, (MLAPT::cacheMode == CACHE_MODE::PA_BLK_NZ)>(
             kvCacheGm_, outputLocal,
             ScatterCacheParams{baseParams_->blockSize, rmsNormAndScatterCkvParams.cacheOffset, vectorRow_,
-                               baseParams_->headSizeCkv, baseParams_->headSizeCkv,
+                               baseParams_->headSizeCkv, KvRowStride(),
                                static_cast<int64_t>(baseParams_->kvCacheStride0), baseParams_->seq1Size,
                                rmsNormAndScatterCkvParams.tokenIndex},
             rmsNormAndScatterCkvParams.rowsInCurBatch, rmsNormAndScatterCkvParams.cacheOffset,
@@ -1803,13 +1817,13 @@ __aicore__ inline void MlaPrologVecS1CubS2<MLAPT>::ScatterKr(LocalTensor<krCache
             ScatterCache<krCacheType, (MLAPT::cacheMode == CACHE_MODE::PA_NZ)>(
                 krCacheGm_, outputKrLocal,
                 ScatterCacheParams{baseParams_->blockSize, paTokenIdx, vectorRow_, baseParams_->dimHeadRope,
-                                   baseParams_->dimHeadRope, static_cast<int64_t>(baseParams_->krCacheStride0)});
+                                   KrRowStride(), static_cast<int64_t>(baseParams_->krCacheStride0)});
         }
     } else {
         ScatterCacheMultiRows<krCacheType, (MLAPT::cacheMode == CACHE_MODE::PA_BLK_NZ)>(
             krCacheGm_, outputKrLocal,
             ScatterCacheParams{baseParams_->blockSize, ropeAndScatterKrParams.cacheOffset, vectorRow_,
-                               baseParams_->dimHeadRope, baseParams_->dimHeadRope,
+                               baseParams_->dimHeadRope, KrRowStride(),
                                static_cast<int64_t>(baseParams_->krCacheStride0), baseParams_->seq1Size,
                                ropeAndScatterKrParams.tokenIndex},
             ropeAndScatterKrParams.rowsInCurBatch, ropeAndScatterKrParams.cacheOffset,

@@ -110,6 +110,16 @@ __aicore__ inline void ScatterCacheMultiRows(GlobalTensor<T>& cacheGm, const Loc
     int64_t copyCnt = scatterCacheParams.col * rowsInCurBatch;
 
     if constexpr (!IS_NZ) {
+        if (scatterCacheParams.tokenStride != scatterCacheParams.col) {
+            // Copy this component only; preserve the other component's lanes.
+            for (int64_t row = 0; row < scatterCacheParams.row; ++row) {
+                const int64_t dst = row < rowsInCurBatch
+                    ? cacheOffset + row * scatterCacheParams.tokenStride
+                    : nextBatchOffset + (row - rowsInCurBatch) * scatterCacheParams.tokenStride;
+                DataCopy(cacheGm[dst], inputLocal[row * scatterCacheParams.col], scatterCacheParams.col);
+            }
+            return;
+        }
         DataCopy(cacheGm[cacheOffset], inputLocal, copyCnt);
         if (rowsInCurBatch != scatterCacheParams.row) {
             DataCopy(cacheGm[nextBatchOffset], inputLocal[copyCnt],

@@ -286,6 +286,28 @@ void Launch(const MlaPrologV3Tensors &t, const at::Tensor &token_x, const at::Te
     std::string err;
     TORCH_CHECK(MlaPrologV3RunTilingCached(t, &tilingData, &res, &err), "mla_prolog_v3 tiling failed: ", err);
 
+    // Logical cache shapes remain [blocks,page,1,512/64]. Support
+    // their BF16 interleaved views without staging into packed scratch caches.
+    if (!kv_cache.is_contiguous() || !kr_cache.is_contiguous()) {
+        TORCH_CHECK(t.cacheMode == "PA_BSND" && t.weightQuantMode == 0 &&
+                    t.kvQuantMode == 0 && t.queryQuantMode == 0 && t.ckvkrRepoMode == 0,
+                    "strided MLA caches require BF16 PA_BSND without cache/query quantization");
+        TORCH_CHECK(res.splitMMode == 0, "strided MLA caches require the split-N kernel");
+        TORCH_CHECK(kv_cache.scalar_type() == at::kBFloat16 && kr_cache.scalar_type() == at::kBFloat16,
+                    "strided MLA caches require BF16 tensors");
+        for (const auto& cache : {kv_cache, kr_cache}) {
+            TORCH_CHECK(cache.dim() == 4 && cache.size(2) == 1 && cache.stride(3) == 1 &&
+                        cache.stride(1) >= cache.size(3) && cache.stride(0) == cache.size(1) * cache.stride(1),
+                        "MLA PA_BSND cache requires one KV head and regular positive row strides");
+        }
+        // CachedTiling hashes the entire patched blob, preventing aliases with
+        // the packed-cache tiling and keeping capture/replay addresses stable.
+        tilingData.baseParams.kvCacheStride0 = kv_cache.stride(0);
+        tilingData.baseParams.krCacheStride0 = kr_cache.stride(0);
+        tilingData.baseParams.kvCacheRowStride = kv_cache.stride(1);
+        tilingData.baseParams.krCacheRowStride = kr_cache.stride(1);
+    }
+
     const at::Tensor &tiling_tensor = CachedTiling(tilingData);
     at::Tensor workspace = WorkspaceFor(static_cast<int64_t>(res.workspaceSize), token_x);
 
