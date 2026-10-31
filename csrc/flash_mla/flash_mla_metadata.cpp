@@ -6,6 +6,9 @@
 #include <c10/core/DeviceGuard.h>
 #include <dlfcn.h>
 #include <memory>
+#include <cstdlib>
+#include <sstream>
+#include <string>
 #include <vector>
 #include "torch_npu/csrc/core/npu/NPUStream.h"
 #include "torch_npu/csrc/framework/OpCommand.h"
@@ -24,15 +27,38 @@ using Workspace=int(*)(const AclTensor*,const AclTensor*,const AclTensor*,
 using Launch=int(*)(void*,uint64_t,Executor*,aclrtStream);
 struct Api {
     Create create;Destroy destroy;Workspace workspace;Launch launch;
-    Api() {
-        auto base=dlopen("libnnopbase.so",RTLD_NOW|RTLD_LOCAL);
-        auto custom=dlopen("libcust_opapi.so",RTLD_NOW|RTLD_LOCAL);
-        TORCH_CHECK(base && custom,"FlashMLA metadata requires the FlashMlaMetadata custom OPP library in LD_LIBRARY_PATH.");
-        create=reinterpret_cast<Create>(dlsym(base,"aclCreateTensor"));
-        destroy=reinterpret_cast<Destroy>(dlsym(base,"aclDestroyTensor"));
+    // Different CANN vendors use the same libcust_opapi.so SONAME. Resolve
+    // FlashMLA from configured vendor paths before a basename lookup can
+    // return an unrelated library that the serving process already loaded.
+    bool LoadCustom(const std::string& path) {
+        auto custom=dlopen(path.c_str(),RTLD_NOW|RTLD_LOCAL);
+        if(!custom)return false;
         workspace=reinterpret_cast<Workspace>(dlsym(custom,"aclnnFlashMlaMetadataGetWorkspaceSize"));
         launch=reinterpret_cast<Launch>(dlsym(custom,"aclnnFlashMlaMetadata"));
-        TORCH_CHECK(create && destroy && workspace && launch,"FlashMlaMetadata native ABI is unavailable");
+        if(workspace && launch)return true;
+        dlclose(custom);
+        workspace=nullptr;launch=nullptr;
+        return false;
+    }
+    Api() {
+        auto base=dlopen("libnnopbase.so",RTLD_NOW|RTLD_LOCAL);
+        TORCH_CHECK(base,"FlashMLA metadata requires libnnopbase.so");
+        create=reinterpret_cast<Create>(dlsym(base,"aclCreateTensor"));
+        destroy=reinterpret_cast<Destroy>(dlsym(base,"aclDestroyTensor"));
+        bool loaded=false;
+        if(const char* roots=std::getenv("ASCEND_CUSTOM_OPP_PATH")) {
+            std::istringstream paths(roots);
+            std::string vendor;
+            while(std::getline(paths,vendor,':')) {
+                if(!vendor.empty() && LoadCustom(vendor+"/op_api/lib/libcust_opapi.so")) {
+                    loaded=true;break;
+                }
+            }
+        }
+        if(!loaded)loaded=LoadCustom("libcust_opapi.so");
+        TORCH_CHECK(create && destroy && loaded,
+            "FlashMlaMetadata native ABI is unavailable. Set ASCEND_CUSTOM_OPP_PATH "
+            "to the FlashMLA vendor directory containing op_api/lib/libcust_opapi.so");
     }
 };
 AclTensor* Descriptor(Api& api,const at::Tensor& t) {
