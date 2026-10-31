@@ -1,0 +1,44 @@
+{
+  "time": 1793422862.8441632,
+  "kernel_head": "0d19ea0d6cfa39afe72446f494cdf86d3a1dd174",
+  "sglang_head": "7d9cdf6a32b23e405fcca64d85bbc7c2db74a387",
+  "library_sha256": "9fc6a24c417ae500b628ac351b12cd22c5c2e1f14f82ffc68d73e19c924d59b9",
+  "native_matches_tested_source": true,
+  "packed_query_source": true,
+  "zero_copy_sglang_source": true,
+  "root_sglang_tests": 56,
+  "real_weight_cases": 480,
+  "acceptance_cases": 28,
+  "valid_performance_cases": 16,
+  "missing_performance_cases": [
+    [
+      "direct",
+      7
+    ],
+    [
+      "direct",
+      8
+    ],
+    [
+      "direct",
+      9
+    ],
+    [
+      "direct",
+      10
+    ]
+  ],
+  "controller_live": true,
+  "card7": [
+    "| 7      | Ascend950DT      | OK            | 392.5                 49                       0     / 0             |",
+    "| 7                         | 212052        | python             | 308                   | 337482                  |",
+    "| 7                         | 222417        | sglang::schedul    | 90883                 | 339080                  |"
+  ],
+  "sglang_file_hashes": {
+    "python/sglang/srt/hardware_backend/npu/attention/mla_preprocess.py": "8f4d44955ff0fe1373bc32fd3f77a83fa21025c2443f6dec0d04ea94771c8841",
+    "python/sglang/srt/hardware_backend/npu/attention/flash_mla_adapter.py": "21f617715749a4aa19c35373853830f57f44cfab33bbedb92dc26052490c8b86",
+    "python/sglang/srt/hardware_backend/npu/attention/ascend_backend.py": "3a291a9bb0ff2c1a27d80ebd755f03295e02f5b7b871cd925bd4c7e14b983aa9",
+    "test/registered/ascend/test_mlaprolog_v3_packed_query.py": "f7e9131299d76d0f63218668983436585ed858637dada47317f627033fca2731"
+  },
+  "complete": false
+}

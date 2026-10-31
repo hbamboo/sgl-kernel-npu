@@ -1,0 +1,10 @@
+{
+  "hashes": {
+    "python/sglang/srt/hardware_backend/npu/attention/mla_preprocess.py": "8f4d44955ff0fe1373bc32fd3f77a83fa21025c2443f6dec0d04ea94771c8841",
+    "python/sglang/srt/hardware_backend/npu/attention/flash_mla_adapter.py": "21f617715749a4aa19c35373853830f57f44cfab33bbedb92dc26052490c8b86",
+    "python/sglang/srt/hardware_backend/npu/attention/ascend_backend.py": "3a291a9bb0ff2c1a27d80ebd755f03295e02f5b7b871cd925bd4c7e14b983aa9",
+    "test/registered/ascend/test_mlaprolog_v3_packed_query.py": "f7e9131299d76d0f63218668983436585ed858637dada47317f627033fca2731"
+  },
+  "test_started": 1793422443.776118,
+  "result": "56 passed"
+}

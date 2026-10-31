@@ -1,0 +1,37 @@
+[
+  {
+    "stage": "mix11-real-regression",
+    "rc": 0,
+    "elapsed": 11.730978012084961
+  },
+  {
+    "stage": "mix11-graph-regression",
+    "rc": 0,
+    "elapsed": 22.081665992736816
+  },
+  {
+    "stage": "mix11-full-decode-sweep",
+    "rc": 0,
+    "elapsed": 44.20222187042236
+  },
+  {
+    "stage": "mix11-no-norm",
+    "rc": 0,
+    "elapsed": 54.58634901046753
+  },
+  {
+    "stage": "mix11-integration",
+    "rc": 0,
+    "elapsed": 74.95498251914978
+  },
+  {
+    "stage": "mix11-policy-compare",
+    "rc": 0,
+    "elapsed": 87.86234426498413
+  },
+  {
+    "stage": "mix11-acceptance",
+    "rc": 0,
+    "elapsed": 655.9512543678284
+  }
+]

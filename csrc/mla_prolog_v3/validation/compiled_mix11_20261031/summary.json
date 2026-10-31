@@ -1,0 +1,38 @@
+{
+  "valid_performance_cases": 16,
+  "planned_performance_cases": 20,
+  "missing_performance_cases": [
+    [
+      "direct",
+      7
+    ],
+    [
+      "direct",
+      8
+    ],
+    [
+      "direct",
+      9
+    ],
+    [
+      "direct",
+      10
+    ]
+  ],
+  "speed_gain_pct_range": [
+    37.02464790125628,
+    42.15563356476988
+  ],
+  "latency_reduction_pct_range": [
+    27.020429147854664,
+    29.654564161583263
+  ],
+  "real_weight_cases": 480,
+  "acceptance_cases": 28,
+  "sglang_integration_cases": 56,
+  "library_sha256": "9fc6a24c417ae500b628ac351b12cd22c5c2e1f14f82ffc68d73e19c924d59b9",
+  "native_commit": "0d19ea0d6cfa39afe72446f494cdf86d3a1dd174",
+  "goal_status": "paused by user; waiting for a later explicit command",
+  "complete_performance_acceptance": false,
+  "scope": "decode prolog + Query assembly, captured device graph"
+}

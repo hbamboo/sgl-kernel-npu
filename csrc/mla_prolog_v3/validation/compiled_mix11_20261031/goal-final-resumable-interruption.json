@@ -1,0 +1,19 @@
+{
+  "rows_preserved": 16,
+  "workers": [
+    {
+      "pid": 472357,
+      "wait_status": 9,
+      "state": "zombie",
+      "stderr_empty": true
+    },
+    {
+      "pid": 472803,
+      "wait_status": 9,
+      "state": "zombie",
+      "stderr_empty": true
+    }
+  ],
+  "reason": "Workers exited with SIGKILL while waiting, no stderr; sender/cause unknown",
+  "time": 1793422229.7576158
+}

@@ -1,0 +1,42 @@
+golden_T8                          OK   (/tmp/mla-output576-20261030/mix11-acceptance/golden_T8.log)
+golden_T256                        OK   (/tmp/mla-output576-20261030/mix11-acceptance/golden_T256.log)
+real_weights_layer2                OK   (/tmp/mla-output576-20261030/mix11-acceptance/real_weights_layer2.log)
+real_weights_layer0                OK   (/tmp/mla-output576-20261030/mix11-acceptance/real_weights_layer0.log)
+real_weights_layer23               OK   (/tmp/mla-output576-20261030/mix11-acceptance/real_weights_layer23.log)
+real_weights_layer46               OK   (/tmp/mla-output576-20261030/mix11-acceptance/real_weights_layer46.log)
+real_weights_pybind                OK   (/tmp/mla-output576-20261030/mix11-acceptance/real_weights_pybind.log)
+token_boundary_sweep               OK   (/tmp/mla-output576-20261030/mix11-acceptance/token_boundary_sweep.log)
+vendor_bit_exact                   OK   (/tmp/mla-output576-20261030/mix11-acceptance/vendor_bit_exact.log)
+out_variant                        OK   (/tmp/mla-output576-20261030/mix11-acceptance/out_variant.log)
+mxfp8_auto_dequant                 OK   (/tmp/mla-output576-20261030/mix11-acceptance/mxfp8_auto_dequant.log)
+sglang_alias                       OK   (/tmp/mla-output576-20261030/mix11-acceptance/sglang_alias.log)
+sglang_nd_weights                  OK   (/tmp/mla-output576-20261030/mix11-acceptance/sglang_nd_weights.log)
+sglang_mode_infer                  OK   (/tmp/mla-output576-20261030/mix11-acceptance/sglang_mode_infer.log)
+mlapolog_scheme_state              OK   (/tmp/mla-output576-20261030/mix11-acceptance/mlapolog_scheme_state.log)
+pybind_fast_path                   OK   (/tmp/mla-output576-20261030/mix11-acceptance/pybind_fast_path.log)
+shape_interleave                   OK   (/tmp/mla-output576-20261030/mix11-acceptance/shape_interleave.log)
+python_api_real_weights            OK   (/tmp/mla-output576-20261030/mix11-acceptance/python_api_real_weights.log)
+shim_ckpt_orientation              OK   (/tmp/mla-output576-20261030/mix11-acceptance/shim_ckpt_orientation.log)
+example_three_paths                OK   (/tmp/mla-output576-20261030/mix11-acceptance/example_three_paths.log)
+pure_logic_unit_tests              OK   (/tmp/mla-output576-20261030/mix11-acceptance/pure_logic_unit_tests.log)
+multi_stream                       OK   (/tmp/mla-output576-20261030/mix11-acceptance/multi_stream.log)
+graph_capture_alloc                OK   (/tmp/mla-output576-20261030/mix11-acceptance/graph_capture_alloc.log)
+out_buffer_guard                   OK   (/tmp/mla-output576-20261030/mix11-acceptance/out_buffer_guard.log)
+packed_query                       OK   (/tmp/mla-output576-20261030/mix11-acceptance/packed_query.log)
+allocate_outputs                   OK   (/tmp/mla-output576-20261030/mix11-acceptance/allocate_outputs.log)
+vendor_multi_geometry              OK   (/tmp/mla-output576-20261030/mix11-acceptance/vendor_multi_geometry.log)
+perf_sweep                         OK   (/tmp/mla-output576-20261030/mix11-acceptance/perf_sweep.log)
+
+passed=28 failed=0  (logs in /tmp/mla-output576-20261030/mix11-acceptance)
+--- precision summary (golden T=8) ---
+query        cosine=0.999994  max|d|=0.00299  mean rel=0.0235  ref|.|mean=0.1275
+query_rope   cosine=0.999996  max|d|=0.00977  mean rel=0.0233  ref|.|mean=0.4614
+query_norm   cosine=0.999998  max|d|=0.01732  mean rel=0.0019  ref|.|mean=0.7960
+kv_cache     cosine=0.999998  max|d|=0.01691  mean rel=0.0019  ref|.|mean=0.7918
+kr_cache     cosine=0.999998  max|d|=0.00074  mean rel=0.0019  ref|.|mean=0.0691
+--- performance summary ---
+    64      51.48        371.2      21.5080     11.4
+   256      89.85        273.1      49.2937      8.4
+   512     170.12        186.8      52.0708      5.7
+  1024     330.00        140.2      53.6864      4.3
+  2048     650.54        115.7      54.4677      3.5

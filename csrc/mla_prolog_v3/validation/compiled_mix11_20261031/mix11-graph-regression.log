@@ -1,0 +1,22 @@
+PASS refreshed capture 1 False
+PASS refreshed capture 2 False
+PASS refreshed capture 3 False
+PASS refreshed capture 4 False
+PASS refreshed capture 5 False
+PASS refreshed capture 6 False
+PASS refreshed capture 7 False
+PASS refreshed capture 8 False
+PASS refreshed capture 9 False
+PASS refreshed capture 10 False
+PASS refreshed capture 1 True
+PASS refreshed capture 2 True
+PASS refreshed capture 3 True
+PASS refreshed capture 4 True
+PASS refreshed capture 5 True
+PASS refreshed capture 6 True
+PASS refreshed capture 7 True
+PASS refreshed capture 8 True
+PASS refreshed capture 9 True
+PASS refreshed capture 10 True
+PASS mixed decode multi-stream
+PASS nonstandard stride fallback

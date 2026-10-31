@@ -1,0 +1,4805 @@
+{
+  "rows": [
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 0,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 2,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 23,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 0,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 42,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 1,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 2,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 3,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 4,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 5,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 6,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 7,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 8,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 9,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": false,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-06,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    },
+    {
+      "layer": 46,
+      "seed": 2026,
+      "tokens": 10,
+      "direct_cache": true,
+      "epsilon": 1e-05,
+      "bit_exact": true,
+      "canary": true,
+      "cache_reset_before_candidate": true
+    }
+  ],
+  "count": 480
+}

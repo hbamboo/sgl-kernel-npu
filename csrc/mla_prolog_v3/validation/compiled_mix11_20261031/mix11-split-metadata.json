@@ -1,0 +1,17 @@
+{
+  "valid": true,
+  "rows": [
+    {
+      "target": "mla_prolog_v3_kernel",
+      "object": "/tmp/mla-output576-20261030/build-small/csrc/mla_prolog_v3_kernel_merge_obj_dir/device.o",
+      "sha256": "a58db06af61c4bd7710c606c72fda21cd70685a47fd82e49a2a76054b39d238d",
+      "metadata": ".ascend.meta. [0]: mla_prolog_v3_0_mix_aic\nKERNEL_TYPE: MIX_AIC_MAIN\nMIX_TASK_RATION: [1:2]\n.ascend.meta. [0]: mla_prolog_v3_0_mix_aiv\nKERNEL_TYPE: MIX_AIC_MAIN\nMIX_TASK_RATION: [1:2]\n"
+    },
+    {
+      "target": "mla_prolog_v3_small_kernel",
+      "object": "/tmp/mla-output576-20261030/build-small/csrc/mla_prolog_v3_small_kernel_merge_obj_dir/device.o",
+      "sha256": "a6369112da6ed3b18c6bdd2c1891d4790f0a1324d6cd49a8c9328e898e72be2c",
+      "metadata": ".ascend.meta. [0]: mla_prolog_v3_small_0_mix_aic\nKERNEL_TYPE: MIX_AIC_MAIN\nMIX_TASK_RATION: [1:1]\n.ascend.meta. [0]: mla_prolog_v3_small_0_mix_aiv\nKERNEL_TYPE: MIX_AIC_MAIN\nMIX_TASK_RATION: [1:1]\n"
+    }
+  ]
+}

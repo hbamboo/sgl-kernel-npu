@@ -1,0 +1,29 @@
+{
+  "source": "/sgl-workspace/p-kv-opt-artifacts/decode-direct-cache/merged-verification-r2/pd/direct/stacks/direct-cache-direct/decode_1.log",
+  "kind": "sampled server-log lines, not every decode step",
+  "all_samples": {
+    "1": 28,
+    "2": 17,
+    "3": 27,
+    "4": 15,
+    "5": 8,
+    "6": 7,
+    "7": 18,
+    "8": 5,
+    "9": 4,
+    "10": 4
+  },
+  "business_window": "16:50:00..16:55:40",
+  "business_samples": {
+    "1": 23,
+    "2": 14,
+    "3": 20,
+    "4": 12,
+    "5": 8,
+    "6": 5,
+    "7": 13,
+    "8": 5,
+    "9": 4,
+    "10": 4
+  }
+}

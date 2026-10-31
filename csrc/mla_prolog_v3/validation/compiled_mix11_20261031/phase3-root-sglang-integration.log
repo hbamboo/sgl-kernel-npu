@@ -1,0 +1,17 @@
+........................................................                 [100%]
+=============================== warnings summary ===============================
+../usr/local/python3.12.13/lib/python3.12/site-packages/_pytest/config/__init__.py:1437
+  /usr/local/python3.12.13/lib/python3.12/site-packages/_pytest/config/__init__.py:1437: PytestConfigWarning: Unknown config option: asyncio_mode
+
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: 14 warnings
+  /usr/local/python3.12.13/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+registered/ascend/test_mlaprolog_v3_packed_query.py::test_wrapper_to_flashmla[False-1]
+  /sgl-workspace/sglang-p-kv-opt/test/registered/ascend/test_mlaprolog_v3_packed_query.py:24: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:423.)
+    idx=torch.arange(tokens,device='npu:0',dtype=torch.int64)*17%2048
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+56 passed, 16 warnings in 15.66s

@@ -1,0 +1,24 @@
+{
+  "worktree_commit": "9554df82fa300d9904f6bbc0b9dff18588dab9dd",
+  "kernel_parent": "698e1c71bd0ba862dc863e502f812a023191ab8b",
+  "kernel_commit": "0d19ea0d6cfa39afe72446f494cdf86d3a1dd174",
+  "library_sha256": "9fc6a24c417ae500b628ac351b12cd22c5c2e1f14f82ffc68d73e19c924d59b9",
+  "library_path": "/mnt/paas/hxdnpu/sgl-kernel-npu/python/sgl_kernel_npu/sgl_kernel_npu/lib/libsgl_kernel_npu.so",
+  "phase2_backup": "/tmp/mla-output576-20261030/phase2-packed-query.so",
+  "protected_init_sha256": "1855d998cd79d9089bc2aadb88b892aee81b310c67cb874939b150783470576b",
+  "cmake_unrelated_preserved": true,
+  "performance_rows_at_install": 16,
+  "files": [
+    "csrc/CMakeLists.txt",
+    "csrc/mla_prolog_v3/op_host/mla_prolog_v3_host.cpp",
+    "csrc/mla_prolog_v3/op_host/mla_prolog_v3_host.h",
+    "csrc/mla_prolog_v3/op_host/mla_prolog_v3_pybind.cpp",
+    "csrc/mla_prolog_v3/op_host/mla_prolog_v3_torch.cpp",
+    "csrc/mla_prolog_v3/op_kernel/mla_prolog_v3.cpp",
+    "csrc/mla_prolog_v3/op_kernel/mla_prolog_v3_body.h",
+    "csrc/mla_prolog_v3/op_kernel/mla_prolog_v3_small.cpp",
+    "csrc/mla_prolog_v3/tests/test_small_static_regression.py",
+    "csrc/mla_prolog_v3/tests/test_mix11_graphs.py"
+  ],
+  "sglang_boundary_test_commit": "7d9cdf6a32b23e405fcca64d85bbc7c2db74a387"
+}
