@@ -14,6 +14,11 @@ def _load_sgl_kernel_npu():
         extra_path = npu_path / "lib" / name
         if extra_path.is_file():
             torch.ops.load_library(str(extra_path))
+    flash_mla_path = npu_path / "lib" / "libsgl_kernel_npu_flash_mla.so"
+    if flash_mla_path.is_file():
+        torch.ops.load_library(str(flash_mla_path))
 
 
 _load_sgl_kernel_npu()
+
+from .flash_mla import flash_mla, flash_mla_metadata

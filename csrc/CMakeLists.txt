@@ -348,6 +348,11 @@ target_include_directories(${OP_PLUGIN_NAME} PRIVATE
         ${ASCEND_DRIVER_PATH}/kernel/inc
 )
 
+# FlashMLA companion library (A5 only).
+if(SGL_KERNEL_ENABLE_A5_ONLY_OPS)
+    add_subdirectory(flash_mla)
+endif()
+
 # ScatterPaKvCache companion libraries (A5 only).
 if(SGL_KERNEL_ENABLE_A5_ONLY_OPS)
     add_subdirectory(scatter_pa_kv_cache)
