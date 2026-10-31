@@ -75,3 +75,69 @@ def test_fake():
     with FakeTensorMode():
         ts=[torch.empty(129,20,448,device='npu',dtype=torch.bfloat16),torch.empty(129,1,64,device='npu',dtype=torch.bfloat16),torch.empty(129,device='npu',dtype=torch.int64),torch.empty(2,128,20,256,device='npu',dtype=torch.bfloat16),torch.empty(2,128,20,256,device='npu',dtype=torch.bfloat16)]
         assert call(*ts) is None
+
+
+@pytest.mark.parametrize('dtype',[torch.bfloat16,torch.float16])
+@pytest.mark.parametrize('idx',[torch.int32,torch.int64])
+@pytest.mark.parametrize('n',[0,1,65,129,8192,30080])
+@pytest.mark.parametrize('random',[False,True])
+def test_dense_outputs_and_cache(dtype,idx,n,random):
+    ts,ek,ev=tensors(n,dtype=dtype,idx=idx,random=random)
+    x,r,s,k,v=ts
+    ko=torch.empty(n,20,256,dtype=dtype,device='npu')
+    vo=torch.empty_like(ko)
+    call(*ts,key_out=ko,value_out=vo)
+    assert torch.equal(bits(ko),bits(torch.cat((x[...,:192],r.expand(-1,20,-1)),dim=-1)))
+    assert torch.equal(bits(vo),bits(x[...,192:]))
+    assert torch.equal(bits(k),bits(ek))
+    assert torch.equal(bits(v),bits(ev))
+
+
+def test_dense_invalid_slots_still_produce_fia_rows():
+    ts,_,_=tensors(3)
+    cap=ts[3].shape[0]*128
+    ts[2].copy_(torch.tensor([-1,7,cap],dtype=ts[2].dtype,device='npu'))
+    ko=torch.empty(3,20,256,dtype=ts[0].dtype,device='npu');vo=torch.empty_like(ko)
+    call(*ts,key_out=ko,value_out=vo)
+    assert torch.equal(bits(ko),bits(torch.cat((ts[0][...,:192],ts[1].expand(-1,20,-1)),dim=-1)))
+    assert torch.equal(bits(vo),bits(ts[0][...,192:]))
+    expected_k=torch.full_like(ts[3],-3);expected_v=torch.full_like(ts[4],5)
+    expected_k.view(cap,20,256)[7]=ko[1]
+    expected_v.view(cap,20,256)[7]=vo[1]
+    assert torch.equal(bits(ts[3]),bits(expected_k))
+    assert torch.equal(bits(ts[4]),bits(expected_v))
+
+
+def test_dense_stream_and_graph_replay_updates_both_outputs():
+    ts,_,_=tensors(129)
+    ko=torch.empty(129,20,256,dtype=ts[0].dtype,device='npu');vo=torch.empty_like(ko)
+    stream=torch.npu.Stream()
+    with torch.npu.stream(stream):call(*ts,key_out=ko,value_out=vo)
+    stream.synchronize()
+    for _ in range(3):call(*ts,key_out=ko,value_out=vo)
+    torch.npu.synchronize()
+    graph=torch.npu.NPUGraph()
+    with torch.npu.graph(graph):call(*ts,key_out=ko,value_out=vo)
+    ts[0].copy_(torch.randn_like(ts[0]));ts[1].copy_(torch.randn_like(ts[1]))
+    ko.fill_(-9);vo.fill_(-9);ts[3].fill_(-3);ts[4].fill_(5)
+    graph.replay();torch.npu.synchronize()
+    expected=torch.cat((ts[0][...,:192],ts[1].expand(-1,20,-1)),dim=-1)
+    assert torch.equal(bits(ko),bits(expected))
+    assert torch.equal(bits(vo),bits(ts[0][...,192:]))
+    slots=ts[2].cpu().long()
+    assert torch.equal(bits(ts[3].view(-1,20,256)[ts[2].long()]),bits(expected))
+    assert torch.equal(bits(ts[4].view(-1,20,256)[ts[2].long()]),bits(vo))
+
+
+def test_dense_validation_and_fake():
+    ts,_,_=tensors(3)
+    ko=torch.empty(3,20,256,dtype=ts[0].dtype,device='npu');vo=torch.empty_like(ko)
+    with pytest.raises(RuntimeError,match='supplied together'):call(*ts,key_out=ko)
+    with pytest.raises(RuntimeError,match='alias each other'):call(*ts,key_out=ko,value_out=ko)
+    with pytest.raises(RuntimeError,match='alias inputs or caches'):
+        call(*ts,key_out=ts[3].view(-1,20,256)[:3],value_out=vo)
+    with pytest.raises(RuntimeError,match='key_out must'):
+        call(*ts,key_out=ko[:2],value_out=vo)
+    from torch._subclasses.fake_tensor import FakeTensorMode
+    with FakeTensorMode(allow_non_fake_inputs=True):
+        assert call(*ts,key_out=ko,value_out=vo) is None

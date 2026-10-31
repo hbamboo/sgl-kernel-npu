@@ -47,3 +47,18 @@ SGLang integration is based on opt/p_kv_shared_tune. Enable `SGLANG_NPU_PREFILL_
 Device7 standalone profiler, T=33305/H=20/nope192/rope64/V256, shuffled pages, ten adjacent ArgMax->target pairs: old layout plus two scatter kernels 2847.154us; fused 418.954us. Minimum logical read+write throughput is 3.063TB/s, compared with 3.302TB/s from a 1GiB source/destination copy on the same card (92.7%). These are effective bytes, not a physical HBM counter or proof of an absolute hardware maximum. Tile/core/coalescing scans and random slots reached the same plateau.
 
 Real user weights `/mnt/sfs_turbo/models/chatdpo-glm-flash-0727-mxfp8`: BS12, 33305 new tokens and prefix128/request, ten alternating warmed A/B pairs gave complete ModelRunner extend median 786.044ms ->671.861ms (-14.53%). All logits were bitwise equal. Separate profiler: 94 generic scatters/102.808ms ->47 fused kernels/20.369ms. This is single-card model prefill, not HTTP TTFT or cross-card PD transport.
+
+
+## Optional contiguous FIA outputs
+
+The existing scatter_pa_kv_cache_mla entry accepts optional key_out[T,H,nope+rope]
+and value_out[T,H,value_dim] keyword arguments. Supply both caller-owned,
+contiguous outputs with the same dtype/device as packed_kv. They must not alias
+the inputs, caches or each other. The kernel reuses assembled UB rows to emit
+both dense FIA inputs and paged cache updates in one launch. Invalid PA slots
+skip the cache update but still produce their dense rows. Existing calls without
+these outputs keep the cache-only behavior. Warm each signature before capture.
+
+The no-prefix SGLang path uses the dense outputs with its existing contiguous
+FIA call. An older wheel is detected from the operator schema and retains the
+previous K/V preparation path; upgrade the wheel to remove the five copy kernels.

@@ -24,6 +24,7 @@ __simd_vf__ inline void AssembleRope(__ubuf__ uint16_t* key,__ubuf__ uint16_t* r
 template<class Index>
 class Kernel {
     GlobalTensor<uint16_t> packedGm_,ropeGm_,keyCacheGm_,valueCacheGm_;
+    GlobalTensor<uint16_t> keyOutGm_,valueOutGm_;
     GlobalTensor<Index> slotsGm_;
     TQueBind<QuePosition::VECIN,QuePosition::VECOUT,2> keyQ_,valueQ_;
     TQue<QuePosition::VECIN,2> ropeQ_;
@@ -33,7 +34,7 @@ class Kernel {
     int64_t start_,count_,dim_,packedDim_;
 public:
     __aicore__ inline void Init(GM_ADDR packed,GM_ADDR rope,GM_ADDR slots,GM_ADDR kc,GM_ADDR vc,
-                               const ScatterMlaTiling& p) {
+                               GM_ADDR keyOut,GM_ADDR valueOut,const ScatterMlaTiling& p) {
         p_=p;start_=GetBlockIdx()*p_.tokensPerCore;
         count_=ScalarMin(p_.tokensPerCore,p_.tokens-start_);
         dim_=p_.nopeDim+p_.ropeDim;packedDim_=p_.nopeDim+p_.valueDim;
@@ -42,6 +43,10 @@ public:
         slotsGm_.SetGlobalBuffer(reinterpret_cast<__gm__ Index*>(slots));
         keyCacheGm_.SetGlobalBuffer(reinterpret_cast<__gm__ uint16_t*>(kc));
         valueCacheGm_.SetGlobalBuffer(reinterpret_cast<__gm__ uint16_t*>(vc));
+        if(p_.writeDense) {
+            keyOutGm_.SetGlobalBuffer(reinterpret_cast<__gm__ uint16_t*>(keyOut));
+            valueOutGm_.SetGlobalBuffer(reinterpret_cast<__gm__ uint16_t*>(valueOut));
+        }
         pipe_.InitBuffer(keyQ_,2,p_.tileTokens*p_.heads*dim_*sizeof(uint16_t));
         pipe_.InitBuffer(valueQ_,2,p_.tileTokens*p_.heads*p_.valueDim*sizeof(uint16_t));
         // Extra vector register protects the final masked 64-lane rope load.
@@ -74,6 +79,14 @@ public:
                                  static_cast<uint32_t>(p_.ropeDim));
         auto event=static_cast<event_t>(pipe_.FetchEventID(HardEvent::V_MTE3));
         SetFlag<HardEvent::V_MTE3>(event);WaitFlag<HardEvent::V_MTE3>(event);
+        // Reuse the assembled UB rows for contiguous FIA inputs and PA caches.
+        // Dense rows are produced even when a padding slot is invalid for PA.
+        if(p_.writeDense) {
+            DataCopyExtParams kp{1,static_cast<uint32_t>(n*p_.heads*dim_*2),0,0,0};
+            DataCopyExtParams vp{1,static_cast<uint32_t>(n*p_.heads*p_.valueDim*2),0,0,0};
+            DataCopyPad(keyOutGm_[(start_+off)*p_.heads*dim_],k,kp);
+            DataCopyPad(valueOutGm_[(start_+off)*p_.heads*p_.valueDim],v,vp);
+        }
         for(int64_t i=0;i<n;) {
             int64_t slot=slots.GetValue(off+i);
             if(slot<0||slot>=p_.capacity) {++i;continue;}
@@ -107,15 +120,16 @@ public:
 };
 }
 extern "C" __global__ __aicore__ void sgl_scatter_mla(GM_ADDR packed,GM_ADDR rope,GM_ADDR slots,
-                                                     GM_ADDR kc,GM_ADDR vc,GM_ADDR tiling) {
+                                                     GM_ADDR kc,GM_ADDR vc,GM_ADDR keyOut,
+                                                     GM_ADDR valueOut,GM_ADDR tiling) {
     KERNEL_TASK_TYPE_DEFAULT(KERNEL_TYPE_AIV_ONLY);
     ScatterMlaTiling p;
     auto* dst=reinterpret_cast<uint64_t*>(&p);
     auto* src=reinterpret_cast<__gm__ uint64_t*>(tiling);
     for(int i=0;i<sizeof(p)/sizeof(uint64_t);++i)dst[i]=src[i];
     if(p.indexBytes==4) {
-        sglang::scatter_mla::Kernel<int32_t> op;op.Init(packed,rope,slots,kc,vc,p);op.Process();
+        sglang::scatter_mla::Kernel<int32_t> op;op.Init(packed,rope,slots,kc,vc,keyOut,valueOut,p);op.Process();
     } else {
-        sglang::scatter_mla::Kernel<int64_t> op;op.Init(packed,rope,slots,kc,vc,p);op.Process();
+        sglang::scatter_mla::Kernel<int64_t> op;op.Init(packed,rope,slots,kc,vc,keyOut,valueOut,p);op.Process();
     }
 }

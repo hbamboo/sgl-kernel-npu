@@ -12,4 +12,5 @@ struct ScatterMlaTiling {
     int64_t tokensPerCore;
     int64_t indexBytes;
     int64_t coalesce;
+    int64_t writeDense;
 };

@@ -21,11 +21,19 @@ def scatter_pa_kv_cache(key:torch.Tensor,key_cache:torch.Tensor,slot_mapping:tor
 
 def scatter_pa_kv_cache_mla(packed_kv:torch.Tensor,k_rope:torch.Tensor,
                           slot_mapping:torch.Tensor,key_cache:torch.Tensor,
-                          value_cache:torch.Tensor,nope_dim:int=192)->None:
+                          value_cache:torch.Tensor,nope_dim:int=192,*,
+                          key_out:Optional[torch.Tensor]=None,
+                          value_out:Optional[torch.Tensor]=None)->None:
     """Assemble expanded MLA K/V directly into caller-owned paged caches.
 
     packed_kv: [T,H,nope_dim+value_dim]; k_rope: [T,1,rope_dim], already rotated.
     BF16/FP16 payloads are copied bit for bit. Cache layout is Norm (PA BSND).
+    Optional key_out[T,H,nope+rope] and value_out[T,H,value_dim] receive the
+    same assembled rows for contiguous FIA, including rows with invalid slots.
     """
-    torch.ops.npu.scatter_pa_kv_cache_mla(packed_kv,k_rope,slot_mapping,
-                                         key_cache,value_cache,nope_dim)
+    if key_out is None and value_out is None:
+        torch.ops.npu.scatter_pa_kv_cache_mla(packed_kv,k_rope,slot_mapping,
+                                             key_cache,value_cache,nope_dim)
+    else:
+        torch.ops.npu.scatter_pa_kv_cache_mla(packed_kv,k_rope,slot_mapping,
+            key_cache,value_cache,nope_dim,key_out=key_out,value_out=value_out)

@@ -8,7 +8,9 @@
 namespace sglang::npu_kernel {
 void scatter_pa_kv_cache_mla(const at::Tensor& packed,const at::Tensor& rope,
                             const at::Tensor& slots,at::Tensor kc,at::Tensor vc,
-                            int64_t nope_dim,int64_t tile_tokens,int64_t core_num,bool coalesce) {
+                            int64_t nope_dim,int64_t tile_tokens,int64_t core_num,bool coalesce,
+                            const c10::optional<at::Tensor>& key_out,
+                            const c10::optional<at::Tensor>& value_out) {
     TORCH_CHECK(packed.device().type()==c10::DeviceType::PrivateUse1,"packed must be on NPU");
     c10::DeviceGuard guard(packed.device());
     TORCH_CHECK(packed.dim()==3&&rope.dim()==3&&rope.size(1)==1,"expected packed[T,H,nope+V], rope[T,1,R]");
@@ -22,6 +24,17 @@ void scatter_pa_kv_cache_mla(const at::Tensor& packed,const at::Tensor& rope,
     TORCH_CHECK(tokens==rope.size(0)&&slots.size(0)==tokens,"token counts must match");
     TORCH_CHECK(nope_dim>0&&rd>0&&vd>0&&nope_dim%16==0&&rd%16==0&&vd%16==0,"positive dimensions must be 32-byte aligned");
     TORCH_CHECK(kc.size(0)==vc.size(0)&&kc.size(1)==vc.size(1)&&kc.size(2)==heads&&vc.size(2)==heads&&kc.size(3)==nope_dim+rd&&vc.size(3)==vd,"cache geometry mismatch");
+    TORCH_CHECK(key_out.has_value()==value_out.has_value(),"key_out and value_out must be supplied together");
+    if(key_out.has_value()) {
+        const auto& ko=*key_out;const auto& vo=*value_out;
+        TORCH_CHECK(ko.dim()==3&&ko.size(0)==tokens&&ko.size(1)==heads&&ko.size(2)==nope_dim+rd,"key_out must be [T,H,nope+rope]");
+        TORCH_CHECK(vo.dim()==3&&vo.size(0)==tokens&&vo.size(1)==heads&&vo.size(2)==vd,"value_out must be [T,H,value_dim]");
+        for(const auto& t:{ko,vo}) {
+            TORCH_CHECK(t.device()==packed.device()&&t.scalar_type()==packed.scalar_type()&&t.is_contiguous(),"dense outputs must match payload device/dtype and be contiguous");
+            for(const auto& input:{packed,rope,kc,vc})TORCH_CHECK(!t.is_alias_of(input),"dense outputs must not alias inputs or caches");
+        }
+        TORCH_CHECK(!ko.is_alias_of(vo),"dense outputs must not alias each other");
+    }
     auto* platform=platform_ascendc::PlatformAscendCManager::GetInstance();
     const int64_t max_cores=platform->GetCoreNumAiv();
     TORCH_CHECK(core_num>=0&&core_num<=max_cores,"core_num exceeds device capacity");
@@ -34,16 +47,19 @@ void scatter_pa_kv_cache_mla(const at::Tensor& packed,const at::Tensor& rope,
     p.tokens=tokens;p.heads=heads;p.nopeDim=nope_dim;p.ropeDim=rd;p.valueDim=vd;
     p.capacity=kc.size(0)*kc.size(1);p.tileTokens=tile_tokens;p.usedCores=cores;
     p.tokensPerCore=(tokens+cores-1)/cores;p.indexBytes=slots.element_size();p.coalesce=coalesce;
+    p.writeDense=key_out.has_value();
     const auto required=2*tile_tokens*heads*((nope_dim+rd)+vd)*2+2*(tile_tokens*rd*2+256)+((p.tokensPerCore*p.indexBytes+31)/32)*32;
     TORCH_CHECK(required+2048<=static_cast<int64_t>(ub),"tile exceeds UB capacity: ",required," / ",ub);
     auto tiling=ge_helper::TilingTensorCache<ScatterMlaTiling>::Get(p,"scatter_pa_kv_cache_mla");
     const uint32_t block_dim=cores;
-    EXEC_KERNEL_CMD(sgl_scatter_mla,block_dim,packed,rope,slots,kc,vc,tiling);
+    const at::Tensor ko=key_out.has_value()?*key_out:kc;
+    const at::Tensor vo=value_out.has_value()?*value_out:vc;
+    EXEC_KERNEL_CMD(sgl_scatter_mla,block_dim,packed,rope,slots,kc,vc,ko,vo,tiling);
 }
-void scatter_pa_kv_cache_mla_meta(const at::Tensor&,const at::Tensor&,const at::Tensor&,at::Tensor,at::Tensor,int64_t,int64_t,int64_t,bool) {}
+void scatter_pa_kv_cache_mla_meta(const at::Tensor&,const at::Tensor&,const at::Tensor&,at::Tensor,at::Tensor,int64_t,int64_t,int64_t,bool,const c10::optional<at::Tensor>&,const c10::optional<at::Tensor>&) {}
 }
 TORCH_LIBRARY_FRAGMENT(npu,m) {
-    m.def("scatter_pa_kv_cache_mla(Tensor packed, Tensor k_rope, Tensor slot_mapping, Tensor(a!) key_cache, Tensor(b!) value_cache, int nope_dim=192, int tile_tokens=0, int core_num=0, bool coalesce=True) -> ()");
+    m.def("scatter_pa_kv_cache_mla(Tensor packed, Tensor k_rope, Tensor slot_mapping, Tensor(a!) key_cache, Tensor(b!) value_cache, int nope_dim=192, int tile_tokens=0, int core_num=0, bool coalesce=True, Tensor(c!)? key_out=None, Tensor(d!)? value_out=None) -> ()");
 }
 TORCH_LIBRARY_IMPL(npu,PrivateUse1,m) {m.impl("scatter_pa_kv_cache_mla",TORCH_FN(sglang::npu_kernel::scatter_pa_kv_cache_mla));}
 TORCH_LIBRARY_IMPL(npu,Meta,m) {m.impl("scatter_pa_kv_cache_mla",TORCH_FN(sglang::npu_kernel::scatter_pa_kv_cache_mla_meta));}
