@@ -1,0 +1,44 @@
+--- a/csrc/mla_prolog/op_kernel/mla_prolog_tiling_data.h
++++ b/csrc/mla_prolog/op_kernel/mla_prolog_tiling_data.h
+@@ -90,6 +90,7 @@
+     uint32_t decodeHeadLocal;
+     uint32_t decodeParallelDown;
+     uint32_t decodeKvBlockStart;
++    uint32_t decodeQnWideN;
+ };
+ 
+ // 2. 完整分块数据结构体（对应 MlaPrologTilingData 宏定义，嵌套基础参数）
+--- a/csrc/mla_prolog_v3/op_kernel/mla_prolog_v3_tiling_copy.h
++++ b/csrc/mla_prolog_v3/op_kernel/mla_prolog_v3_tiling_copy.h
+@@ -77,6 +77,7 @@
+     db->decodeHeadLocal = sb->decodeHeadLocal;
+     db->decodeParallelDown = sb->decodeParallelDown;
+     db->decodeKvBlockStart = sb->decodeKvBlockStart;
++    db->decodeQnWideN = sb->decodeQnWideN;
+     const __gm__ MlaPrologTplArgs *st = &src->tplArgs;
+     dst.tplArgs.cacheMode = st->cacheMode;
+     dst.tplArgs.scenario = st->scenario;
+--- a/csrc/mla_prolog_v3/op_host/mla_prolog_v3_torch.cpp
++++ b/csrc/mla_prolog_v3/op_host/mla_prolog_v3_torch.cpp
+@@ -356,6 +356,10 @@
+         bp.mm2BlockNum = (576U + bp.mm2SingleCoreN - 1) / bp.mm2SingleCoreN;
+         bp.decodeKvBlockStart = bp.mm1BlockNum;
+     }
++    const char* wideN = std::getenv("MLA_PROLOG_V3_DECODE_WIDE_N");
++    bp.decodeQnWideN = wideN && wideN[0] == '1' && t.tokenX.size() == 2 && bp.tokenSize <= 64 &&
++        t.weightQuantMode == 0 && t.kvQuantMode == 0 && res.splitMMode == 0 &&
++        bp.dimHeadSizeQc == 192 && bp.headSizeCkv == 512;
+     const at::Tensor &tiling_tensor = CachedTiling(tilingData);
+     at::Tensor workspace = WorkspaceFor(static_cast<int64_t>(res.workspaceSize), token_x);
+ 
+--- a/csrc/mla_prolog/op_kernel/arch35/kernel_mla_prolog_split_n_arch35.h
++++ b/csrc/mla_prolog/op_kernel/arch35/kernel_mla_prolog_split_n_arch35.h
+@@ -578,7 +578,7 @@
+     mmQnParam_.orgKc = QueryHeadStride() * baseParams_->numHeadSize;
+     mmQnParam_.orgKb = baseParams_->dimHeadSizeQc;
+     mmQnParam_.baseK = 128;
+-    mmQnParam_.baseN = 128;
++    mmQnParam_.baseN = baseParams_->decodeQnWideN ? 256 : 128;
+     mmQnParam_.stepK = 1;
+     if ((mmQnParam_.k > mmQnParam_.baseK) && (mmQnParam_.k % mmQnParam_.baseK != 0)) {
+         mmQnParam_.baseK = 64;

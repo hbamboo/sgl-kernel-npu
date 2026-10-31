@@ -84,6 +84,12 @@ struct MlaPrologBaseParams {
     // Zero keeps the packed-cache addressing used before direct cache writes.
     uint64_t kvCacheRowStride;
     uint64_t krCacheRowStride;
+    // Physical head strides for optional interleaved BF16 decode query views.
+    uint64_t queryHeadStride;
+    uint64_t queryRopeHeadStride;
+    uint32_t decodeHeadLocal;
+    uint32_t decodeParallelDown;
+    uint32_t decodeKvBlockStart;
 };
 
 // 2. 完整分块数据结构体（对应 MlaPrologTilingData 宏定义，嵌套基础参数）

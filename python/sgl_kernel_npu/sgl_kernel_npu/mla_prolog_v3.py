@@ -85,13 +85,21 @@ def _resolve_mode(weight_uq_qr, scale, requested):
     return inferred
 
 
-def _alloc(token_x, n_heads, hckv, dr, hcq, weight_quant_mode, query_norm_flag, kv_cache_quant_mode):
+def _alloc(token_x, n_heads, hckv, dr, hcq, weight_quant_mode, query_norm_flag, kv_cache_quant_mode, packed_query=False):
     tokens = token_x.shape[0] if token_x.dim() == 2 else token_x.shape[0] * token_x.shape[1]
     dev = token_x.device
     dtype = torch.float8_e4m3fn if weight_quant_mode in (3, 4) else (
         torch.int8 if weight_quant_mode in (1, 2) else torch.bfloat16)
-    q = torch.empty(tokens, n_heads, hckv, dtype=torch.bfloat16, device=dev)
-    q_rope = torch.empty(tokens, n_heads, dr, dtype=torch.bfloat16, device=dev)
+    if packed_query:
+        if weight_quant_mode != 0 or kv_cache_quant_mode != 0:
+            raise ValueError("packed_query requires unquantized BF16 decode")
+        if getattr(direct(), "mla_prolog_v3_packed_query_version", 0) < 1:
+            raise RuntimeError("packed_query requires a rebuilt MlaPrologV3 kernel")
+        q_full = torch.empty(tokens, n_heads, hckv + dr, dtype=torch.bfloat16, device=dev)
+        q, q_rope = q_full[..., :hckv], q_full[..., hckv:]
+    else:
+        q = torch.empty(tokens, n_heads, hckv, dtype=torch.bfloat16, device=dev)
+        q_rope = torch.empty(tokens, n_heads, dr, dtype=torch.bfloat16, device=dev)
     # the tiling expects an empty 1-D tensor when the KV cache is not quantised
     if kv_cache_quant_mode == 1:
         dq_nope = torch.empty(tokens, n_heads, 1, dtype=torch.float32, device=dev)
@@ -116,8 +124,13 @@ def allocate_outputs(
     query_norm_flag: bool = False,
     weight_quant_mode: int = 0,
     kv_cache_quant_mode: int = 0,
+    packed_query: bool = False,
 ):
     """Allocate the five buffers ``mla_prolog_v3_out`` expects.
+
+    With packed_query=True, query and query_rope share one contiguous
+    [T, H, Hckv+Dr] allocation (BF16, unquantized). The component views are
+    noncontiguous; consumers can recover the full query with a metadata view.
 
     The shapes are not obvious (an empty 1-D tensor where nothing is quantised, ``[T, Hcq/32]``
     for an MXFP8 query scale, ...), and the kernel validates them, so use this helper instead
@@ -130,7 +143,7 @@ def allocate_outputs(
     n_heads, hckv = weight_uk.shape[0], weight_uk.shape[2]
     dr = rope_sin.shape[-1]
     hcq = weight_dq.shape[-1]
-    return _alloc(token_x, n_heads, hckv, dr, hcq, weight_quant_mode, query_norm_flag, kv_cache_quant_mode)
+    return _alloc(token_x, n_heads, hckv, dr, hcq, weight_quant_mode, query_norm_flag, kv_cache_quant_mode, packed_query)
 
 
 def mla_prolog_v3_out(
@@ -218,10 +231,13 @@ def mla_prolog_v3(
     query_norm_flag: bool = False,
     weight_quant_mode: int = 0,
     kv_cache_quant_mode: int = 0,
+    packed_query: bool = False,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """Run MlaPrologV3, allocating the five outputs.
 
     Returns ``(query, query_rope, dequant_scale_q_nope, query_norm, dequant_scale_q_norm)``.
+    packed_query=True writes the first two components directly into one
+    [T, H, Hckv+Dr] allocation, suitable for FlashMLA decode without concat.
     """
     # adapt the weights first: the resolved mode decides the output dtypes
     _tokens = token_x.shape[0] if token_x.dim() == 2 else (
@@ -249,7 +265,7 @@ def mla_prolog_v3(
     dr = rope_sin.shape[-1]
     hcq = w_dq.shape[-1]  # prepared weight is [in, out]; the raw argument may be [out, in]
     q, q_rope, dq_nope, q_norm, dq_norm = _alloc(
-        token_x, n_heads, hckv, dr, hcq, mode, query_norm_flag, kv_cache_quant_mode)
+        token_x, n_heads, hckv, dr, hcq, mode, query_norm_flag, kv_cache_quant_mode, packed_query)
     direct().mla_prolog_v3_out(
         token_x, w_dq, w_uqqr, weight_uk, w_dkv, rmsnorm_gamma_cq, rmsnorm_gamma_ckv,
         rope_sin, rope_cos, kv_cache, kr_cache, q, q_rope, dq_nope, q_norm, dq_norm,

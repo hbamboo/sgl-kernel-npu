@@ -1,0 +1,26 @@
+{
+  "lib": "/tmp/mla-output576-20261030/baseline-cache.so",
+  "candidate": false,
+  "rows": [
+    {
+      "tokens": 1,
+      "us": 20.23395705730357,
+      "bit_exact": true
+    },
+    {
+      "tokens": 32,
+      "us": 24.77536049294979,
+      "bit_exact": true
+    },
+    {
+      "tokens": 64,
+      "us": 34.285745722182256,
+      "bit_exact": true
+    },
+    {
+      "tokens": 92,
+      "us": 48.04665991600523,
+      "bit_exact": true
+    }
+  ]
+}

@@ -348,6 +348,15 @@ uint64_t MakeTilingHash(const MlaPrologV3Tensors &t)
                             static_cast<double>(t.kcScale), static_cast<double>(t.queryNormFlag),
                             static_cast<double>(t.doRope)};
     HashBytes(&h, attrs, sizeof(attrs));
+    for (const char* name : {"MLA_PROLOG_V3_CORES", "MLA_PROLOG_V3_MM1_MIN_TILE",
+                             "MLA_PROLOG_V3_MAX_STEP", "MLA_PROLOG_V3_MM_BASEK",
+                             "MLA_PROLOG_V3_MM_BASEN", "MLA_PROLOG_V3_STEP256",
+                             "MLA_PROLOG_V3_SPLIT_M_GLM", "MLA_PROLOG_V3_DECODE_TUNE"}) {
+        const char* value = std::getenv(name);
+        const size_t len = value ? std::strlen(value) : 0;
+        HashBytes(&h, &len, sizeof(len));
+        if (len) HashBytes(&h, value, len);
+    }
     return h;
 }
 

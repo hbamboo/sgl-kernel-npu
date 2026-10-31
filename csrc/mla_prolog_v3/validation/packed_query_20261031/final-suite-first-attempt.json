@@ -1,0 +1,22 @@
+[
+  {
+    "stage": "final-compare",
+    "rc": 0,
+    "elapsed": 13.881244421005249
+  },
+  {
+    "stage": "full-decode-sweep",
+    "rc": 0,
+    "elapsed": 33.871715784072876
+  },
+  {
+    "stage": "final-integration",
+    "rc": 0,
+    "elapsed": 53.96153235435486
+  },
+  {
+    "stage": "acceptance",
+    "rc": 1,
+    "elapsed": 631.7826771736145
+  }
+]

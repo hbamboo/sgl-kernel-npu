@@ -72,6 +72,11 @@ __aicore__ inline void CopyMlaPrologTilingDataFromGm(__gm__ uint8_t *tilingGmPtr
     db->krCacheStride0 = sb->krCacheStride0;
     db->kvCacheRowStride = sb->kvCacheRowStride;
     db->krCacheRowStride = sb->krCacheRowStride;
+    db->queryHeadStride = sb->queryHeadStride;
+    db->queryRopeHeadStride = sb->queryRopeHeadStride;
+    db->decodeHeadLocal = sb->decodeHeadLocal;
+    db->decodeParallelDown = sb->decodeParallelDown;
+    db->decodeKvBlockStart = sb->decodeKvBlockStart;
     const __gm__ MlaPrologTplArgs *st = &src->tplArgs;
     dst.tplArgs.cacheMode = st->cacheMode;
     dst.tplArgs.scenario = st->scenario;

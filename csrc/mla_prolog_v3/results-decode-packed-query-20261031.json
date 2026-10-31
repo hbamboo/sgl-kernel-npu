@@ -1,0 +1,76 @@
+{
+  "status": "576-wide output verified; 30% target for common business batches NOT achieved",
+  "native_library_sha256": "6cfe9b18fe1fb07bc13a34e12f41e6d9065b1dee70727537bab72e6b46d6a94b",
+  "checkpoint": "/mnt/sfs_turbo/models/chatdpo-glm-flash-0727-mxfp8",
+  "runtime_weight_mode": "BF16 mode0 after checkpoint dequantization",
+  "physical_device": 7,
+  "results": [
+    {
+      "tokens": 1,
+      "baseline_us": 20.186297436977952,
+      "candidate_us": 18.274829742756296,
+      "speedup": 1.1045956499255112,
+      "latency_reduction_pct": 9.46913469490529
+    },
+    {
+      "tokens": 32,
+      "baseline_us": 24.743861340461894,
+      "candidate_us": 21.689681296652935,
+      "speedup": 1.14081258281468,
+      "latency_reduction_pct": 12.343182827389487
+    },
+    {
+      "tokens": 64,
+      "baseline_us": 34.25309632686859,
+      "candidate_us": 27.13440326934165,
+      "speedup": 1.2623493498959726,
+      "latency_reduction_pct": 20.78262645103689
+    },
+    {
+      "tokens": 92,
+      "baseline_us": 48.01297948715535,
+      "candidate_us": 34.94827544435542,
+      "speedup": 1.3738297205423349,
+      "latency_reduction_pct": 27.210775466028014
+    }
+  ],
+  "business_batch_evidence": {
+    "source": "/sgl-workspace/p-kv-opt-artifacts/decode-direct-cache/merged-verification-r2/pd/direct/stacks/direct-cache-direct/decode_1.log",
+    "kind": "sampled server-log lines, not every decode step",
+    "all_samples": {
+      "1": 28,
+      "2": 17,
+      "3": 27,
+      "4": 15,
+      "5": 8,
+      "6": 7,
+      "7": 18,
+      "8": 5,
+      "9": 4,
+      "10": 4
+    },
+    "business_window": "16:50:00..16:55:40",
+    "business_samples": {
+      "1": 23,
+      "2": 14,
+      "3": 20,
+      "4": 12,
+      "5": 8,
+      "6": 5,
+      "7": 13,
+      "8": 5,
+      "9": 4,
+      "10": 4
+    }
+  },
+  "validation": {
+    "legacy_acceptance": 27,
+    "packed_acceptance_retest": true,
+    "decode_shapes": 95,
+    "initial_sglang_tests": 47,
+    "additional_graph_tests": 13,
+    "query_norm_false_cases": 5
+  },
+  "first_acceptance_issue": "OUT directory/file collision in added result writer; fixed and retested",
+  "full_model_serving_speedup": "not measured"
+}

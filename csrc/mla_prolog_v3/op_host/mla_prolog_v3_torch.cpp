@@ -12,6 +12,7 @@
 //   * mla_prolog_v3_out  - writes into caller-provided buffers (stable addresses for
 //                          the serving stack / ACL graph capture)
 
+#include <cstdlib>
 #include <mutex>
 #include <string>
 #include <tuple>
@@ -308,6 +309,59 @@ void Launch(const MlaPrologV3Tensors &t, const at::Tensor &token_x, const at::Te
         tilingData.baseParams.krCacheRowStride = kr_cache.stride(1);
     }
 
+    // The tiler validates logical dimensions; the device needs physical
+    // strides when query/query_rope are slices of one [T,H,Hckv+Dr] tensor.
+    if (!out.query.is_contiguous() || !out.query_rope.is_contiguous()) {
+        TORCH_CHECK(t.weightQuantMode == 0 && t.kvQuantMode == 0 && t.queryQuantMode == 0 &&
+                    t.cacheMode == "PA_BSND" && res.splitMMode == 0,
+                    "strided MLA queries require unquantized BF16 PA_BSND split-N");
+        for (const auto& q : {out.query, out.query_rope}) {
+            TORCH_CHECK(q.scalar_type() == at::kBFloat16 && q.device() == token_x.device() &&
+                        q.dim() == 3 && q.stride(2) == 1 && q.stride(1) >= q.size(2) &&
+                        q.stride(1) % 16 == 0 && q.stride(0) == q.size(1) * q.stride(1),
+                        "MLA query requires BF16 on the input device with aligned regular head strides");
+        }
+        tilingData.baseParams.queryHeadStride = out.query.stride(1);
+        tilingData.baseParams.queryRopeHeadStride = out.query_rope.stride(1);
+    }
+
+    const char* headLocal = std::getenv("MLA_PROLOG_V3_DECODE_HEAD_LOCAL");
+    const char* tune = std::getenv("MLA_PROLOG_V3_DECODE_TUNE");
+    auto& bp = tilingData.baseParams;
+    const bool packedDecode = (!tune || tune[0] != '0') && out.query.dim() == 3 &&
+        out.query.stride(1) == bp.headSizeCkv + bp.dimHeadRope;
+    const bool headLocalEnabled = headLocal ? headLocal[0] == '1' : packedDecode && bp.tokenSize > 16;
+    bp.decodeHeadLocal = headLocalEnabled && t.tokenX.size() == 2 &&
+        bp.tokenSize <= 128 && t.weightQuantMode == 0 && t.kvQuantMode == 0 &&
+        res.splitMMode == 0 && !res.enableDequantOpt && !res.enableGroupComputeOpt &&
+        bp.dimHeadSizeQc == 192 && bp.dimHeadRope == 64 && bp.numHeadSize == 20;
+    if (bp.decodeHeadLocal) {
+        // Each cube owns complete heads through both projections, so Qn only
+        // reads QC produced by the same cube and needs a local pipe dependency.
+        bp.mm3BlockNum = bp.mm4BlockNum;
+        bp.mm3SingleCoreN = bp.mm4SingleCoreBatch * (bp.dimHeadSizeQc + bp.dimHeadRope);
+    }
+    const char* parallelDown = std::getenv("MLA_PROLOG_V3_DECODE_PARALLEL_DOWN");
+    const bool parallelEnabled = parallelDown ? parallelDown[0] == '1' :
+        packedDecode && bp.tokenSize >= 41 && res.blockDim >= 19;
+    bp.decodeParallelDown = parallelEnabled && t.tokenX.size() == 2 &&
+        bp.tokenSize <= 128 && t.weightQuantMode == 0 && t.kvQuantMode == 0 &&
+        res.splitMMode == 0 && !res.enableDequantOpt && !res.enableGroupComputeOpt &&
+        bp.headSizeX == 2048 && bp.headSizeCq == 768 && bp.headSizeCkv == 512 &&
+        bp.dimHeadSizeQc == 192 && bp.dimHeadRope == 64 && bp.numHeadSize == 20 && res.blockDim >= 14;
+    if (bp.decodeParallelDown) {
+        const char* cqEnv = std::getenv("MLA_PROLOG_V3_DECODE_CQ_CORES");
+        const char* kvEnv = std::getenv("MLA_PROLOG_V3_DECODE_KV_CORES");
+        const uint32_t cqCores = cqEnv ? std::atoi(cqEnv) : (res.blockDim >= 19 ? 10 : 8);
+        const uint32_t kvCores = kvEnv ? std::atoi(kvEnv) : (res.blockDim >= 19 ? 9 : 6);
+        TORCH_CHECK(cqCores > 0 && kvCores > 0 && cqCores + kvCores <= res.blockDim,
+                    "invalid decode down-projection core groups");
+        bp.mm1SingleCoreN = ((768U + cqCores * 16U - 1) / (cqCores * 16U)) * 16U;
+        bp.mm2SingleCoreN = ((576U + kvCores * 16U - 1) / (kvCores * 16U)) * 16U;
+        bp.mm1BlockNum = (768U + bp.mm1SingleCoreN - 1) / bp.mm1SingleCoreN;
+        bp.mm2BlockNum = (576U + bp.mm2SingleCoreN - 1) / bp.mm2SingleCoreN;
+        bp.decodeKvBlockStart = bp.mm1BlockNum;
+    }
     const at::Tensor &tiling_tensor = CachedTiling(tilingData);
     at::Tensor workspace = WorkspaceFor(static_cast<int64_t>(res.workspaceSize), token_x);
 

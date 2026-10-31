@@ -300,7 +300,8 @@ void MlaPrologTiling::SetCacheShapeInfo()
 
 // [sgl-kernel-npu port] GLM decode heuristic.  With T <= 128 the per-core N slice at
 // 32 cores is only 24 columns of Hcq, which wastes the cube and fragments the DMA;
-// using 16 cores (twice the tile) measured ~6% faster.  Override wins when set.
+// Small batches retain 16 cores; real-weight GLM decode above16 uses20 cores
+// to avoid serializing two Qn heads per cube. Explicit override still wins.
 ge::graphStatus MlaPrologTiling::AdjustCoreNumByShape()
 {
     if (std::getenv("MLA_PROLOG_V3_CORES") != nullptr) {
@@ -308,8 +309,15 @@ ge::graphStatus MlaPrologTiling::AdjustCoreNumByShape()
     }
     constexpr uint32_t kDecodeTokenLimit = 128U;
     if (baseShapeInfo_.tSize <= kDecodeTokenLimit && aicNum_ > 16U) {
-        aicNum_ = 16U;
-        aivNum_ = 32U;
+        const char* tune = std::getenv("MLA_PROLOG_V3_DECODE_TUNE");
+        const bool glmBf16 = context_->weightQuantMode && *context_->weightQuantMode == 0 &&
+            baseShapeInfo_.heSize == 2048 && baseShapeInfo_.hcqSize == 768 &&
+            baseShapeInfo_.hckvSize == 512 && baseShapeInfo_.nSize == 20 &&
+            baseShapeInfo_.dSize == 192 && baseShapeInfo_.drSize == 64;
+        const uint32_t cores = glmBf16 && (!tune || tune[0] != '0') &&
+            baseShapeInfo_.tSize > 16 && aicNum_ >= 20 ? 20U : 16U;
+        aicNum_ = cores;
+        aivNum_ = cores * 2U;
     }
     return ge::GRAPH_SUCCESS;
 }

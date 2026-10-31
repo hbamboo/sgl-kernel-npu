@@ -1,0 +1,26 @@
+{
+  "lib": "/mnt/paas/hxdnpu/sgl-kernel-npu/python/sgl_kernel_npu/sgl_kernel_npu/lib/libsgl_kernel_npu.so",
+  "candidate": true,
+  "rows": [
+    {
+      "tokens": 1,
+      "us": 18.274829742756296,
+      "bit_exact": true
+    },
+    {
+      "tokens": 32,
+      "us": 21.689681296652935,
+      "bit_exact": true
+    },
+    {
+      "tokens": 64,
+      "us": 27.13440326934165,
+      "bit_exact": true
+    },
+    {
+      "tokens": 92,
+      "us": 34.94827544435542,
+      "bit_exact": true
+    }
+  ]
+}

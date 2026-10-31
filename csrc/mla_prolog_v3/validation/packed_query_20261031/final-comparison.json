@@ -1,0 +1,280 @@
+{
+  "rows": [
+    {
+      "tokens": 1,
+      "bit_exact": true,
+      "us": {
+        "old": 20.09000042651562,
+        "packed": 18.332021033510248,
+        "automatic": 18.332808575731644
+      },
+      "speedup": 1.0958495717404744,
+      "latency_reduction_pct": 8.746599370225795,
+      "host_enqueue_us": [
+        53.861,
+        53.75,
+        54.34
+      ]
+    },
+    {
+      "tokens": 7,
+      "bit_exact": true,
+      "us": {
+        "old": 20.704000554186234,
+        "packed": 18.68114953345441,
+        "automatic": 18.68663823350947
+      },
+      "speedup": 1.1079574771806289,
+      "latency_reduction_pct": 9.743828567802392,
+      "host_enqueue_us": [
+        55.19,
+        54.52,
+        54.851
+      ]
+    },
+    {
+      "tokens": 16,
+      "bit_exact": true,
+      "us": {
+        "old": 21.328106839606104,
+        "packed": 18.96351068577868,
+        "automatic": 18.981510020316914
+      },
+      "speedup": 1.1236254026564536,
+      "latency_reduction_pct": 11.002368081406921,
+      "host_enqueue_us": [
+        53.84,
+        53.821,
+        52.981
+      ]
+    },
+    {
+      "tokens": 17,
+      "bit_exact": true,
+      "us": {
+        "old": 24.27844798311274,
+        "packed": 21.789043507677444,
+        "automatic": 21.099383526660027
+      },
+      "speedup": 1.1506709640324715,
+      "latency_reduction_pct": 13.094183197640819,
+      "host_enqueue_us": [
+        53.1,
+        53.551,
+        53.271
+      ]
+    },
+    {
+      "tokens": 32,
+      "bit_exact": true,
+      "us": {
+        "old": 25.22387149486136,
+        "packed": 22.40274561212418,
+        "automatic": 21.733106450831638
+      },
+      "speedup": 1.160619700268212,
+      "latency_reduction_pct": 13.839132683263411,
+      "host_enqueue_us": [
+        52.88,
+        53.261,
+        52.92
+      ]
+    },
+    {
+      "tokens": 33,
+      "bit_exact": true,
+      "us": {
+        "old": 29.37093694159325,
+        "packed": 26.403787288259952,
+        "automatic": 24.540893574978444
+      },
+      "speedup": 1.1968161164082245,
+      "latency_reduction_pct": 16.444975440244825,
+      "host_enqueue_us": [
+        52.861,
+        53.0,
+        52.74
+      ]
+    },
+    {
+      "tokens": 40,
+      "bit_exact": true,
+      "us": {
+        "old": 29.412467428978452,
+        "packed": 26.62059601317061,
+        "automatic": 25.257531632768348
+      },
+      "speedup": 1.16450284440383,
+      "latency_reduction_pct": 14.126444189842024,
+      "host_enqueue_us": [
+        52.401,
+        52.101,
+        52.47
+      ]
+    },
+    {
+      "tokens": 41,
+      "bit_exact": true,
+      "us": {
+        "old": 29.465873190697202,
+        "packed": 26.691320094656437,
+        "automatic": 24.510064023606322
+      },
+      "speedup": 1.20219486829238,
+      "latency_reduction_pct": 16.818809797415067,
+      "host_enqueue_us": [
+        52.431,
+        52.241,
+        52.52
+      ]
+    },
+    {
+      "tokens": 44,
+      "bit_exact": true,
+      "us": {
+        "old": 29.615318521540214,
+        "packed": 26.793766529002088,
+        "automatic": 24.674192388006983
+      },
+      "speedup": 1.2002548272232363,
+      "latency_reduction_pct": 16.684359244488235,
+      "host_enqueue_us": [
+        52.56,
+        52.451,
+        52.161
+      ]
+    },
+    {
+      "tokens": 48,
+      "bit_exact": true,
+      "us": {
+        "old": 29.708192703571726,
+        "packed": 26.862829289537796,
+        "automatic": 24.693255728863654
+      },
+      "speedup": 1.2030893386345232,
+      "latency_reduction_pct": 16.880653174520244,
+      "host_enqueue_us": [
+        52.17,
+        52.05,
+        52.131
+      ]
+    },
+    {
+      "tokens": 64,
+      "bit_exact": true,
+      "us": {
+        "old": 34.81995805780938,
+        "packed": 31.704616039357287,
+        "automatic": 27.1490863028993
+      },
+      "speedup": 1.28254622160492,
+      "latency_reduction_pct": 22.03010050205867,
+      "host_enqueue_us": [
+        52.19,
+        52.671,
+        52.86
+      ]
+    },
+    {
+      "tokens": 65,
+      "bit_exact": true,
+      "us": {
+        "old": 42.163765176813655,
+        "packed": 39.06451133971519,
+        "automatic": 31.503786431982164
+      },
+      "speedup": 1.3383713499914298,
+      "latency_reduction_pct": 25.28232168101898,
+      "host_enqueue_us": [
+        51.71,
+        52.201,
+        52.021
+      ]
+    },
+    {
+      "tokens": 80,
+      "bit_exact": true,
+      "us": {
+        "old": 43.007657883015085,
+        "packed": 39.46655354601272,
+        "automatic": 31.964616572603266
+      },
+      "speedup": 1.3454770460120822,
+      "latency_reduction_pct": 25.676918609355436,
+      "host_enqueue_us": [
+        52.141,
+        51.811,
+        52.071
+      ]
+    },
+    {
+      "tokens": 92,
+      "bit_exact": true,
+      "us": {
+        "old": 48.659618864668175,
+        "packed": 44.98240288267744,
+        "automatic": 34.83002236548891
+      },
+      "speedup": 1.3970596502654626,
+      "latency_reduction_pct": 28.421094989753314,
+      "host_enqueue_us": [
+        53.741,
+        53.92,
+        53.95
+      ]
+    },
+    {
+      "tokens": 127,
+      "bit_exact": true,
+      "us": {
+        "old": 60.07061613366959,
+        "packed": 56.316532987229365,
+        "automatic": 41.723639407056446
+      },
+      "speedup": 1.4397261837017563,
+      "latency_reduction_pct": 30.542348168674206,
+      "host_enqueue_us": [
+        54.381,
+        54.13,
+        54.491
+      ]
+    },
+    {
+      "tokens": 128,
+      "bit_exact": true,
+      "us": {
+        "old": 60.07738316312749,
+        "packed": 56.34227712103661,
+        "automatic": 41.68655263616684
+      },
+      "speedup": 1.4411693787076303,
+      "latency_reduction_pct": 30.611903446300627,
+      "host_enqueue_us": [
+        54.81,
+        54.8,
+        54.54
+      ]
+    },
+    {
+      "tokens": 129,
+      "bit_exact": true,
+      "us": {
+        "old": 66.48176781674648,
+        "packed": 62.965296684427464,
+        "automatic": 63.092764387739464
+      },
+      "speedup": 1.0537146131080855,
+      "latency_reduction_pct": 5.0976433694552625,
+      "host_enqueue_us": [
+        54.84,
+        54.721,
+        54.741
+      ]
+    }
+  ],
+  "real_checkpoint": "/mnt/sfs_turbo/models/chatdpo-glm-flash-0727-mxfp8",
+  "layer": 2,
+  "calls_per_graph": 47,
+  "pairs": 41
+}

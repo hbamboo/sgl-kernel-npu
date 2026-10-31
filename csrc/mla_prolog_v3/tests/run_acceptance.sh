@@ -53,6 +53,7 @@ run "pure_logic_unit_tests" $T8 csrc/mla_prolog_v3/tests/test_pure_logic.py
 run "multi_stream"          $T8 csrc/mla_prolog_v3/tests/test_multistream.py
 run "graph_capture_alloc"   $T8 csrc/mla_prolog_v3/tests/test_graph_capture_alloc.py
 run "out_buffer_guard"     $T8 csrc/mla_prolog_v3/tests/test_out_buffer_guard.py
+run "packed_query"         env OUT="$OUT/packed-query-results.json" $T8 csrc/mla_prolog_v3/tests/test_packed_query.py
 run "allocate_outputs"     $T8 csrc/mla_prolog_v3/tests/test_allocate_outputs.py
 run "vendor_multi_geometry" $T8 csrc/mla_prolog_v3/tests/cmp_builtin_multi_geom.py
 run "perf_sweep"           $T8 csrc/mla_prolog_v3/tests/bench_mla_prolog.py

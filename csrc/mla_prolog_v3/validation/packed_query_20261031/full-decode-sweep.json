@@ -1,0 +1,765 @@
+{
+  "rows": [
+    {
+      "tokens": 1,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 20.142744196222182,
+      "new_us": 18.261340070278088,
+      "speedup": 1.103026619005154
+    },
+    {
+      "tokens": 2,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 20.219914456631276,
+      "new_us": 18.34316963845111,
+      "speedup": 1.1023130056130603
+    },
+    {
+      "tokens": 3,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 20.330318745146407,
+      "new_us": 18.478425259285785,
+      "speedup": 1.1002192264695287
+    },
+    {
+      "tokens": 4,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 20.43946753156946,
+      "new_us": 18.58859620195754,
+      "speedup": 1.0995702585339395
+    },
+    {
+      "tokens": 5,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 20.55940475869686,
+      "new_us": 18.616468348401657,
+      "speedup": 1.104366541168482
+    },
+    {
+      "tokens": 6,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 20.619595304448556,
+      "new_us": 18.53378782881067,
+      "speedup": 1.1125408089756756
+    },
+    {
+      "tokens": 7,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 20.70263852464392,
+      "new_us": 18.62668103360115,
+      "speedup": 1.1114507456963425
+    },
+    {
+      "tokens": 8,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 20.794617368819864,
+      "new_us": 18.65555377716714,
+      "speedup": 1.1146609539016077
+    },
+    {
+      "tokens": 9,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 20.855149056049104,
+      "new_us": 18.76540386930425,
+      "speedup": 1.1113615886606725
+    },
+    {
+      "tokens": 10,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 20.772531945654688,
+      "new_us": 18.668702308167802,
+      "speedup": 1.1126928697430905
+    },
+    {
+      "tokens": 11,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 21.109829557702895,
+      "new_us": 18.806127791709088,
+      "speedup": 1.1224974003957062
+    },
+    {
+      "tokens": 12,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 21.12340419850451,
+      "new_us": 18.802595899460165,
+      "speedup": 1.1234302067360271
+    },
+    {
+      "tokens": 13,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 21.223169692019198,
+      "new_us": 18.93753193794413,
+      "speedup": 1.1206935392407422
+    },
+    {
+      "tokens": 14,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 21.060787616892064,
+      "new_us": 18.75946750032141,
+      "speedup": 1.1226751301192972
+    },
+    {
+      "tokens": 15,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 21.189532381422975,
+      "new_us": 18.96351068577868,
+      "speedup": 1.1173844723442299
+    },
+    {
+      "tokens": 16,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 21.134276339348325,
+      "new_us": 18.818701835388833,
+      "speedup": 1.123046452630703
+    },
+    {
+      "tokens": 17,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 23.473744696759162,
+      "new_us": 20.999893229058447,
+      "speedup": 1.1178030497925362
+    },
+    {
+      "tokens": 18,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 23.5550860141186,
+      "new_us": 21.000574243829604,
+      "speedup": 1.1216400913912896
+    },
+    {
+      "tokens": 19,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 23.684362147716765,
+      "new_us": 21.039723081791653,
+      "speedup": 1.1256974274634752
+    },
+    {
+      "tokens": 20,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 23.590574873254653,
+      "new_us": 20.92572349183103,
+      "speedup": 1.1273481121197042
+    },
+    {
+      "tokens": 21,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 23.67248940975108,
+      "new_us": 21.067276914068994,
+      "speedup": 1.1236615679524433
+    },
+    {
+      "tokens": 22,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 23.84248946575408,
+      "new_us": 21.18172290477347,
+      "speedup": 1.1256161537445561
+    },
+    {
+      "tokens": 23,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 23.85310670162769,
+      "new_us": 21.15027701601069,
+      "speedup": 1.1277916919750492
+    },
+    {
+      "tokens": 24,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 23.927254879728277,
+      "new_us": 21.235871822276014,
+      "speedup": 1.1267375825196428
+    },
+    {
+      "tokens": 25,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 23.984340911215924,
+      "new_us": 21.292914735509996,
+      "speedup": 1.126400082334311
+    },
+    {
+      "tokens": 26,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 24.095659560345588,
+      "new_us": 21.40221189945302,
+      "speedup": 1.1258490324993653
+    },
+    {
+      "tokens": 27,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 24.186426020683125,
+      "new_us": 21.40404315704995,
+      "speedup": 1.1299933308495842
+    },
+    {
+      "tokens": 28,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 24.38329889419231,
+      "new_us": 21.484276081653352,
+      "speedup": 1.13493695582392
+    },
+    {
+      "tokens": 29,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 24.337126853618216,
+      "new_us": 21.427299113983803,
+      "speedup": 1.1358000242660267
+    },
+    {
+      "tokens": 30,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 24.39557491464818,
+      "new_us": 21.598062616713502,
+      "speedup": 1.1295260759069123
+    },
+    {
+      "tokens": 31,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 24.47772279698798,
+      "new_us": 21.705957169228412,
+      "speedup": 1.1276960792905728
+    },
+    {
+      "tokens": 32,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 24.51470304042735,
+      "new_us": 21.64627643341714,
+      "speedup": 1.1325136272667193
+    },
+    {
+      "tokens": 33,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 27.682489537178203,
+      "new_us": 24.504828960337537,
+      "speedup": 1.129674872735651
+    },
+    {
+      "tokens": 34,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 27.729937370787276,
+      "new_us": 24.532553997445614,
+      "speedup": 1.1303322668187985
+    },
+    {
+      "tokens": 35,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 27.76919273619956,
+      "new_us": 24.615191398782933,
+      "speedup": 1.1281323100974374
+    },
+    {
+      "tokens": 36,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 27.808681447455225,
+      "new_us": 24.631893381159355,
+      "speedup": 1.128970518714804
+    },
+    {
+      "tokens": 37,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 27.84559574533016,
+      "new_us": 24.677786421268543,
+      "speedup": 1.128366834447171
+    },
+    {
+      "tokens": 38,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 27.89529840996925,
+      "new_us": 24.777617860347668,
+      "speedup": 1.125826484498774
+    },
+    {
+      "tokens": 39,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 27.851913837676353,
+      "new_us": 24.99415012116128,
+      "speedup": 1.1143373030353831
+    },
+    {
+      "tokens": 40,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 27.97636072686378,
+      "new_us": 25.257191759474733,
+      "speedup": 1.1076591963700402
+    },
+    {
+      "tokens": 41,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 28.00831896193484,
+      "new_us": 24.562511038272937,
+      "speedup": 1.140287282448146
+    },
+    {
+      "tokens": 42,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 27.996255996379446,
+      "new_us": 24.633531874798713,
+      "speedup": 1.1365100278219122
+    },
+    {
+      "tokens": 43,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 28.05536097668587,
+      "new_us": 24.7946597160177,
+      "speedup": 1.1315082077356242
+    },
+    {
+      "tokens": 44,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 28.095765316739996,
+      "new_us": 24.85614888211514,
+      "speedup": 1.1303346085505577
+    },
+    {
+      "tokens": 45,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 28.103255211038793,
+      "new_us": 24.94070124118886,
+      "speedup": 1.1268029290462396
+    },
+    {
+      "tokens": 46,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 28.05763863502665,
+      "new_us": 24.893808872141737,
+      "speedup": 1.1270930366315097
+    },
+    {
+      "tokens": 47,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 28.06774352459197,
+      "new_us": 24.755977569742406,
+      "speedup": 1.133776416040113
+    },
+    {
+      "tokens": 48,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 28.17099906028585,
+      "new_us": 24.92536128835475,
+      "speedup": 1.1302142718969326
+    },
+    {
+      "tokens": 49,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.351127523057006,
+      "new_us": 26.751277294564755,
+      "speedup": 1.1719488074472928
+    },
+    {
+      "tokens": 50,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.36963793571959,
+      "new_us": 26.739807839089252,
+      "speedup": 1.173143731042909
+    },
+    {
+      "tokens": 51,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.412616689154444,
+      "new_us": 26.76021291854534,
+      "speedup": 1.173855259850526
+    },
+    {
+      "tokens": 52,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.51353115731097,
+      "new_us": 26.650573344940835,
+      "speedup": 1.182471039156585
+    },
+    {
+      "tokens": 53,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.40176610743746,
+      "new_us": 26.76876555097864,
+      "speedup": 1.173074867708625
+    },
+    {
+      "tokens": 54,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.316701402055457,
+      "new_us": 26.932488096521254,
+      "speedup": 1.1627853056064468
+    },
+    {
+      "tokens": 55,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.497275575678398,
+      "new_us": 26.729639540327355,
+      "speedup": 1.1783651451100958
+    },
+    {
+      "tokens": 56,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.62046696277375,
+      "new_us": 26.924531510535708,
+      "speedup": 1.174411036656311
+    },
+    {
+      "tokens": 57,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.787489322905845,
+      "new_us": 26.757405159321237,
+      "speedup": 1.1879884889298513
+    },
+    {
+      "tokens": 58,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.803235094597998,
+      "new_us": 26.755807247567684,
+      "speedup": 1.1886479372618879
+    },
+    {
+      "tokens": 59,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.937360763549805,
+      "new_us": 27.076744018717015,
+      "speedup": 1.1795126009786423
+    },
+    {
+      "tokens": 60,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.923722713551623,
+      "new_us": 26.771936010807117,
+      "speedup": 1.1924323553091143
+    },
+    {
+      "tokens": 61,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 31.927808802178564,
+      "new_us": 27.082275837025744,
+      "speedup": 1.178918972478975
+    },
+    {
+      "tokens": 62,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 32.00831819087901,
+      "new_us": 27.17697874028632,
+      "speedup": 1.1777732358244393
+    },
+    {
+      "tokens": 63,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 32.1375106243377,
+      "new_us": 27.225552721226467,
+      "speedup": 1.1804171967932762
+    },
+    {
+      "tokens": 64,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 32.083212061131256,
+      "new_us": 27.153339791805188,
+      "speedup": 1.181556755342998
+    },
+    {
+      "tokens": 65,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 37.80880887457665,
+      "new_us": 31.362850615318784,
+      "speedup": 1.205528455889447
+    },
+    {
+      "tokens": 66,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.0708080656985,
+      "new_us": 31.46344803749247,
+      "speedup": 1.2100011422884285
+    },
+    {
+      "tokens": 67,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.09985201409523,
+      "new_us": 31.528488118597803,
+      "speedup": 1.2084262293446655
+    },
+    {
+      "tokens": 68,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.154553859791854,
+      "new_us": 31.493935179203113,
+      "speedup": 1.2114889308906387
+    },
+    {
+      "tokens": 69,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.10995690366055,
+      "new_us": 31.51891586628366,
+      "speedup": 1.2091138243884665
+    },
+    {
+      "tokens": 70,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.10663933449603,
+      "new_us": 31.5587875690866,
+      "speedup": 1.2074810938498592
+    },
+    {
+      "tokens": 71,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.186978786549666,
+      "new_us": 31.66406458996712,
+      "speedup": 1.2060036915996362
+    },
+    {
+      "tokens": 72,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.1679357366359,
+      "new_us": 31.706317942193213,
+      "speedup": 1.2037959061100527
+    },
+    {
+      "tokens": 73,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.336320126310305,
+      "new_us": 31.633382147931037,
+      "speedup": 1.2118944457798886
+    },
+    {
+      "tokens": 74,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.20006390835376,
+      "new_us": 31.621042718278602,
+      "speedup": 1.208058325232651
+    },
+    {
+      "tokens": 75,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.229277793397294,
+      "new_us": 31.679318306293894,
+      "speedup": 1.206758220734885
+    },
+    {
+      "tokens": 76,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.2407878307586,
+      "new_us": 31.70972428423293,
+      "speedup": 1.2059640597308225
+    },
+    {
+      "tokens": 77,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.38770186647456,
+      "new_us": 31.817489481986836,
+      "speedup": 1.2064968824208266
+    },
+    {
+      "tokens": 78,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.45344705784574,
+      "new_us": 31.877596327599058,
+      "speedup": 1.206284396811733
+    },
+    {
+      "tokens": 79,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.53563805843921,
+      "new_us": 32.144767172793124,
+      "speedup": 1.198815279989187
+    },
+    {
+      "tokens": 80,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 38.54057383030019,
+      "new_us": 32.178724065740056,
+      "speedup": 1.1977036053873078
+    },
+    {
+      "tokens": 81,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 42.369979493161466,
+      "new_us": 34.58165868799737,
+      "speedup": 1.2252153627283147
+    },
+    {
+      "tokens": 82,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 42.37767990599287,
+      "new_us": 34.69810587294558,
+      "speedup": 1.2213254539359486
+    },
+    {
+      "tokens": 83,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 42.52131949079798,
+      "new_us": 34.882509962041325,
+      "speedup": 1.218986808491393
+    },
+    {
+      "tokens": 84,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 42.52525593372101,
+      "new_us": 34.86672360846337,
+      "speedup": 1.2196516200162453
+    },
+    {
+      "tokens": 85,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 42.64744799187843,
+      "new_us": 34.90025439160935,
+      "speedup": 1.2219810065949446
+    },
+    {
+      "tokens": 86,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 42.617082595825195,
+      "new_us": 34.85595672688586,
+      "speedup": 1.2226628271819278
+    },
+    {
+      "tokens": 87,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 42.73125465880049,
+      "new_us": 34.879298920327045,
+      "speedup": 1.2251179347500434
+    },
+    {
+      "tokens": 88,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 42.85623164887124,
+      "new_us": 34.93440404851386,
+      "speedup": 1.2267629237171538
+    },
+    {
+      "tokens": 89,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 42.86129931186108,
+      "new_us": 35.02557379134158,
+      "speedup": 1.2237144084262372
+    },
+    {
+      "tokens": 90,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 43.00482729648022,
+      "new_us": 34.962382722408215,
+      "speedup": 1.2300313636495208
+    },
+    {
+      "tokens": 91,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 43.023702946115044,
+      "new_us": 34.95604180275126,
+      "speedup": 1.2307944700629352
+    },
+    {
+      "tokens": 92,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 43.093914681292596,
+      "new_us": 35.085254527152856,
+      "speedup": 1.2282628489396237
+    },
+    {
+      "tokens": 127,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 51.628680939370014,
+      "new_us": 41.84865951538086,
+      "speedup": 1.2336997537613994
+    },
+    {
+      "tokens": 128,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 51.637832154618934,
+      "new_us": 42.08476492699156,
+      "speedup": 1.2269958557259375
+    },
+    {
+      "tokens": 129,
+      "bit_exact": true,
+      "canary": true,
+      "old_us": 66.4688526315892,
+      "new_us": 63.09115125777873,
+      "speedup": 1.0535368479806273
+    }
+  ],
+  "invalid_stride_rejected": true
+}

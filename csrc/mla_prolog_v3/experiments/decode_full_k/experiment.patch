@@ -1,0 +1,96 @@
+--- a/csrc/mla_prolog/op_kernel/mla_prolog_tiling_data.h
++++ b/csrc/mla_prolog/op_kernel/mla_prolog_tiling_data.h
+@@ -87,6 +87,7 @@
+     // Physical head strides for optional interleaved BF16 decode query views.
+     uint64_t queryHeadStride;
+     uint64_t queryRopeHeadStride;
++    uint32_t decodeFullK;
+ };
+ 
+ // 2. 完整分块数据结构体（对应 MlaPrologTilingData 宏定义，嵌套基础参数）
+--- a/csrc/mla_prolog_v3/op_kernel/mla_prolog_v3_tiling_copy.h
++++ b/csrc/mla_prolog_v3/op_kernel/mla_prolog_v3_tiling_copy.h
+@@ -74,6 +74,7 @@
+     db->krCacheRowStride = sb->krCacheRowStride;
+     db->queryHeadStride = sb->queryHeadStride;
+     db->queryRopeHeadStride = sb->queryRopeHeadStride;
++    db->decodeFullK = sb->decodeFullK;
+     const __gm__ MlaPrologTplArgs *st = &src->tplArgs;
+     dst.tplArgs.cacheMode = st->cacheMode;
+     dst.tplArgs.scenario = st->scenario;
+--- a/csrc/mla_prolog_v3/op_host/mla_prolog_v3_torch.cpp
++++ b/csrc/mla_prolog_v3/op_host/mla_prolog_v3_torch.cpp
+@@ -324,6 +324,10 @@
+         tilingData.baseParams.queryRopeHeadStride = out.query_rope.stride(1);
+     }
+ 
++    const char* fullK = std::getenv("MLA_PROLOG_V3_DECODE_FULL_K");
++    tilingData.baseParams.decodeFullK = fullK && fullK[0] == '1' && t.weightQuantMode == 0 &&
++        t.kvQuantMode == 0 && res.splitMMode == 0 && t.tokenX[0] <= 64 &&
++        t.tokenX.size() == 2 && t.weightUk[1] == 192 && t.weightUk[2] == 512;
+     const at::Tensor &tiling_tensor = CachedTiling(tilingData);
+     at::Tensor workspace = WorkspaceFor(static_cast<int64_t>(res.workspaceSize), token_x);
+ 
+--- a/csrc/mla_prolog/op_kernel/arch35/kernel_mla_prolog_split_n_arch35.h
++++ b/csrc/mla_prolog/op_kernel/arch35/kernel_mla_prolog_split_n_arch35.h
+@@ -1295,7 +1295,16 @@
+                 CrossCoreWaitFlag(FINISH_VEC_DEQUANT_QC_SPLIT_N);
+             }
+         }
+-        if (unlikely(mmQnParam_.baseK < mmQnParam_.k)) {
++        if constexpr (std::is_same<mmQnInputType, bfloat16_t>::value) {
++            if (baseParams_->decodeFullK) {
++                MatmulQnFullK<mmQnInputType, mmQnOutputType, dequantScaleType>(
++                    mmQnResGm_[qnResOffset], mmQcQrResDequantGm_[qcOffset],
++                    weightUkGm_[weightUkOffset], mmQnParam_, bufParam_);
++            }
++        }
++        if (baseParams_->decodeFullK) {
++            // Qn has already been evaluated; keep the shared head-loop offsets.
++        } else if (unlikely(mmQnParam_.baseK < mmQnParam_.k)) {
+             uint32_t nInput = baseParams_->headSizeCkv;
+             uint32_t nL1SplitSize = mmQnParam_.baseN;
+             uint32_t nL1loops = CeilDivT(nInput, nL1SplitSize);
+--- a/csrc/mla_prolog/op_kernel/arch35/service_matmul_arch35.h
++++ b/csrc/mla_prolog/op_kernel/arch35/service_matmul_arch35.h
+@@ -726,6 +726,40 @@
+     bufParam.aL1BufIter++;
+ }
+ 
++// Decode experiment: D=192, M<=64. L1A<=24 KiB, L1B=96 KiB,
++// L0A/L0B<=24 KiB, L0C<=16 KiB per ping/pong. Keep the BF16 QC boundary.
++template <typename T, typename O, typename S>
++__aicore__ inline void MatmulQnFullK(const GlobalTensor<O>& dst,
++    const GlobalTensor<T>& a, const GlobalTensor<T>& b, const MMParams& para, MMBufParams& buf)
++{
++    using Acc = float;
++    const uint32_t m = Align(para.m, BLOCK_CUBE_SIZE);
++    mmLocalTensors<T, Acc> local;
++    local.Init(buf);
++    LoadL1A(a, para.m, para.k, para.orgKa, buf);
++    WaitFlag<HardEvent::MTE2_MTE1>(A_EVENT0 + (buf.aL1BufIter & 1u));
++    LocalTensor<T> aL1 = local.aL1Tensor[(buf.aL1BufIter & 1u) * (L1_A_SIZE / sizeof(T))];
++    for (uint32_t n = 0; n < para.n; n += 256) {
++        LoadL1B<T, DataFormat::ND, false>(b[n], 256, para.n, para.k, para.k, buf);
++        WaitFlag<HardEvent::MTE2_MTE1>(B_EVENT0 + (buf.bL1BufIter & 1u));
++        LocalTensor<T> bL1 = local.bL1Tensor[(buf.bL1BufIter & 1u) * (L1_B_SIZE / sizeof(T))];
++        for (uint32_t sub = 0; sub < 256; sub += 64) {
++            WaitFlag<HardEvent::FIX_M>(L0C_EVENT0 + (buf.cL0BufIter & 1u));
++            LocalTensor<Acc> cL0 = local.cL0Tensor[(buf.cL0BufIter & 1u) * (L0C_PP_SIZE / sizeof(Acc))];
++            MmadParams mm(m, 64, para.k, UNIT_FLAG_SET, false, true);
++            MatmulL0<T, Acc, S>(buf, aL1, bL1[para.k * sub], local.aL0Tensor,
++                local.bL0Tensor, cL0, mm, para.k);
++            GetTensorC<T,O,Acc,true>(dst[n+sub],cL0,para.m,64,m,para.orgKc,buf);
++            SetFlag<HardEvent::FIX_M>(L0C_EVENT0 + (buf.cL0BufIter & 1u));
++            ++buf.cL0BufIter;
++        }
++        SetFlag<HardEvent::MTE1_MTE2>(B_EVENT0 + (buf.bL1BufIter & 1u));
++        ++buf.bL1BufIter;
++    }
++    SetFlag<HardEvent::MTE1_MTE2>(A_EVENT0 + (buf.aL1BufIter & 1u));
++    ++buf.aL1BufIter;
++}
++
+ /**
+  * @brief MatmulGroupComputeAFullLoad
+  * A矩阵能够全载，通过切分K轴，进行L1的数据管理和矩阵乘运算，仅适用于算力分组场景下的mmQc和mmQr;
