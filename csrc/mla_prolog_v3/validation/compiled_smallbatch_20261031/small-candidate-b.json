@@ -1,0 +1,46 @@
+{
+  "lib": "/tmp/mla-output576-20261030/small-batch/python/sgl_kernel_npu/sgl_kernel_npu/lib/libsgl_kernel_npu.so",
+  "candidate": true,
+  "rows": [
+    {
+      "tokens": 1,
+      "us": 16.791894080791067,
+      "bit_exact": true
+    },
+    {
+      "tokens": 2,
+      "us": 16.79878666045818,
+      "bit_exact": true
+    },
+    {
+      "tokens": 3,
+      "us": 17.118361402065197,
+      "bit_exact": true
+    },
+    {
+      "tokens": 4,
+      "us": 17.070786750062982,
+      "bit_exact": true
+    },
+    {
+      "tokens": 5,
+      "us": 17.182659595570666,
+      "bit_exact": true
+    },
+    {
+      "tokens": 6,
+      "us": 17.19191480190196,
+      "bit_exact": true
+    },
+    {
+      "tokens": 7,
+      "us": 17.323553562164307,
+      "bit_exact": true
+    },
+    {
+      "tokens": 8,
+      "us": 17.26972295882854,
+      "bit_exact": true
+    }
+  ]
+}

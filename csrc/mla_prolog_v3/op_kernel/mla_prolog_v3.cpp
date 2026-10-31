@@ -34,7 +34,7 @@
 using namespace MlaProlog;
 
 template <uint8_t CacheMode, uint8_t Scenario, uint8_t QuantMode, bool EnableDequantOpt, bool EnableGroupComputeOpt,
-          uint8_t EmptyTensorMode, uint8_t ActualSeqLenMode, uint8_t SplitMMode, bool EnableRope, uint8_t CvMode>
+          uint8_t EmptyTensorMode, uint8_t ActualSeqLenMode, uint8_t SplitMMode, bool EnableRope, uint8_t CvMode, uint32_t StaticTokens = 0>
 __aicore__ inline void MlaPrologV3KernelBody(
     __gm__ uint8_t* tokenX, __gm__ uint8_t* weightDq, __gm__ uint8_t* weightUqQr, __gm__ uint8_t* weightUk,
     __gm__ uint8_t* weightDkvKr, __gm__ uint8_t* rmsnormGammaCq, __gm__ uint8_t* rmsnormGammaCkv,
@@ -70,6 +70,36 @@ __aicore__ inline void MlaPrologV3KernelBody(
     // copy the GM tiling blob into local memory explicitly.
     optiling::MlaPrologTilingData tilingDataIn;
     optiling::CopyMlaPrologTilingDataFromGm(tiling, tilingDataIn);
+    if constexpr (StaticTokens != 0) {
+        const uint32_t tokens = StaticTokens;
+        tilingDataIn.baseParams.tokenSize = tokens;
+        tilingDataIn.baseParams.stepBatchSize = tokens;
+        tilingDataIn.baseParams.vectorBlockNum = tokens;
+        tilingDataIn.baseParams.headSizeX = 2048;
+        tilingDataIn.baseParams.headSizeCq = 768;
+        tilingDataIn.baseParams.headSizeCkv = 512;
+        tilingDataIn.baseParams.headSizeQc = 3840;
+        tilingDataIn.baseParams.headSizeQr = 1280;
+        tilingDataIn.baseParams.headSizeKr = 64;
+        tilingDataIn.baseParams.numHeadSize = 20;
+        tilingDataIn.baseParams.numHeadKvSize = 1;
+        tilingDataIn.baseParams.dimHeadSizeQc = 192;
+        tilingDataIn.baseParams.dimHeadRope = 64;
+        tilingDataIn.baseParams.mm1BlockNum = 16;
+        tilingDataIn.baseParams.mm1SingleCoreN = 48;
+        tilingDataIn.baseParams.mm2BlockNum = 9;
+        tilingDataIn.baseParams.mm2SingleCoreN = 64;
+        tilingDataIn.baseParams.mm3BlockNum = 16;
+        tilingDataIn.baseParams.mm3SingleCoreN = 320;
+        tilingDataIn.baseParams.mm4BlockNum = 10;
+        tilingDataIn.baseParams.mm4SingleCoreBatch = 2;
+        tilingDataIn.baseParams.queryNormFlag = 1;
+        tilingDataIn.baseParams.queryHeadStride = 576;
+        tilingDataIn.baseParams.queryRopeHeadStride = 576;
+        tilingDataIn.baseParams.decodeHeadLocal = 0;
+        tilingDataIn.baseParams.decodeParallelDown = 0;
+        tilingDataIn.baseParams.decodeKvBlockStart = 0;
+    }
     const optiling::MlaPrologTilingData* __restrict tilingData = nullptr;
     const optiling::MlaPrologBaseParams* __restrict tilingDataBaseParams = &tilingDataIn.baseParams;
 
@@ -324,6 +354,19 @@ extern "C" __global__ __aicore__ void mla_prolog_v3(
 {
     const uint64_t key = reinterpret_cast<const __gm__ optiling::MlaPrologTilingData *>(tiling)->tilingKey;
 
+    if (const uint32_t staticTokens = key >> 32) {
+        switch (staticTokens) {
+            case 1: MlaPrologV3KernelBody<1, 1, 0, false, false, 0, 0, 0, true, 7, 1>(MLA_PROLOG_V3_ARGS); break;
+            case 2: MlaPrologV3KernelBody<1, 1, 0, false, false, 0, 0, 0, true, 7, 2>(MLA_PROLOG_V3_ARGS); break;
+            case 3: MlaPrologV3KernelBody<1, 1, 0, false, false, 0, 0, 0, true, 7, 3>(MLA_PROLOG_V3_ARGS); break;
+            case 4: MlaPrologV3KernelBody<1, 1, 0, false, false, 0, 0, 0, true, 7, 4>(MLA_PROLOG_V3_ARGS); break;
+            case 5: MlaPrologV3KernelBody<1, 1, 0, false, false, 0, 0, 0, true, 7, 5>(MLA_PROLOG_V3_ARGS); break;
+            case 6: MlaPrologV3KernelBody<1, 1, 0, false, false, 0, 0, 0, true, 7, 6>(MLA_PROLOG_V3_ARGS); break;
+            case 7: MlaPrologV3KernelBody<1, 1, 0, false, false, 0, 0, 0, true, 7, 7>(MLA_PROLOG_V3_ARGS); break;
+            case 8: MlaPrologV3KernelBody<1, 1, 0, false, false, 0, 0, 0, true, 7, 8>(MLA_PROLOG_V3_ARGS); break;
+        }
+        return;
+    }
     switch (key) {
         // ---- bf16 / no quant, PA_BSND, 1:2 (golden / accuracy baseline)
         case MLA_PROLOG_V3_KEY(1, 1, 0, 0, 0, 0, 0, 0, 1, 7):

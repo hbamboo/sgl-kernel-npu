@@ -1,0 +1,4 @@
+{
+  "separate_process_aba": "INVALID for performance: A2 timing spikes",
+  "resident_interleaved": "PID-audited sample medians; microbenchmark only"
+}

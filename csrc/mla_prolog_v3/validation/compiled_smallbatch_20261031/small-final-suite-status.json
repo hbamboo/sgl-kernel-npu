@@ -1,0 +1,42 @@
+[
+  {
+    "stage": "small-real-regression",
+    "rc": 0,
+    "elapsed": 12.302387714385986
+  },
+  {
+    "stage": "small-full-decode-sweep",
+    "rc": 0,
+    "elapsed": 33.28206777572632
+  },
+  {
+    "stage": "small-no-norm",
+    "rc": 0,
+    "elapsed": 43.93980026245117
+  },
+  {
+    "stage": "small-integration",
+    "rc": 0,
+    "elapsed": 68.27666020393372
+  },
+  {
+    "stage": "small-original-a",
+    "rc": 0,
+    "elapsed": 79.79392147064209
+  },
+  {
+    "stage": "small-candidate-b",
+    "rc": 0,
+    "elapsed": 96.18502688407898
+  },
+  {
+    "stage": "small-original-a2",
+    "rc": 0,
+    "elapsed": 110.0707848072052
+  },
+  {
+    "stage": "small-acceptance",
+    "rc": 0,
+    "elapsed": 694.9234907627106
+  }
+]

@@ -84,6 +84,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
     m.attr("mla_prolog_v3_direct_cache_version") = 1;
     m.attr("mla_prolog_v3_packed_query_version") = 1;
+    m.attr("mla_prolog_v3_small_decode_version") = 1;
     m.def("mla_prolog_v3", &mla_prolog_v3_py, "MlaPrologV3 (allocates output tensors)",
           py::arg("token_x"), py::arg("weight_dq"), py::arg("weight_uq_qr"), py::arg("weight_uk"),
           py::arg("weight_dkv_kr"), py::arg("rmsnorm_gamma_cq"), py::arg("rmsnorm_gamma_ckv"),

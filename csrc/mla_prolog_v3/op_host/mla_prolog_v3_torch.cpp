@@ -362,6 +362,26 @@ void Launch(const MlaPrologV3Tensors &t, const at::Tensor &token_x, const at::Te
         bp.mm2BlockNum = (576U + bp.mm2SingleCoreN - 1) / bp.mm2SingleCoreN;
         bp.decodeKvBlockStart = bp.mm1BlockNum;
     }
+    // Small GLM decode: expose fixed geometry to the device compiler. The key
+    // carries the batch selector without adding a second GM scalar read.
+    const char* staticEnv = std::getenv("MLA_PROLOG_V3_DECODE_STATIC");
+    uint32_t staticTokens = (staticEnv ? staticEnv[0] != '0' : packedDecode) &&
+        bp.tokenSize >= 1 && bp.tokenSize <= 8 && t.tokenX.size() == 2 &&
+        t.cacheMode == "PA_BSND" && t.weightQuantMode == 0 && t.kvQuantMode == 0 &&
+        t.queryQuantMode == 0 && t.ckvkrRepoMode == 0 &&
+        bp.headSizeX == 2048 && bp.headSizeCq == 768 && bp.headSizeCkv == 512 &&
+        bp.dimHeadSizeQc == 192 && bp.dimHeadRope == 64 && bp.numHeadSize == 20 &&
+        bp.numHeadKvSize == 1 && bp.queryNormFlag == 1 &&
+        bp.queryHeadStride == 576 && bp.queryRopeHeadStride == 576 &&
+        bp.stepBatchSize == bp.tokenSize && bp.vectorBlockNum == bp.tokenSize &&
+        bp.mm1BlockNum == 16 && bp.mm1SingleCoreN == 48 &&
+        bp.mm2BlockNum == 9 && bp.mm2SingleCoreN == 64 &&
+        bp.mm3BlockNum == 16 && bp.mm3SingleCoreN == 320 &&
+        bp.mm4BlockNum == 10 && bp.mm4SingleCoreBatch == 2 &&
+        !bp.decodeHeadLocal && !bp.decodeParallelDown && res.blockDim == 16 &&
+        res.splitMMode == 0 && !res.enableDequantOpt && !res.enableGroupComputeOpt
+        ? bp.tokenSize : 0;
+    if (staticTokens) tilingData.tilingKey |= static_cast<uint64_t>(staticTokens) << 32;
     const at::Tensor &tiling_tensor = CachedTiling(tilingData);
     at::Tensor workspace = WorkspaceFor(static_cast<int64_t>(res.workspaceSize), token_x);
 
