@@ -103,6 +103,8 @@ struct MlaPrologV3Tensors {
 
 struct MlaPrologV3TilingResult {
     uint32_t blockDim{0};
+    uint32_t physicalAic{0};
+    uint32_t physicalAiv{0};
     size_t workspaceSize{0};
     uint64_t tilingKey{0};
     // decoded tiling-key template arguments (mirrored into MlaPrologTilingData)

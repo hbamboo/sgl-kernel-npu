@@ -228,6 +228,23 @@ if(SGL_KERNEL_ENABLE_A5_ONLY_OPS)
         -DHAVE_TILING
     )
     list(APPEND A5_ONLY_KERNEL_TARGETS mla_prolog_v3_kernel)
+
+    # Separate compilation keeps each entry's physical mixed-core ratio.
+    ascendc_library(mla_prolog_v3_small_kernel STATIC
+        ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/op_kernel/mla_prolog_v3_small.cpp
+    )
+    ascendc_include_directories(mla_prolog_v3_small_kernel PRIVATE
+        ${PROJECT_OP_SRC_BASE}/mla_prolog/op_kernel
+        ${PROJECT_OP_SRC_BASE}/mla_prolog/op_kernel/arch35
+        ${PROJECT_OP_SRC_BASE}/mla_prolog_v3/op_kernel
+        ${PROJECT_OP_SRC_BASE}/utils/kernel
+        ${ASCEND_INCLUDE_DIR}
+    )
+    ascendc_compile_definitions(mla_prolog_v3_small_kernel PRIVATE
+        -DHAVE_WORKSPACE
+        -DHAVE_TILING
+    )
+    list(APPEND A5_ONLY_KERNEL_TARGETS mla_prolog_v3_small_kernel)
 endif()
 
 # Dedicated A3-only kernel targets. Keep these separate from workspace_kernel:

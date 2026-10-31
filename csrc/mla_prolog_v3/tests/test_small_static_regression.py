@@ -8,7 +8,7 @@ for layer in [0,2,23,46]:
     assert C.mla_prolog_v3_small_decode_version>=1
     for seed in [0,42,2026]:
         torch.manual_seed(seed)
-        for t in range(1,9):
+        for t in range(1,11):
             for direct_cache in [False,True]:
                 for eps in [1e-6,1e-5]:
                     args,kw,full=make(t,direct_cache,16 if t%2 else 128)

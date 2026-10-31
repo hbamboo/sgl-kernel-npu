@@ -23,6 +23,7 @@
 #include "torch_helper.h"
 
 #include "aclrtlaunch_mla_prolog_v3.h"
+#include "aclrtlaunch_mla_prolog_v3_small.h"
 
 #include "mla_prolog_v3_host.h"
 
@@ -362,11 +363,15 @@ void Launch(const MlaPrologV3Tensors &t, const at::Tensor &token_x, const at::Te
         bp.mm2BlockNum = (576U + bp.mm2SingleCoreN - 1) / bp.mm2SingleCoreN;
         bp.decodeKvBlockStart = bp.mm1BlockNum;
     }
-    // Small GLM decode: expose fixed geometry to the device compiler. The key
-    // carries the batch selector without adding a second GM scalar read.
+    const char* mixEnv = std::getenv("MLA_PROLOG_V3_DECODE_MIX11");
     const char* staticEnv = std::getenv("MLA_PROLOG_V3_DECODE_STATIC");
-    uint32_t staticTokens = (staticEnv ? staticEnv[0] != '0' : packedDecode) &&
-        bp.tokenSize >= 1 && bp.tokenSize <= 8 && t.tokenX.size() == 2 &&
+    const char* coresEnv = std::getenv("MLA_PROLOG_V3_CORES");
+    const bool staticEnabled = staticEnv ? staticEnv[0] != '0' : packedDecode;
+    const bool mixEnabled = mixEnv ? mixEnv[0] != '0' : packedDecode;
+    const bool useMixedKernel = staticEnabled && mixEnabled &&
+        res.physicalAic >= 20 && res.physicalAiv >= 20 &&
+        (!coresEnv || std::atoi(coresEnv) == 20) &&
+        t.tokenX.size() == 2 && bp.tokenSize >= 1 && bp.tokenSize <= 10 &&
         t.cacheMode == "PA_BSND" && t.weightQuantMode == 0 && t.kvQuantMode == 0 &&
         t.queryQuantMode == 0 && t.ckvkrRepoMode == 0 &&
         bp.headSizeX == 2048 && bp.headSizeCq == 768 && bp.headSizeCkv == 512 &&
@@ -375,13 +380,42 @@ void Launch(const MlaPrologV3Tensors &t, const at::Tensor &token_x, const at::Te
         bp.queryHeadStride == 576 && bp.queryRopeHeadStride == 576 &&
         bp.stepBatchSize == bp.tokenSize && bp.vectorBlockNum == bp.tokenSize &&
         bp.mm1BlockNum == 16 && bp.mm1SingleCoreN == 48 &&
-        bp.mm2BlockNum == 9 && bp.mm2SingleCoreN == 64 &&
-        bp.mm3BlockNum == 16 && bp.mm3SingleCoreN == 320 &&
-        bp.mm4BlockNum == 10 && bp.mm4SingleCoreBatch == 2 &&
-        !bp.decodeHeadLocal && !bp.decodeParallelDown && res.blockDim == 16 &&
-        res.splitMMode == 0 && !res.enableDequantOpt && !res.enableGroupComputeOpt
-        ? bp.tokenSize : 0;
-    if (staticTokens) tilingData.tilingKey |= static_cast<uint64_t>(staticTokens) << 32;
+        bp.mm2BlockNum == 9 && bp.mm2SingleCoreN == 64 && !bp.decodeParallelDown &&
+        (res.blockDim == 16 || res.blockDim == 20) && res.splitMMode == 0 &&
+        !res.enableDequantOpt && !res.enableGroupComputeOpt;
+    if (useMixedKernel) {
+        // Mode0 split-N workspaces depend on T and matrix dimensions, which
+        // remain unchanged. Only Qc/Qn ownership and the physical launch grid change.
+        res.blockDim = 20;
+        bp.mm3BlockNum = bp.mm4BlockNum = 20;
+        bp.mm3SingleCoreN = 256;
+        bp.mm4SingleCoreBatch = 1;
+        bp.decodeHeadLocal = headLocal ? headLocal[0] == '1' : bp.tokenSize >= 4;
+        tilingData.tplArgs.cvMode = 6;
+        constexpr uint64_t cvMask = static_cast<uint64_t>(0xff) << 19;
+        tilingData.tilingKey = (tilingData.tilingKey & ~cvMask) | (static_cast<uint64_t>(6) << 19) |
+            (static_cast<uint64_t>(bp.tokenSize + (bp.decodeHeadLocal ? 16 : 0)) << 32);
+    } else {
+        // Small GLM decode: expose fixed geometry to the device compiler. The key
+        // carries the batch selector without adding a second GM scalar read.
+        uint32_t staticTokens = (staticEnv ? staticEnv[0] != '0' : packedDecode) &&
+            bp.tokenSize >= 1 && bp.tokenSize <= 8 && t.tokenX.size() == 2 &&
+            t.cacheMode == "PA_BSND" && t.weightQuantMode == 0 && t.kvQuantMode == 0 &&
+            t.queryQuantMode == 0 && t.ckvkrRepoMode == 0 &&
+            bp.headSizeX == 2048 && bp.headSizeCq == 768 && bp.headSizeCkv == 512 &&
+            bp.dimHeadSizeQc == 192 && bp.dimHeadRope == 64 && bp.numHeadSize == 20 &&
+            bp.numHeadKvSize == 1 && bp.queryNormFlag == 1 &&
+            bp.queryHeadStride == 576 && bp.queryRopeHeadStride == 576 &&
+            bp.stepBatchSize == bp.tokenSize && bp.vectorBlockNum == bp.tokenSize &&
+            bp.mm1BlockNum == 16 && bp.mm1SingleCoreN == 48 &&
+            bp.mm2BlockNum == 9 && bp.mm2SingleCoreN == 64 &&
+            bp.mm3BlockNum == 16 && bp.mm3SingleCoreN == 320 &&
+            bp.mm4BlockNum == 10 && bp.mm4SingleCoreBatch == 2 &&
+            !bp.decodeHeadLocal && !bp.decodeParallelDown && res.blockDim == 16 &&
+            res.splitMMode == 0 && !res.enableDequantOpt && !res.enableGroupComputeOpt
+            ? bp.tokenSize : 0;
+        if (staticTokens) tilingData.tilingKey |= static_cast<uint64_t>(staticTokens) << 32;
+    }
     const at::Tensor &tiling_tensor = CachedTiling(tilingData);
     at::Tensor workspace = WorkspaceFor(static_cast<int64_t>(res.workspaceSize), token_x);
 
@@ -400,11 +434,19 @@ void Launch(const MlaPrologV3Tensors &t, const at::Tensor &token_x, const at::Te
     // the launch macro captures its blockdim argument by name in a lambda, so it must
     // be a plain local variable
     const uint32_t block_dim = res.blockDim;
+    if (useMixedKernel) {
+    EXEC_KERNEL_CMD(mla_prolog_v3_small, block_dim, token_x, weight_dq, weight_uq_qr, weight_uk, weight_dkv_kr,
+                    rmsnorm_gamma_cq, rmsnorm_gamma_ckv, rope_sin, rope_cos, kv_cache, kr_cache, cache_index_t,
+                    scale_x_t, scale_wdq_t, scale_wuqqr_t, scale_wdkvkr_t, quant_ckv_t, quant_ckr_t, smooth_cq_t,
+                    seq_len_t, clip_alpha_t, out.query, out.query_rope, kv_cache, kr_cache, out.dequant_q_nope,
+                    out.query_norm, out.dequant_q_norm, workspace, tiling_tensor);
+    } else {
     EXEC_KERNEL_CMD(mla_prolog_v3, block_dim, token_x, weight_dq, weight_uq_qr, weight_uk, weight_dkv_kr,
                     rmsnorm_gamma_cq, rmsnorm_gamma_ckv, rope_sin, rope_cos, kv_cache, kr_cache, cache_index_t,
                     scale_x_t, scale_wdq_t, scale_wuqqr_t, scale_wdkvkr_t, quant_ckv_t, quant_ckr_t, smooth_cq_t,
                     seq_len_t, clip_alpha_t, out.query, out.query_rope, kv_cache, kr_cache, out.dequant_q_nope,
                     out.query_norm, out.dequant_q_norm, workspace, tiling_tensor);
+    }
 }
 
 }  // namespace

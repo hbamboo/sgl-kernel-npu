@@ -256,6 +256,10 @@ bool MlaPrologV3RunTiling(const MlaPrologV3Tensors &tensors, optiling::MlaProlog
     }
 
     if (result != nullptr) {
+        // Preserve physical limits before selecting a small decode launch grid.
+        auto platform = platform_ascendc::PlatformAscendCManager::GetInstance();
+        result->physicalAic = platform ? platform->GetCoreNumAic() : 0;
+        result->physicalAiv = platform ? platform->GetCoreNumAiv() : 0;
         result->blockDim = ctx.blockDim;
         result->workspaceSize = workSpaces[0];
         result->tilingKey = ctx.tilingKey;
