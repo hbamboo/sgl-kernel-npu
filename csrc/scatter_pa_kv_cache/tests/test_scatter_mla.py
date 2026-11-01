@@ -141,3 +141,36 @@ def test_dense_validation_and_fake():
     from torch._subclasses.fake_tensor import FakeTensorMode
     with FakeTensorMode(allow_non_fake_inputs=True):
         assert call(*ts,key_out=ko,value_out=vo) is None
+
+
+@pytest.mark.parametrize("dense", [False, True])
+def test_tiling_cache_overflow_with_delayed_launch(dense):
+    """Keep uncached tiling alive while TASK_QUEUE_ENABLE delays its launch."""
+    torch.manual_seed(42)
+    ts, _, _ = tensors(1700, random=False)
+    x, rope, slots, key_cache, value_cache = ts
+    key_out = torch.empty(1700, 20, 256, device="npu", dtype=x.dtype)
+    value_out = torch.empty_like(key_out)
+    a = torch.randn(4096, 4096, device="npu", dtype=x.dtype)
+    b = torch.randn_like(a)
+    for i, n in enumerate(range(1000, 1700)):
+        if i == 512:
+            # Device backlog lets subsequent host work recycle temporary
+            # allocations before an incorrectly captured raw-pointer launch.
+            for _ in range(64):
+                backlog = a @ b
+        kwargs = dict(key_out=key_out[:n], value_out=value_out[:n]) if dense else {}
+        call(x[:n], rope[:n], slots[:n], key_cache, value_cache, **kwargs)
+        if i >= 508:
+            scratch = torch.empty(128, device="npu", dtype=torch.uint8)
+            scratch.fill_(0x7f)
+        if i < 512 or i % 128 == 127:
+            torch.npu.synchronize()
+    torch.npu.synchronize()
+    expected_key = torch.cat((x[:1699, :, :192], rope[:1699].expand(-1, 20, -1)), dim=-1)
+    expected_value = x[:1699, :, 192:]
+    assert torch.equal(bits(key_cache.view(-1, 20, 256)[:1699]), bits(expected_key))
+    assert torch.equal(bits(value_cache.view(-1, 20, 256)[:1699]), bits(expected_value))
+    if dense:
+        assert torch.equal(bits(key_out[:1699]), bits(expected_key))
+        assert torch.equal(bits(value_out[:1699]), bits(expected_value))

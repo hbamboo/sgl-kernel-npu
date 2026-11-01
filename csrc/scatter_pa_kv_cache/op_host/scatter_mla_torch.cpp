@@ -5,6 +5,7 @@
 #include "scatter_mla_tiling.h"
 #include "aclrtlaunch_sgl_scatter_mla.h"
 #include <c10/core/DeviceGuard.h>
+#include "torch_npu/csrc/core/npu/NPUCachingAllocator.h"
 namespace sglang::npu_kernel {
 void scatter_pa_kv_cache_mla(const at::Tensor& packed,const at::Tensor& rope,
                             const at::Tensor& slots,at::Tensor kc,at::Tensor vc,
@@ -54,7 +55,20 @@ void scatter_pa_kv_cache_mla(const at::Tensor& packed,const at::Tensor& rope,
     const uint32_t block_dim=cores;
     const at::Tensor ko=key_out.has_value()?*key_out:kc;
     const at::Tensor vo=value_out.has_value()?*value_out:vc;
-    EXEC_KERNEL_CMD(sgl_scatter_mla,block_dim,packed,rope,slots,kc,vc,ko,vo,tiling);
+    // The bounded tiling cache returns a temporary tensor after 512 entries.
+    // Keep tensor ownership until the queued host launch has consumed its args;
+    // raw data pointers alone let the allocator reuse tiling before that launch.
+    auto npu_stream=c10_npu::getCurrentNPUStream();
+    auto acl_stream=npu_stream.stream(false);
+    auto launch=[acl_stream,npu_stream,block_dim,packed,rope,slots,kc,vc,ko,vo,tiling]() -> int {
+        for(const auto& tensor:{packed,rope,slots,kc,vc,ko,vo,tiling}) {
+            c10_npu::NPUCachingAllocator::recordStream(tensor.storage().data_ptr(),npu_stream);
+        }
+        return ACLRT_LAUNCH_KERNEL(sgl_scatter_mla)(block_dim,acl_stream,
+            packed.data_ptr(),rope.data_ptr(),slots.data_ptr(),kc.data_ptr(),vc.data_ptr(),
+            ko.data_ptr(),vo.data_ptr(),tiling.data_ptr());
+    };
+    at_npu::native::OpCommand::RunOpApi("sgl_scatter_mla",launch);
 }
 void scatter_pa_kv_cache_mla_meta(const at::Tensor&,const at::Tensor&,const at::Tensor&,at::Tensor,at::Tensor,int64_t,int64_t,int64_t,bool,const c10::optional<at::Tensor>&,const c10::optional<at::Tensor>&) {}
 }

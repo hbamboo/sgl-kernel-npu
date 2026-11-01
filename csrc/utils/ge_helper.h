@@ -143,9 +143,12 @@ public:
             TORCH_CHECK(!isCapturing, opName,
                         ": the current tiling configuration is not cached and the 512-entry cache is full; "
                         "NPU graph capture cannot use a one-shot tiling address");
-            auto tilingTensor = at::empty({tilingSize}, at::TensorOptions().device(device).dtype(at::kByte));
-            CopyTo_(tilingTensor, tilingData, opName);
-            return tilingTensor;
+            // A temporary tiling allocation may be reused while earlier kernels
+            // are still queued. Use the framework's stream-ordered H2D copy,
+            // rather than a raw synchronous memcpy outside that launch stream.
+            auto hostTiling = at::empty({tilingSize}, at::TensorOptions().device(at::kCPU).dtype(at::kByte));
+            std::memcpy(hostTiling.data_ptr(), &tilingData, sizeof(T));
+            return sglang::npu_kernel::TorchNpuHelper::CopyTensorHostToDevice(hostTiling);
         }
 
         if (!cache.buffer.defined()) {
