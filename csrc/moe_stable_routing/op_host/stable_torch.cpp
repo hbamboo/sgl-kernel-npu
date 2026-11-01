@@ -37,6 +37,7 @@ Outputs Route(const Tensor& x, const Tensor& ids, const Tensor& scale, int64_t t
     Validate(x, ids, scale, tile);
     TORCH_CHECK(x.device().type() == c10::DeviceType::PrivateUse1, "requires NPU input");
     c10::DeviceGuard guard(x.device());
+    auto stream = c10_npu::getCurrentNPUStream(); auto raw = stream.stream(false);
     // No CPU inspection of IDs. Upstream top-k must guarantee every ID in [0,64).
     auto output = Allocate(x);
     auto out = std::get<0>(output), map = std::get<1>(output);
@@ -47,9 +48,11 @@ Outputs Route(const Tensor& x, const Tensor& ids, const Tensor& scale, int64_t t
     uint32_t tokens = x.size(0), perCore = (tokens+63)/64;
     uint32_t sortSlots = ((perCore*4+31)/32)*32, stride = 1;
     while (stride < tokens*4) stride *= 2;
-    auto stream = c10_npu::getCurrentNPUStream(); auto raw = stream.stream(false);
     auto launch = [=]() -> int {
-        for (const auto& t : {x, ids, scale, out, map, totals, outScale, ranks, counts, offsets})
+        // External inputs may belong to another allocation stream.
+        // All seven fresh tensors above belong to raw and remain captured
+        // until this callback has submitted their last same-stream use.
+        for (const auto& t : {x, ids, scale})
             c10_npu::NPUCachingAllocator::recordStream(t.storage().data_ptr(), stream);
         auto status = ACLRT_LAUNCH_KERNEL(moe_local_ranks)(64, raw, ids.data_ptr(), ranks.data_ptr(),
             counts.data_ptr(), tokens, perCore, sortSlots, stride);
