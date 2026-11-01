@@ -357,3 +357,8 @@ endif()
 if(SGL_KERNEL_ENABLE_A5_ONLY_OPS)
     add_subdirectory(scatter_pa_kv_cache)
 endif()
+
+# Stable raw-byte MoE routing companion (optional loader; A5 only).
+if(SGL_KERNEL_ENABLE_A5_ONLY_OPS)
+    add_subdirectory(moe_stable_routing)
+endif()
