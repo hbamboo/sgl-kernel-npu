@@ -51,17 +51,20 @@ absolute path.
 
 | T | pages | input | old median / p95 (us) | new median / p95 (us) | net saved (us) | ratio |
 |---:|---:|---|---:|---:|---:|---:|
-| 3787 | 7194 | packed 576 | 1524.8 / 1550.7 | 67.5 / 77.1 | 1457.3 | 22.6x |
-| 15148 | 7194 | packed 576 | 1558.1 / 1608.8 | 100.0 / 114.5 | 1458.2 | 15.6x |
-| 3787 | 128 | packed 576 | 174.0 / 188.6 | 64.1 / 75.1 | 110.0 | 2.7x |
-| 3787 | 15148 | packed 576 | 3010.7 / 3029.8 | 70.0 / 110.2 | 2940.7 | 43.0x |
-| 3787 | 7194 | strided 1344 | 1551.8 / 1572.0 | 71.1 / 88.0 | 1480.8 | 21.8x |
-| 15148 | 15148 | packed 576 | 3046.6 / 3067.6 | 101.1 / 117.1 | 2945.5 | 30.1x |
+| 3787 | 7194 | packed 576 | 1531.4 / 1559.8 | 71.3 / 82.0 | 1460.1 | 21.5x |
+| 15148 | 7194 | packed 576 | 1573.2 / 1617.7 | 108.9 / 135.2 | 1464.3 | 14.4x |
+| 3787 | 128 | packed 576 | 188.8 / 220.3 | 73.8 / 83.6 | 115.0 | 2.6x |
+| 3787 | 15148 | packed 576 | 3012.0 / 3028.9 | 72.1 / 83.8 | 2940.0 | 41.8x |
+| 3787 | 7194 | strided 1344 | 1554.8 / 1572.6 | 71.5 / 88.1 | 1483.3 | 21.8x |
+| 15148 | 15148 | packed 576 | 3047.5 / 3064.2 | 105.6 / 120.5 | 2941.9 | 28.9x |
 
-At fixed T the candidate is flat across cache capacity (T=3787: 64.1 us at 128
-pages, 67.5 us at 7194, 70.0 us at 15148; T=15148: 100.0 us at 7194, 101.1 us at
-15148), while the old path scales linearly (~0.2 ms per 1000 pages).  Raw
-samples: `results/bench_full_path.json`.
+A previous full run of the same final kernel gave 1524.8/67.5, 1558.1/100.0,
+174.0/64.1, 3010.7/70.0, 1551.8/71.1 and 3046.6/101.1 us (old/new medians), i.e.
+run-to-run variation below ~7%.  At fixed T the candidate is flat across cache
+capacity (T=3787: 73.8 us at 128 pages, 71.3 us at 7194, 72.1 us at 15148;
+T=15148: 108.9 us at 7194, 105.6 us at 15148), while the old path scales
+linearly (~0.2 ms per 1000 pages).  Raw samples:
+`results/bench_full_path.json`.
 
 The event interval includes host launch latency when the device is idle (host
 enqueue measured median ~46 us for the candidate, ~124 us for the old op).  In a
@@ -73,14 +76,14 @@ profiler time is 21 us (T=3787) and 54 us (T=15148).
 `results/profiles/` and remote `/mnt/.../results/profiles/`.  Cache 7194 pages
 (1,060,798,464 bytes), 3 calls per window after warmup.
 
-Old path, per call (T=3787): `aclnnContiguous_Slice` 103.8 us (64-wide cache),
-`aclnnContiguous_Slice` 563.5 us (512-wide cache), `KvRmsNormRopeCache` 14.9 us,
-`aclnnViewCopy` 118.4 us, `aclnnViewCopy` 587.7 us.  Exactly **two whole-pool
+Old path, per call (T=3787): `aclnnContiguous_Slice` 101.9 us (64-wide cache),
+`aclnnContiguous_Slice` 566.3 us (512-wide cache), `KvRmsNormRopeCache` 15.5 us,
+`aclnnViewCopy` 118.3 us, `aclnnViewCopy` 583.2 us.  Exactly **two whole-pool
 Slice + two whole-pool ViewCopy** per call; the copy kernels are independent of
-T for fixed capacity (T=15148: 101.8/566.3/47.7/114.1/582.4 us).
+T for fixed capacity (T=15148: 100.1/565.5/48.1/114.4/583.6 us).
 
-Candidate path, per call: only `sgl_kv_rmsnorm_unified_cache_0`, 21.1 us
-(T=3787), 53.8 us (T=15148).  Class counts per 3-call window:
+Candidate path, per call: only `sgl_kv_rmsnorm_unified_cache_0`, 20.4 us
+(T=3787), 54.1 us (T=15148).  Class counts per 3-call window:
 old `{slice:6, viewcopy:6, kv_rmsnorm_cache:3}`; new `{slice:0, viewcopy:0,
 unified:3}`.  No whole-cache Slice/ViewCopy/contiguous kernel appears.
 
