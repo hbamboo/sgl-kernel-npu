@@ -19,7 +19,12 @@
  * quantization paths (RmsNormAsymQuant*, RmsNormSymQuant*, CAST_*_TO_INT8/HIFLOAT8/
  * FLOAT8 traits) are deleted because the migrated route is explicitly limited to
  * BF16/FP16 non-quantized latent512/rope64 (DESIGN.md section 6). No arithmetic used
- * by the retained path was changed.
+ * by the retained path was changed, with one deliberate exception: the
+ * non-quantized RMSNorm post-processing now folds rstd = 1/sqrt(mean + eps) in
+ * FP32 and applies x * rstd * gamma.  That is the rounding used by the device
+ * RmsNorm (torch_npu.npu_rms_norm) that the unfused production path calls; the
+ * previous x / sqrt(mean + eps) * gamma order skipped the reciprocal rounding
+ * and produced rare BF16 output ties at large token counts.
  */
 
 #ifndef KV_RMS_NORM_ROPE_CACHE_REGBASE_BASE_H
@@ -424,16 +429,26 @@ __aicore__ inline void KvRmsNormRopeCacheRegbase<T_KV>::RmsNormPostVF(
                 ReduceSum(reg1, reg0, pMask);
                 AscendC::Reg::Muls(reg2, reg1, reciprocal, pFull);
                 AscendC::Reg::Adds(reg3, reg2, epsilon, pFull);
-                AscendC::Reg::Sqrt(reg4, reg3, pFull);
-                Duplicate(reg5, reg4, pFull);
+                AscendC::Reg::Sqrt(reg3, reg3, pFull);
+                // Match the deployed RmsNorm rounding: ReduceSum leaves the row
+                // scalar in lane 0, so broadcast sqrt(mean + eps), fold the
+                // reciprocal rstd = 1/sqrt(mean + eps) in FP32, then apply
+                // x * rstd * gamma as two multiplies.  Dividing x by
+                // sqrt(mean + eps) and multiplying by gamma (the previous
+                // order) skips the reciprocal rounding and produced rare BF16
+                // ties against torch_npu.npu_rms_norm, the unfused production
+                // path.
+                Duplicate(reg4, reg3, pFull);
+                Duplicate(reg5, static_cast<float>(1.0), pFull);
+                AscendC::Reg::Div(reg3, reg5, reg4, pFull);
                 uint32_t sreg0 = oriR;
                 for (uint16_t j = 0; j < rLoopCount; ++j) {
                     maskOri = AscendC::Reg::UpdateMask<float>(sreg0);
                     uint32_t addrPtr = j * VL_FP32 + i * oriRAligned;
                     LoadTensorForDtypeT<T_KV>(x, reg1, maskOri, addrPtr);
-                    AscendC::Reg::Div(reg6, reg1, reg5, maskOri);
+                    AscendC::Reg::Mul(reg6, reg1, reg3, maskOri);
                     LoadTensorForDtypeT<T_KV>(gamma, reg7, maskOri, j * VL_FP32);
-                    AscendC::Reg::Mul(reg8, reg7, reg6, maskOri);
+                    AscendC::Reg::Mul(reg8, reg6, reg7, maskOri);
                     StoreTensorForDtypeTOut<T_KV>(dst, reg8, maskOri, addrPtr);
                 }
             }

@@ -34,8 +34,13 @@
  *      produce the returned k_rope/c_kv rows (upstream only checked >= 0);
  *   5. quantization, NZ cache modes, block-table modes, the K/V scale/offset
  *      inputs and their UB buffers are removed because this route is limited to
- *      non-quantized BF16/FP16 PA_BNSD (ND) unified cache.
- * No arithmetic used by the retained path was modified.
+ *      non-quantized BF16/FP16 PA_BNSD (ND) unified cache;
+ *   6. RmsNormPostVF folds rstd = 1/sqrt(mean + eps) in FP32 and applies
+ *      x * rstd * gamma instead of x / sqrt(mean + eps) * gamma.  This matches
+ *      the device RmsNorm (torch_npu.npu_rms_norm) rounding used by the unfused
+ *      production path; the old order changed rare BF16 outputs at large T.
+ *
+ * Apart from item 6, no arithmetic used by the retained path was modified.
  */
 
 #ifndef KV_RMSNORM_ROPE_CACHE_H
