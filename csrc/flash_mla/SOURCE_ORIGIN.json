@@ -519,7 +519,7 @@
       "new_path": "README.md",
       "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/README.md",
       "baseline_sha256": "3f147000f49755f6dccd492febdaec406d527c6fe1b4ec88624c2f1f43a59fb1",
-      "new_sha256": "3f147000f49755f6dccd492febdaec406d527c6fe1b4ec88624c2f1f43a59fb1",
+      "new_sha256": "8e6dfd426cecbae6eebbdb94b4cc6ffb101292a88c59aab9c1bc34656382e17b",
       "transformation": "documents the upstream-shaped tree, template parameters and direct-invoke explicit specializations"
     }
   ],
