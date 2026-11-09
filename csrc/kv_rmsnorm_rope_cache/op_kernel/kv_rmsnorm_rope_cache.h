@@ -35,7 +35,7 @@
  *   5. quantization, NZ cache modes, block-table modes, the K/V scale/offset
  *      inputs and their UB buffers are removed because this route is limited to
  *      non-quantized BF16/FP16 PA_BNSD (ND) unified cache;
- *   6. RmsNormPostVF folds rstd = 1/sqrt(mean + eps) in FP32 and applies
+ *   6. RmsNormPostVF computes the native compensated FP32 rstd and applies
  *      x * rstd * gamma instead of x / sqrt(mean + eps) * gamma.  This matches
  *      the device RmsNorm (torch_npu.npu_rms_norm) rounding used by the unfused
  *      production path; the old order changed rare BF16 outputs at large T.

@@ -20,8 +20,8 @@
  * FLOAT8 traits) are deleted because the migrated route is explicitly limited to
  * BF16/FP16 non-quantized latent512/rope64 (DESIGN.md section 6). No arithmetic used
  * by the retained path was changed, with one deliberate exception: the
- * non-quantized RMSNorm post-processing now folds rstd = 1/sqrt(mean + eps) in
- * FP32 and applies x * rstd * gamma.  That is the rounding used by the device
+ * non-quantized RMSNorm post-processing computes rstd = 1/sqrt(mean + eps)
+ * with the native FP32 residual compensation and applies x * rstd * gamma.  That is the rounding used by the device
  * RmsNorm (torch_npu.npu_rms_norm) that the unfused production path calls; the
  * previous x / sqrt(mean + eps) * gamma order skipped the reciprocal rounding
  * and produced rare BF16 output ties at large token counts.
@@ -73,6 +73,42 @@ constexpr static int64_t CONST_ONE = 1;
 constexpr static int64_t CONST_TWO = 2;
 constexpr static int64_t CONST_FOUR = 4;
 constexpr static int64_t CONST_SIXTY_THREE = 63;
+
+// Match CANN 9.1 norm_common/reduce_common_regbase.h::ComputeRstdNewtonRaphsonReg.
+// A separately rounded sqrt followed by a reciprocal can cross BF16/FP16 ties.
+// Process independent FP32 row statistics lane-wise, once per UB tile.
+__simd_callee__ inline void ComputeRstdCompensated(
+    RegTensor<float>& dst, RegTensor<float>& meanPlusEpsilon, MaskReg& mask)
+{
+    RegTensor<float> var, reciprocalValue, estimate, residual, term, one, half;
+    RegTensor<float> correction, negativeVar, negativeEstimate, infinity, zero;
+    MaskReg isInfinite, isZero;
+    constexpr float kPositiveInfinity = 3.40282366920938E+38;
+    AscendC::Reg::Copy<float, Reg::MaskMergeMode::MERGING>(var, meanPlusEpsilon, mask);
+    Duplicate(one, 1.0f, mask);
+    Duplicate(half, 0.5f, mask);
+    Duplicate(correction, 1.5f, mask);
+    Duplicate(residual, 1.0f, mask);
+    AscendC::Reg::Div(reciprocalValue, one, var, mask);
+    AscendC::Reg::Sqrt(estimate, reciprocalValue, mask);
+    AscendC::Reg::Muls(term, var, -0.5f, mask);
+    AscendC::Reg::Mul(term, term, estimate, mask);
+    AscendC::Reg::Mula(correction, term, estimate, mask);
+    AscendC::Reg::Mul(dst, estimate, correction, mask);
+    AscendC::Reg::Muls(negativeVar, var, -1.0f, mask);
+    AscendC::Reg::Mula(residual, negativeVar, reciprocalValue, mask);
+    AscendC::Reg::Muls(negativeEstimate, dst, -1.0f, mask);
+    AscendC::Reg::Mula(reciprocalValue, negativeEstimate, dst, mask);
+    AscendC::Reg::Mula(residual, var, reciprocalValue, mask);
+    AscendC::Reg::Mul(residual, residual, dst, mask);
+    AscendC::Reg::Mula(dst, residual, half, mask);
+    Duplicate(infinity, kPositiveInfinity, mask);
+    Duplicate(zero, 0.0f, mask);
+    AscendC::Reg::CompareScalar(isInfinite, var, kPositiveInfinity, mask);
+    AscendC::Reg::Select(dst, zero, dst, isInfinite);
+    AscendC::Reg::CompareScalar(isZero, var, 0.0f, mask);
+    AscendC::Reg::Select(dst, infinity, dst, isZero);
+}
 
 template <typename T_KV>
 class KvRmsNormRopeCacheRegbase
@@ -424,23 +460,29 @@ __aicore__ inline void KvRmsNormRopeCacheRegbase<T_KV>::RmsNormPostVF(
             AscendC::Reg::MaskReg pFull =
                 AscendC::Reg::CreateMask<float, AscendC::Reg::MaskPattern::ALL>();
             AscendC::Reg::MaskReg maskOri;
+            // Compact completed row statistics in-place. An index i is before
+            // every unread partial row j*stride (j>i, stride>=1).
+            AscendC::Reg::MaskReg pScalar =
+                AscendC::Reg::CreateMask<float, AscendC::Reg::MaskPattern::VL1>();
             for (uint16_t i = 0; i < loopTimes; ++i) {
-                DataCopy(reg0, (__local_mem__ float*)sumTmp + i * stride);
+                DataCopy(reg0, sumTmp + i * stride);
                 ReduceSum(reg1, reg0, pMask);
                 AscendC::Reg::Muls(reg2, reg1, reciprocal, pFull);
                 AscendC::Reg::Adds(reg3, reg2, epsilon, pFull);
-                AscendC::Reg::Sqrt(reg3, reg3, pFull);
-                // Match the deployed RmsNorm rounding: ReduceSum leaves the row
-                // scalar in lane 0, so broadcast sqrt(mean + eps), fold the
-                // reciprocal rstd = 1/sqrt(mean + eps) in FP32, then apply
-                // x * rstd * gamma as two multiplies.  Dividing x by
-                // sqrt(mean + eps) and multiplying by gamma (the previous
-                // order) skips the reciprocal rounding and produced rare BF16
-                // ties against torch_npu.npu_rms_norm, the unfused production
-                // path.
-                Duplicate(reg4, reg3, pFull);
-                Duplicate(reg5, static_cast<float>(1.0), pFull);
-                AscendC::Reg::Div(reg3, reg5, reg4, pFull);
+                DataCopy<float, StoreDist::DIST_FIRST_ELEMENT_B32>(sumTmp + i, reg3, pScalar);
+            }
+            LocalMemBar<MemType::VEC_STORE, MemType::VEC_LOAD>();
+            // Each lane is one row; amortize the compensated rstd over the tile.
+            uint32_t remainingRows = loopTimes;
+            for (uint16_t base = 0; base < loopTimes; base += VL_FP32) {
+                auto rowsMask = AscendC::Reg::UpdateMask<float>(remainingRows);
+                DataCopy(reg3, sumTmp + base);
+                ComputeRstdCompensated(reg3, reg3, rowsMask);
+                DataCopy(sumTmp + base, reg3, rowsMask);
+            }
+            LocalMemBar<MemType::VEC_STORE, MemType::VEC_LOAD>();
+            for (uint16_t i = 0; i < loopTimes; ++i) {
+                DataCopy<float, LoadDist::DIST_BRC_B32>(reg3, sumTmp + i);
                 uint32_t sreg0 = oriR;
                 for (uint16_t j = 0; j < rLoopCount; ++j) {
                     maskOri = AscendC::Reg::UpdateMask<float>(sreg0);

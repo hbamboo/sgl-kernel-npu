@@ -230,6 +230,23 @@ def test_outputs_bitwise_vs_unfused_production(dtype, T):
     assert_bitwise(vo, v_ref, f"T{T} c_kv")
 
 
+@pytest.mark.parametrize("dtype,tokens,seed,row", [
+    (torch.float16, 127, 127, 70),
+    (torch.bfloat16, 128, 4128, 111),
+])
+def test_compensated_rstd_single_row_rounding(dtype, tokens, seed, row):
+    """A one-row rstd rounding difference crosses the output's rounding midpoint."""
+    c = make_case(tokens, 2, dtype, seed=seed)
+    kv = c["kv2d"][row:row + 1]
+    cos, sin = c["cos"][row:row + 1], c["sin"][row:row + 1]
+    index = torch.zeros(1, dtype=torch.int64, device="npu")
+    ko, vo = run_candidate(kv, c["gamma"], cos, sin, index, c["cache"])
+    k_ref, v_ref = run_production(kv, c["gamma"], cos, sin)
+    torch.npu.synchronize()
+    assert_bitwise(ko, k_ref, "single-row k_rope")
+    assert_bitwise(vo, v_ref, "single-row compensated c_kv")
+
+
 @pytest.mark.parametrize("dtype", DTYPES)
 def test_zero_tokens(dtype):
     c = make_case(0, 2, dtype)
