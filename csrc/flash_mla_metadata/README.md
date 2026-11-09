@@ -53,3 +53,22 @@ and fake-tensor shape inference.
 ```bash
 python3 -m pytest -q csrc/flash_mla_metadata/tests
 ```
+
+
+## Host input contract and stream core limits
+
+Pure host checks mirror upstream `op_host/flash_mla_metadata_check.h`: layout in
+{BSND,BNSD,TND}, `max_seqlen_q/kv` = -1 or non-negative (int32 ABI bound),
+heads 1..128, Hkv=1, Dqk=576, Dv=512, mask 0/3/4 with window consistency,
+batch in (0,65536), TND requires non-empty `cu`, and non-TND rejects non-empty
+`cu`. Provided optional tensors keep the pre-migration wrapper's
+dtype/device/contiguity checks. A genuine empty vector `(0,)` is the
+omitted/None-equivalent form and is passed as a null pointer; rank-0 or
+otherwise non-1-D supplied length tensors are rejected synchronously. All checks run before the platform query,
+output allocation, or AICPU enqueue. Tensor value checks (negative lengths,
+cumulative monotonicity, used<=physical) remain in the AICPU kernel.
+
+Metadata content uses `aclrtGetResInCurrentThread` cube/vector counts when the
+current thread carries a stream resource limit, falling back per resource to
+platform totals, matching the original ACLNN host. The returned metadata
+allocation keeps the pre-migration wrapper's platform-total capacity formula.

@@ -117,25 +117,85 @@ at::Tensor flash_mla_metadata_impl(const at::Tensor& seq,int64_t heads,int64_t k
     const c10::DeviceGuard guard(seq.device());
     auto maxq=maxq_.value_or(-1),maxkv=maxkv_.value_or(-1),mode=mode_.value_or(0);
     auto layout=layout_.value_or("BSND");
-    TORCH_CHECK(seq.device().type()==c10::DeviceType::PrivateUse1 && seq.scalar_type()==at::kInt && seq.dim()==1 && seq.is_contiguous(),"cache_seqlens must be a contiguous NPU int32 vector");
-    TORCH_CHECK(seq.numel()>0 && seq.numel()<=std::numeric_limits<int32_t>::max(),"cache_seqlens length must fit int32 and be non-empty");
-    TORCH_CHECK(heads>0 && kvheads==1 && dqk==576 && dv==512,"FlashMLA requires Hkv=1,Dqk=576,Dv=512");
-    const auto cores=FlashMlaCoreNums();
-    for(const auto& t:{cu,used}) if(t)TORCH_CHECK(t->device()==seq.device() && t->scalar_type()==at::kInt && t->is_contiguous(),"metadata length tensors must be contiguous NPU int32");
-    // Shape-only checks (no D2H): the AICPU kernel reads cu[B+1]/used[B] from
-    // device memory, so short buffers must be rejected here like the original
-    // ACLNN descriptors did.
-    if(cu) TORCH_CHECK(cu->dim()==1 && cu->numel()==seq.numel()+1,"cu_seqlens_q must be 1-D with batch+1 elements");
-    if(used) TORCH_CHECK(used->dim()==1 && used->numel()==seq.numel(),"seqused_q must be 1-D with batch elements");
-    TORCH_CHECK(maxq>=-1 && maxq<=std::numeric_limits<int32_t>::max(),"max_seqlen_q out of int32 range");
-    TORCH_CHECK(maxkv>=-1 && maxkv<=std::numeric_limits<int32_t>::max(),"max_seqlen_kv out of int32 range");
-    TORCH_CHECK(left>=-1 && left<=std::numeric_limits<int32_t>::max(),"win_left out of int32 range");
-    TORCH_CHECK(right>=-1 && right<=std::numeric_limits<int32_t>::max(),"win_right out of int32 range");
-    TORCH_CHECK(mode>=std::numeric_limits<int32_t>::min() && mode<=std::numeric_limits<int32_t>::max(),"mask_mode out of int32 range");
-    TORCH_CHECK(cu || layout!="TND", "TND metadata requires cu_seqlens_q");
-    const int64_t words=(((cores.first+cores.second)*seq.numel()+1)*16+4095)/4096*4096;
+
+    // Pure Host contract from the original ACLNN FlashMlaMetadataCheck. All
+    // attribute/meta checks complete before the platform query, output
+    // allocation, or AICPU enqueue, so invalid inputs fail synchronously and
+    // cannot poison the device context. Tensor VALUE checks stay on AICPU.
+    TORCH_CHECK(seq.device().type()==c10::DeviceType::PrivateUse1 && seq.scalar_type()==at::kInt &&
+                    seq.dim()==1 && seq.is_contiguous(),
+                "cache_seqlens must be a contiguous NPU int32 vector");
+    TORCH_CHECK(layout=="BSND"||layout=="BNSD"||layout=="TND",
+                "layout_q only supports TND, BNSD, BSND, but got ",layout);
+    TORCH_CHECK(maxq==-1 || (maxq>=0 && maxq<=std::numeric_limits<int32_t>::max()),
+                "max_seqlen_q must be -1 or non-negative and fit int32");
+    TORCH_CHECK(maxkv==-1 || (maxkv>=0 && maxkv<=std::numeric_limits<int32_t>::max()),
+                "max_seqlen_kv must be -1 or non-negative and fit int32");
+    TORCH_CHECK(heads>=1 && heads<=128,"num_heads_q must be in [1, 128]");
+    TORCH_CHECK(kvheads==1,"MLA kv head num must be 1");
+    TORCH_CHECK(dqk==576 && dv==512,"MLA requires head_dim_qk=576 and head_dim_v=512");
+    TORCH_CHECK(mode==0||mode==3||mode==4,"mask_mode only supports 0, 3, 4");
+    TORCH_CHECK(left>=-1 && left<=std::numeric_limits<int32_t>::max() &&
+                    right>=-1 && right<=std::numeric_limits<int32_t>::max(),
+                "win_left and win_right must be in [-1, INT32_MAX]");
+    TORCH_CHECK(mode==4 || (left==-1 && right==-1),
+                "win_left and win_right must be -1 for mask_mode 0 or 3");
+
+    const int64_t batch=seq.numel();
+    TORCH_CHECK(batch>0 && batch<65536,"batch_size (from cache_seqlens) must be in (0, 65536)");
+
+    // Provided optional length tensors keep the pre-migration wrapper's
+    // dtype/device/contiguity checks. Supported optional lengths are vectors:
+    // a genuine empty vector (1-D, size 0) is the omitted/None-equivalent
+    // form, while rank-0 or otherwise non-1-D supplied tensors are invalid and
+    // rejected synchronously here instead of being passed to AICPU.
+    auto checkProvided=[](const at::Tensor& t,const at::Tensor& seq,const char* name){
+        TORCH_CHECK(t.device()==seq.device(),name," must be on the cache_seqlens device");
+        TORCH_CHECK(t.scalar_type()==at::kInt,name," must be int32");
+        TORCH_CHECK(t.is_contiguous(),name," must be contiguous");
+    };
+    if(cu) {
+        checkProvided(*cu,seq,"cu_seqlens_q");
+        TORCH_CHECK(cu->dim()==1,"cu_seqlens_q must be 1-D when provided");
+    }
+    if(used) {
+        checkProvided(*used,seq,"seqused_q");
+        TORCH_CHECK(used->dim()==1,"seqused_q must be 1-D when provided");
+    }
+    // Confirmed original-Host semantics: only a 1-D size-0 optional is
+    // omitted. Rank-0/2-D empties are not valid length tensors (the original
+    // path let them reach AICPU and fail); reject them synchronously here.
+    auto present=[](const Optional& t){
+        return t.has_value() && t->defined() && t->dim()==1 && t->size(0)>0;
+    };
+    const bool cuPresent=present(cu);
+    const bool usedPresent=present(used);
+    if(cuPresent && layout=="TND") {
+        TORCH_CHECK(cu->numel()==batch+1,"cu_seqlens_q shape must be (batch_size+1,), but got ",cu->numel());
+    }
+    if(usedPresent) {
+        TORCH_CHECK(used->numel()==batch,"seqused_q shape must be (batch_size,), but got ",used->numel());
+    }
+    if(layout=="TND") {
+        TORCH_CHECK(cuPresent,"When layout_q is TND, cu_seqlens_q must be provided non-empty");
+    } else {
+        TORCH_CHECK(!cuPresent,"When layout_q is not TND, cu_seqlens_q must not be provided non-empty");
+    }
+
+    // The pre-migration torch wrapper sized its metadata allocation from the
+    // platform totals; the original ACLNN host produced metadata content from
+    // the current thread's stream resource limits when present, falling back to
+    // the platform totals per resource. Preserve both behaviors.
+    const auto platform=FlashMlaCoreNums();
+    TORCH_CHECK(platform.first>0 && platform.second>0,"FlashMLA requires a 1:2 Cube/Vector platform");
+    uint32_t limitedCube=0,limitedVector=0;
+    const aclError cubeRc=aclrtGetResInCurrentThread(ACL_RT_DEV_RES_CUBE_CORE,&limitedCube);
+    const aclError vectorRc=aclrtGetResInCurrentThread(ACL_RT_DEV_RES_VECTOR_CORE,&limitedVector);
+    const int64_t effectiveCube=cubeRc==ACL_SUCCESS?static_cast<int64_t>(limitedCube):platform.first;
+    const int64_t effectiveVector=vectorRc==ACL_SUCCESS?static_cast<int64_t>(limitedVector):platform.second;
+    TORCH_CHECK(effectiveCube>0 && effectiveVector>0,"effective Cube/Vector core counts must be positive");
+    const int64_t words=(((platform.first+platform.second)*batch+1)*16+4095)/4096*4096;
     auto output=at::empty({words},seq.options());
-    TORCH_CHECK(layout.size()<sizeof(SglFlashMlaMetadataParam::layoutQ),"invalid query layout string");
 
     SglFlashMlaMetadataParam args;
     std::memset(&args,0,sizeof(args));
@@ -143,9 +203,9 @@ at::Tensor flash_mla_metadata_impl(const at::Tensor& seq,int64_t heads,int64_t k
     args.ioAddrNum=kSglFlashMlaMetadataIoCount;
     args.magic=kSglFlashMlaMetadataMagic;
     args.version=kSglFlashMlaMetadataVersion;
-    args.cuSeqlensQ=static_cast<uint64_t>(cu?reinterpret_cast<uintptr_t>(cu->data_ptr()):0U);
+    args.cuSeqlensQ=static_cast<uint64_t>(cuPresent?reinterpret_cast<uintptr_t>(cu->data_ptr()):0U);
     args.cacheSeqlens=static_cast<uint64_t>(reinterpret_cast<uintptr_t>(seq.data_ptr()));
-    args.sequsedQ=static_cast<uint64_t>(used?reinterpret_cast<uintptr_t>(used->data_ptr()):0U);
+    args.sequsedQ=static_cast<uint64_t>(usedPresent?reinterpret_cast<uintptr_t>(used->data_ptr()):0U);
     args.metadata=static_cast<uint64_t>(reinterpret_cast<uintptr_t>(output.data_ptr()));
     args.metadataWords=output.numel();
     args.batchSize=static_cast<int32_t>(seq.numel());
@@ -156,8 +216,8 @@ at::Tensor flash_mla_metadata_impl(const at::Tensor& seq,int64_t heads,int64_t k
     args.headDimQk=static_cast<int32_t>(dqk);
     args.headDimV=static_cast<int32_t>(dv);
     args.maskMode=static_cast<int32_t>(mode);
-    args.aicCoreNum=static_cast<int32_t>(cores.first);
-    args.aivCoreNum=static_cast<int32_t>(cores.second);
+    args.aicCoreNum=static_cast<int32_t>(effectiveCube);
+    args.aivCoreNum=static_cast<int32_t>(effectiveVector);
     args.winLeft=left;
     args.winRight=right;
     std::memcpy(args.layoutQ,layout.c_str(),layout.size()+1);

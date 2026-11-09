@@ -13,7 +13,9 @@
     "attention/common/op_kernel/load_balance/base_info.h": "cfb8b46a7e63d3139326d2b07d34b1cd0185d883f00e42f1ba7a954972721cdd",
     "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k.h": "2352ea26150c09449e51378463f5aeb580506187ac69787934c31413cec5054f",
     "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_def.h": "5dde06c893f12eef0ade9285dd07ed942d2c436830f3856784b6c5dac5a9ab79",
-    "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_impl.h": "bedf2cc4e709200c4572f0e3a7e280fd0057d3bfb23e802a9436444e8f518d1a"
+    "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_impl.h": "bedf2cc4e709200c4572f0e3a7e280fd0057d3bfb23e802a9436444e8f518d1a",
+    "attention/flash_mla_metadata/op_host/flash_mla_metadata_check.h": "1aee27d21fff8f9dfe9e4a70b39fc4145186544088506556d0251eb0e85c7287",
+    "attention/flash_mla_metadata/op_host/op_api/aclnn_flash_mla_metadata.cpp": "73adeca9003edbb9450208859618242d35d7b31ceb65956cdcb13c4a8ab4e191"
   },
   "destination_sha256": {
     "aicpu/flash_mla_metadata.h": "8197e30a2789b45a08e3e039e8d0c52fe34141bfd1fd6ad0b15b0f77c136f1cb",
@@ -23,17 +25,60 @@
     "aicpu/load_balance/section_stream_k/section_stream_k_def.h": "5dde06c893f12eef0ade9285dd07ed942d2c436830f3856784b6c5dac5a9ab79",
     "aicpu/load_balance/section_stream_k/section_stream_k_impl.h": "bedf2cc4e709200c4572f0e3a7e280fd0057d3bfb23e802a9436444e8f518d1a",
     "aicpu/metadata_kernel.cpp": "7b45543837be4bb37cf6477485621be29fa48ef7837eb8119d66032f6c169a2a",
-    "aicpu/metadata_param.h": "97747c62197b38d1ae6e5260227325da6c290142cd3c533ddc8191c7506f8889"
+    "aicpu/metadata_param.h": "97747c62197b38d1ae6e5260227325da6c290142cd3c533ddc8191c7506f8889",
+    "flash_mla_metadata.cpp": "ab07a99f1a4953d7af97584fc3c035e1cd154f7d970a9cec153f44709445ba34"
   },
   "mapping": [
-    {"origin": "attention/common/op_kernel/load_balance/load_balance_common.h", "destination": "aicpu/load_balance/load_balance_common.h", "transformation": "verbatim"},
-    {"origin": "attention/common/op_kernel/load_balance/base_info.h", "destination": "aicpu/load_balance/base_info.h", "transformation": "verbatim"},
-    {"origin": "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k.h", "destination": "aicpu/load_balance/section_stream_k/section_stream_k.h", "transformation": "verbatim"},
-    {"origin": "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_def.h", "destination": "aicpu/load_balance/section_stream_k/section_stream_k_def.h", "transformation": "verbatim"},
-    {"origin": "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_impl.h", "destination": "aicpu/load_balance/section_stream_k/section_stream_k_impl.h", "transformation": "verbatim"},
-    {"origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata.h", "destination": "aicpu/flash_mla_metadata.h", "transformation": "only the flash_mla_shared.h include path is adapted; layout constants and FaMetadata code unchanged"},
-    {"origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata_aicpu.cpp", "destination": "aicpu/metadata_kernel.cpp", "transformation": "checks, integer formulas, SectionStreamK call and metadata generation ported; CpuKernelContext/NodeDef glue replaced by the package-owned RunCpuKernel launch ABI"},
-    {"origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata_aicpu.h", "destination": null, "transformation": "CANN CpuKernel class declaration not migrated; replaced by the local kernel class"}
+    {
+      "origin": "attention/common/op_kernel/load_balance/load_balance_common.h",
+      "destination": "aicpu/load_balance/load_balance_common.h",
+      "transformation": "verbatim"
+    },
+    {
+      "origin": "attention/common/op_kernel/load_balance/base_info.h",
+      "destination": "aicpu/load_balance/base_info.h",
+      "transformation": "verbatim"
+    },
+    {
+      "origin": "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k.h",
+      "destination": "aicpu/load_balance/section_stream_k/section_stream_k.h",
+      "transformation": "verbatim"
+    },
+    {
+      "origin": "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_def.h",
+      "destination": "aicpu/load_balance/section_stream_k/section_stream_k_def.h",
+      "transformation": "verbatim"
+    },
+    {
+      "origin": "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_impl.h",
+      "destination": "aicpu/load_balance/section_stream_k/section_stream_k_impl.h",
+      "transformation": "verbatim"
+    },
+    {
+      "origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata.h",
+      "destination": "aicpu/flash_mla_metadata.h",
+      "transformation": "only the flash_mla_shared.h include path is adapted; layout constants and FaMetadata code unchanged"
+    },
+    {
+      "origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata_aicpu.cpp",
+      "destination": "aicpu/metadata_kernel.cpp",
+      "transformation": "checks, integer formulas, SectionStreamK call and metadata generation ported; CpuKernelContext/NodeDef glue replaced by the package-owned RunCpuKernel launch ABI"
+    },
+    {
+      "origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata_aicpu.h",
+      "destination": null,
+      "transformation": "CANN CpuKernel class declaration not migrated; replaced by the local kernel class"
+    },
+    {
+      "origin": "attention/flash_mla_metadata/op_host/flash_mla_metadata_check.h",
+      "destination": "flash_mla_metadata.cpp",
+      "transformation": "pure Host attribute/shape/optional-presence checks (layout set, heads1..128, Hkv=1, Dqk576/Dv512, mask0/3/4 + windows, batch(0,65536), TND cu presence/non-TND absence) ported; provided optional tensors keep dtype/device/contiguity checks; rank0/dim0==0 optionals treated as omitted. Tensor value checks stay AICPU."
+    },
+    {
+      "origin": "attention/flash_mla_metadata/op_host/op_api/aclnn_flash_mla_metadata.cpp",
+      "destination": "flash_mla_metadata.cpp",
+      "transformation": "aclrtGetResInCurrentThread cube/vector effective stream-resource query with per-resource fallback to FlashMlaCoreNums platform totals ported; output allocation remains platform-total based, matching the pre-migration torch wrapper."
+    }
   ],
   "built_binary_origin": {
     "path": "/mnt/sfs_turbo/hxd/pkgs/ops-transformer-master/build/libtransformer_aicpu_kernels.so",
