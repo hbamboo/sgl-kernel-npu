@@ -35,11 +35,13 @@ The standard A5 build produces `libsgl_kernel_npu_flash_mla.so` in the package's
 cmake --build <build-directory> --target sgl_kernel_npu_flash_mla -j8
 ```
 
-Metadata generation uses the installed native `FlashMlaMetadata` custom OPP.
-Configure its vendor and op-api paths through `ASCEND_CUSTOM_OPP_PATH` and
-`LD_LIBRARY_PATH`. The migrated API does not import the `cann_ops_transformer`
-Python package or compile kernels at import time. The custom OPP remains a
-runtime dependency.
+Metadata generation is package-owned and built from
+`csrc/flash_mla_metadata`: an AICPU producer (`libsgl_flash_mla_metadata_aicpu.so`
+plus its JSON descriptor) is loaded through ACL CPU kernel mode and the host
+entry is assembled into this companion library. No `ASCEND_CUSTOM_OPP_PATH`,
+`LD_LIBRARY_PATH` vendor entry, OPP registration, or `cann_ops_transformer`
+Python package is required. Sequence lengths are read from device tensors on
+every launch and graph replay.
 
 ## NPUGraph and lifetime
 
@@ -62,7 +64,7 @@ multiple streams and NPUGraph replay with changing device lengths, zero-length
 sequences, page tails and long contexts. Run on an available Ascend 950 device:
 
 ```bash
-ASCEND_RT_VISIBLE_DEVICES=7 python3 -m pytest -q csrc/flash_mla/tests
+ASCEND_RT_VISIBLE_DEVICES=7 python3 -m pytest -q csrc/flash_mla/tests csrc/flash_mla_metadata/tests
 ```
 
 Vendor headers retain their CANN Open Software License notices. Sources come

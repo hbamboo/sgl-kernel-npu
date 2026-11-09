@@ -348,7 +348,14 @@ target_include_directories(${OP_PLUGIN_NAME} PRIVATE
         ${ASCEND_DRIVER_PATH}/kernel/inc
 )
 
-# FlashMLA companion library (A5 only).
+# FlashMLA metadata companion library (A5 only): host operator + package-owned
+# AICPU producer. Built before the compute companion, which assembles its
+# host OBJECT library.
+if(SGL_KERNEL_ENABLE_A5_ONLY_OPS)
+    add_subdirectory(flash_mla_metadata)
+endif()
+
+# FlashMLA compute companion library (A5 only).
 if(SGL_KERNEL_ENABLE_A5_ONLY_OPS)
     add_subdirectory(flash_mla)
 endif()

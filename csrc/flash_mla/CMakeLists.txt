@@ -23,8 +23,8 @@ ascendc_compile_definitions(flash_mla_direct_kernel PRIVATE -DHAVE_TILING -DHAVE
 ascendc_compile_options(flash_mla_direct_kernel PRIVATE --cce-auto-sync=off)
 
 add_library(sgl_kernel_npu_flash_mla SHARED
-    ${FLASH_MLA_ROOT}/flash_mla_torch.cpp
-    ${FLASH_MLA_ROOT}/flash_mla_metadata.cpp)
+    $<TARGET_OBJECTS:sgl_kernel_npu_flash_mla_metadata_host>
+    ${FLASH_MLA_ROOT}/flash_mla_torch.cpp)
 target_include_directories(sgl_kernel_npu_flash_mla PRIVATE
     ${FLASH_MLA_ROOT}
     ${PROJECT_OP_SRC_BASE}/utils
@@ -38,5 +38,7 @@ target_include_directories(sgl_kernel_npu_flash_mla PRIVATE
 target_link_directories(sgl_kernel_npu_flash_mla PRIVATE
     ${TORCH_DIR}/lib ${TORCH_NPU_DIR}/lib)
 target_link_libraries(sgl_kernel_npu_flash_mla PRIVATE
-    flash_mla_direct_kernel torch_npu torch torch_cpu c10
+    flash_mla_direct_kernel
+    torch_npu torch torch_cpu c10
     ascendcl tiling_api register platform ascendalog dl)
+install(TARGETS sgl_kernel_npu_flash_mla LIBRARY DESTINATION lib)

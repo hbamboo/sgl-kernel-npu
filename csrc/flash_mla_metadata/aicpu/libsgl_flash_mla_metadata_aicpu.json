@@ -1,0 +1,15 @@
+{
+    "SglFlashMlaMetadata": {
+        "opInfo": {
+            "computeCost": "100",
+            "engine": "DNN_VM_AICPU",
+            "flagAsync": "False",
+            "flagPartial": "False",
+            "functionName": "RunCpuKernel",
+            "kernelSo": "libsgl_flash_mla_metadata_aicpu.so",
+            "opKernelLib": "CUSTAICPUKernel",
+            "userDefined": "True",
+            "workspaceSize": "0"
+        }
+    }
+}
