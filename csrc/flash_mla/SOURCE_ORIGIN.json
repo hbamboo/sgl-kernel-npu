@@ -498,8 +498,8 @@
       "new_path": "op_host/flash_mla_host.h",
       "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/flash_mla_host.h",
       "baseline_sha256": "cc8f9753ef101322f72ea5258b2fde954a22e2d9a49424e3a1370fed31e4da1b",
-      "new_sha256": "cc8f9753ef101322f72ea5258b2fde954a22e2d9a49424e3a1370fed31e4da1b",
-      "transformation": "verbatim move; include resolves to the independent metadata companion"
+      "new_sha256": "33eb0061bdf20f56234647e690d88c820f40414eae53519801e2a83cd4d50a53",
+      "transformation": "include path only; ../flash_mla_metadata -> ../../flash_mla_metadata so the host header no longer relies on the utils include-dir fallback"
     },
     {
       "new_path": "LICENSE",
