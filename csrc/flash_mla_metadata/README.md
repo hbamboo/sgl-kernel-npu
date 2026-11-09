@@ -25,7 +25,7 @@ The scheduling algorithm is the upstream AICPU FlashMlaMetadata kernel:
 layout, mask/window/layout branches, and the same int32 metadata layout consumed
 by the FlashMLA compute kernel. The SectionStreamK closure
 (`aicpu/load_balance/`, five headers) is copied verbatim from the canonical
-origin (see `SOURCE_ORIGIN.json` in the task report). All sequence lengths are
+origin (see `SOURCE_ORIGIN.json` in this directory). All sequence lengths are
 read from device memory inside the AICPU kernel on every launch and every graph
 replay; no host D2H copy, `.item()`, or capture-time metadata cache is used.
 

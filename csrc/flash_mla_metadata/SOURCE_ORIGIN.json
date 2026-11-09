@@ -1,0 +1,44 @@
+{
+  "canonical_source_origin": {
+    "root": "/mnt/sfs_turbo/hxd/pkgs/ops-transformer-master",
+    "metadata_dir": "attention/flash_mla_metadata/op_kernel_aicpu",
+    "load_balance_dir": "attention/common/op_kernel/load_balance",
+    "copies": "ops-mbase192 and ops-d256-spike contain byte-identical copies of all eight sources; /opt/flash_mla_delivery contains only env.sh"
+  },
+  "origin_sha256": {
+    "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata.h": "e8f9403fa2e72efbe02a037d02ccd79ffe2b0d9376d773bb383549aec824dae0",
+    "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata_aicpu.h": "7f11c05dfa0bc25da2ba0596619d71785951b7dc23869b122886ba1205794d5d",
+    "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata_aicpu.cpp": "0ff5d1c25e399cc07be5056c3782a308da4e6100d66144957e4a48b511cd060d",
+    "attention/common/op_kernel/load_balance/load_balance_common.h": "f92f14469407fb0434bde6de07d65f632892a233b134654397157951deebb383",
+    "attention/common/op_kernel/load_balance/base_info.h": "cfb8b46a7e63d3139326d2b07d34b1cd0185d883f00e42f1ba7a954972721cdd",
+    "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k.h": "2352ea26150c09449e51378463f5aeb580506187ac69787934c31413cec5054f",
+    "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_def.h": "5dde06c893f12eef0ade9285dd07ed942d2c436830f3856784b6c5dac5a9ab79",
+    "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_impl.h": "bedf2cc4e709200c4572f0e3a7e280fd0057d3bfb23e802a9436444e8f518d1a"
+  },
+  "destination_sha256": {
+    "aicpu/flash_mla_metadata.h": "8197e30a2789b45a08e3e039e8d0c52fe34141bfd1fd6ad0b15b0f77c136f1cb",
+    "aicpu/load_balance/load_balance_common.h": "f92f14469407fb0434bde6de07d65f632892a233b134654397157951deebb383",
+    "aicpu/load_balance/base_info.h": "cfb8b46a7e63d3139326d2b07d34b1cd0185d883f00e42f1ba7a954972721cdd",
+    "aicpu/load_balance/section_stream_k/section_stream_k.h": "2352ea26150c09449e51378463f5aeb580506187ac69787934c31413cec5054f",
+    "aicpu/load_balance/section_stream_k/section_stream_k_def.h": "5dde06c893f12eef0ade9285dd07ed942d2c436830f3856784b6c5dac5a9ab79",
+    "aicpu/load_balance/section_stream_k/section_stream_k_impl.h": "bedf2cc4e709200c4572f0e3a7e280fd0057d3bfb23e802a9436444e8f518d1a",
+    "aicpu/metadata_kernel.cpp": "7b45543837be4bb37cf6477485621be29fa48ef7837eb8119d66032f6c169a2a",
+    "aicpu/metadata_param.h": "97747c62197b38d1ae6e5260227325da6c290142cd3c533ddc8191c7506f8889"
+  },
+  "mapping": [
+    {"origin": "attention/common/op_kernel/load_balance/load_balance_common.h", "destination": "aicpu/load_balance/load_balance_common.h", "transformation": "verbatim"},
+    {"origin": "attention/common/op_kernel/load_balance/base_info.h", "destination": "aicpu/load_balance/base_info.h", "transformation": "verbatim"},
+    {"origin": "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k.h", "destination": "aicpu/load_balance/section_stream_k/section_stream_k.h", "transformation": "verbatim"},
+    {"origin": "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_def.h", "destination": "aicpu/load_balance/section_stream_k/section_stream_k_def.h", "transformation": "verbatim"},
+    {"origin": "attention/common/op_kernel/load_balance/section_stream_k/section_stream_k_impl.h", "destination": "aicpu/load_balance/section_stream_k/section_stream_k_impl.h", "transformation": "verbatim"},
+    {"origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata.h", "destination": "aicpu/flash_mla_metadata.h", "transformation": "only the flash_mla_shared.h include path is adapted; layout constants and FaMetadata code unchanged"},
+    {"origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata_aicpu.cpp", "destination": "aicpu/metadata_kernel.cpp", "transformation": "checks, integer formulas, SectionStreamK call and metadata generation ported; CpuKernelContext/NodeDef glue replaced by the package-owned RunCpuKernel launch ABI"},
+    {"origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata_aicpu.h", "destination": null, "transformation": "CANN CpuKernel class declaration not migrated; replaced by the local kernel class"}
+  ],
+  "built_binary_origin": {
+    "path": "/mnt/sfs_turbo/hxd/pkgs/ops-transformer-master/build/libtransformer_aicpu_kernels.so",
+    "sha256": "38a439c2a78603c8c11abab6885f4bc0324916282dc6cf5c1f75490d87ca798c",
+    "installed_vendor_library_same_sha256": "/opt/flash_mla_opp/vendors/custom_transformer/op_impl/cpu/aicpu_kernel/impl/libtransformer_aicpu_kernels.so",
+    "object_dependency": "build/attention/flash_mla_metadata/op_kernel_aicpu/CMakeFiles/flash_mla_metadata_cust_obj.dir/flash_mla_metadata_aicpu.cpp.o.d points at the master source"
+  }
+}
