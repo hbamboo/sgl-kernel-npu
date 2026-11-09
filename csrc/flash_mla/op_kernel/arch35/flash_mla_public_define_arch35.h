@@ -24,7 +24,7 @@
 #include "lib/matmul_intf.h"
 #include "lib/matrix/matmul/tiling.h"
 #include "util.h"
-#include "../../../common/op_kernel/vector_common.h"
+#include "../common/vector_common.h"
 
 namespace AttentionCommon {
 

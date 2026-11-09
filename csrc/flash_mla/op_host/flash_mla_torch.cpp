@@ -12,15 +12,9 @@
 #include <tuple>
 #include "torch_helper.h"
 #include "flash_mla_host.h"
-#include "aclrtlaunch_sgl_flash_mla_0_0.h"
-#include "aclrtlaunch_sgl_flash_mla_0_1.h"
-#include "aclrtlaunch_sgl_flash_mla_0_2.h"
-#include "aclrtlaunch_sgl_flash_mla_0_4.h"
-#include "aclrtlaunch_sgl_flash_mla_1_0.h"
-#include "aclrtlaunch_sgl_flash_mla_1_1.h"
-#include "aclrtlaunch_sgl_flash_mla_1_2.h"
-#include "aclrtlaunch_sgl_flash_mla_1_4.h"
-#include "vendor/flash_mla/op_kernel/arch35/flash_mla_tiling_data.h"
+#include "aclrtlaunch_flash_mla.h"
+#include "aclrtlaunch_flash_mla_fp16.h"
+#include "../op_kernel/arch35/flash_mla_tiling_data.h"
 
 namespace sglang::npu_kernel {
 using Optional = c10::optional<at::Tensor>;
@@ -58,6 +52,88 @@ void clear_flash_mla_cache() {
 void Check(const at::Tensor& t,const at::Tensor& q,at::ScalarType type,const char* name) {
     TORCH_CHECK(t.device()==q.device() && t.scalar_type()==type && t.is_contiguous(),
                 name," must be contiguous, have the required dtype and be on the query device");
+}
+
+// Direct invocation of the single upstream-shaped template entry. Each specialization
+// of the SDK-generated launch function owns the tiling key (template id * 1e6 + base
+// key), so the key travels with the queued call and is never re-read from mutable
+// state. BF16 uses the upstream entry name; FP16 keeps the same body compiled with
+// ORIG_DTYPE_Q=DT_FLOAT16 and a distinct C entry name because both device binaries
+// are linked into one host DSO.
+template <uint8_t Layout, uint8_t KvLayout, bool HasMask>
+inline void LaunchFlashMla(bool fp16, uint32_t blocks, void* stream, void* query, void* kCache, void* blockTable,
+                           void* cacheSeqlens, void* cuSeqlensQ, void* sequsedQ, void* sinks, void* attnMask,
+                           void* metadata, void* attnOut, void* softmaxLse, void* workspace, void* tiling) {
+    if (fp16) {
+        ACLRT_LAUNCH_KERNEL(flash_mla_fp16)<Layout, KvLayout, HasMask, 0>(
+            blocks, stream, query, kCache, blockTable, cacheSeqlens, cuSeqlensQ, sequsedQ, sinks, attnMask, metadata,
+            attnOut, softmaxLse, workspace, tiling);
+    } else {
+        ACLRT_LAUNCH_KERNEL(flash_mla)<Layout, KvLayout, HasMask, 0>(
+            blocks, stream, query, kCache, blockTable, cacheSeqlens, cuSeqlensQ, sequsedQ, sinks, attnMask, metadata,
+            attnOut, softmaxLse, workspace, tiling);
+    }
+}
+
+template <uint8_t Layout>
+inline void DispatchKv(bool fp16, int64_t kvLayout, bool hasMask, uint32_t blocks, void* stream, void* query,
+                       void* kCache, void* blockTable, void* cacheSeqlens, void* cuSeqlensQ, void* sequsedQ,
+                       void* sinks, void* attnMask, void* metadata, void* attnOut, void* softmaxLse,
+                       void* workspace, void* tiling) {
+    switch (kvLayout) {
+        case 1:
+            if (hasMask) LaunchFlashMla<Layout, 1, true>(fp16, blocks, stream, query, kCache, blockTable, cacheSeqlens,
+                                                         cuSeqlensQ, sequsedQ, sinks, attnMask, metadata, attnOut,
+                                                         softmaxLse, workspace, tiling);
+            else LaunchFlashMla<Layout, 1, false>(fp16, blocks, stream, query, kCache, blockTable, cacheSeqlens,
+                                                  cuSeqlensQ, sequsedQ, sinks, attnMask, metadata, attnOut,
+                                                  softmaxLse, workspace, tiling);
+            break;
+        case 2:
+            if (hasMask) LaunchFlashMla<Layout, 2, true>(fp16, blocks, stream, query, kCache, blockTable, cacheSeqlens,
+                                                         cuSeqlensQ, sequsedQ, sinks, attnMask, metadata, attnOut,
+                                                         softmaxLse, workspace, tiling);
+            else LaunchFlashMla<Layout, 2, false>(fp16, blocks, stream, query, kCache, blockTable, cacheSeqlens,
+                                                  cuSeqlensQ, sequsedQ, sinks, attnMask, metadata, attnOut,
+                                                  softmaxLse, workspace, tiling);
+            break;
+        case 3:
+            if (hasMask) LaunchFlashMla<Layout, 3, true>(fp16, blocks, stream, query, kCache, blockTable, cacheSeqlens,
+                                                         cuSeqlensQ, sequsedQ, sinks, attnMask, metadata, attnOut,
+                                                         softmaxLse, workspace, tiling);
+            else LaunchFlashMla<Layout, 3, false>(fp16, blocks, stream, query, kCache, blockTable, cacheSeqlens,
+                                                  cuSeqlensQ, sequsedQ, sinks, attnMask, metadata, attnOut,
+                                                  softmaxLse, workspace, tiling);
+            break;
+        default:
+            TORCH_CHECK(false, "unsupported FlashMLA KV layout");
+    }
+}
+
+inline void DispatchFlashMla(bool fp16, int64_t layout, int64_t kvLayout, bool hasMask, uint32_t blocks,
+                             void* stream, void* query, void* kCache, void* blockTable, void* cacheSeqlens,
+                             void* cuSeqlensQ, void* sequsedQ, void* sinks, void* attnMask, void* metadata,
+                             void* attnOut, void* softmaxLse, void* workspace, void* tiling) {
+    switch (layout) {
+        case 0:
+            DispatchKv<0>(fp16, kvLayout, hasMask, blocks, stream, query, kCache, blockTable, cacheSeqlens, cuSeqlensQ,
+                          sequsedQ, sinks, attnMask, metadata, attnOut, softmaxLse, workspace, tiling);
+            break;
+        case 1:
+            DispatchKv<1>(fp16, kvLayout, hasMask, blocks, stream, query, kCache, blockTable, cacheSeqlens, cuSeqlensQ,
+                          sequsedQ, sinks, attnMask, metadata, attnOut, softmaxLse, workspace, tiling);
+            break;
+        case 2:
+            DispatchKv<2>(fp16, kvLayout, hasMask, blocks, stream, query, kCache, blockTable, cacheSeqlens, cuSeqlensQ,
+                          sequsedQ, sinks, attnMask, metadata, attnOut, softmaxLse, workspace, tiling);
+            break;
+        case 4:
+            DispatchKv<4>(fp16, kvLayout, hasMask, blocks, stream, query, kCache, blockTable, cacheSeqlens, cuSeqlensQ,
+                          sequsedQ, sinks, attnMask, metadata, attnOut, softmaxLse, workspace, tiling);
+            break;
+        default:
+            TORCH_CHECK(false, "unsupported FlashMLA query layout");
+    }
 }
 }
 
@@ -143,15 +219,21 @@ std::tuple<at::Tensor,at::Tensor> flash_mla(const at::Tensor& q,const at::Tensor
     void* qp=q.data_ptr();void* kp=k.data_ptr();void* bp=bt->data_ptr();void* sp=seq->data_ptr();
     void* cp=cu?cu->data_ptr():nullptr;void* up=used?used->data_ptr():nullptr;void* sip=hasSinks?sinks->data_ptr():nullptr;
     void* ap=mode?mask->data_ptr():nullptr;void* mdp=schedule.defined()?schedule.data_ptr():nullptr;
+    void* op=output.data_ptr();void* lp=softmax.data_ptr();void* wsp=workspace.data_ptr();void* tp=tiling.data_ptr();
     const uint32_t blocks=cubeCores;
-    if(t.dtype==0 && t.layout==0) { EXEC_KERNEL_CMD(sgl_flash_mla_0_0,blocks,qp,kp,bp,sp,cp,up,sip,ap,mdp,output,softmax,workspace,tiling); }
-    else if(t.dtype==0 && t.layout==1) { EXEC_KERNEL_CMD(sgl_flash_mla_0_1,blocks,qp,kp,bp,sp,cp,up,sip,ap,mdp,output,softmax,workspace,tiling); }
-    else if(t.dtype==0 && t.layout==2) { EXEC_KERNEL_CMD(sgl_flash_mla_0_2,blocks,qp,kp,bp,sp,cp,up,sip,ap,mdp,output,softmax,workspace,tiling); }
-    else if(t.dtype==0 && t.layout==4) { EXEC_KERNEL_CMD(sgl_flash_mla_0_4,blocks,qp,kp,bp,sp,cp,up,sip,ap,mdp,output,softmax,workspace,tiling); }
-    else if(t.dtype==1 && t.layout==0) { EXEC_KERNEL_CMD(sgl_flash_mla_1_0,blocks,qp,kp,bp,sp,cp,up,sip,ap,mdp,output,softmax,workspace,tiling); }
-    else if(t.dtype==1 && t.layout==1) { EXEC_KERNEL_CMD(sgl_flash_mla_1_1,blocks,qp,kp,bp,sp,cp,up,sip,ap,mdp,output,softmax,workspace,tiling); }
-    else if(t.dtype==1 && t.layout==2) { EXEC_KERNEL_CMD(sgl_flash_mla_1_2,blocks,qp,kp,bp,sp,cp,up,sip,ap,mdp,output,softmax,workspace,tiling); }
-    else if(t.dtype==1 && t.layout==4) { EXEC_KERNEL_CMD(sgl_flash_mla_1_4,blocks,qp,kp,bp,sp,cp,up,sip,ap,mdp,output,softmax,workspace,tiling); }
+    // Capture every dispatch value by value: the queued OpCommand callback can run
+    // after this function returns, so the specialization must already be selected
+    // from the per-call state, not from mutable thread-local tiling state.
+    const bool fp16=t.dtype!=0;
+    const int64_t layoutSel=t.layout;
+    const int64_t kvLayoutSel=t.kvLayout;
+    const bool maskSel=t.hasMask!=0;
+    auto acl_stream=c10_npu::getCurrentNPUStream().stream(false);
+    auto acl_call=[fp16,layoutSel,kvLayoutSel,maskSel,blocks,acl_stream,qp,kp,bp,sp,cp,up,sip,ap,mdp,op,lp,wsp,tp]() -> int {
+        DispatchFlashMla(fp16,layoutSel,kvLayoutSel,maskSel,blocks,acl_stream,qp,kp,bp,sp,cp,up,sip,ap,mdp,op,lp,wsp,tp);
+        return 0;
+    };
+    at_npu::native::OpCommand::RunOpApi(fp16 ? "flash_mla_fp16" : "flash_mla",acl_call);
     return {output,softmax};
 }
 }

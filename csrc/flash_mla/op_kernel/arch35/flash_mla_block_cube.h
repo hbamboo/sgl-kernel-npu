@@ -14,7 +14,7 @@
  */
 #ifndef FLASH_MLA_BLOCK_CUBE_H_
 #define FLASH_MLA_BLOCK_CUBE_H_
-#include "../../../common/op_kernel/const_def.h"
+#include "../common/const_def.h"
 #include "kernel_operator_list_tensor_intf.h"
 #include "../utils/flash_mla_type.h"
 using namespace AscendC;

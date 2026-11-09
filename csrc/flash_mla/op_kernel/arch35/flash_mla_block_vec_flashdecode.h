@@ -17,7 +17,7 @@
 
 #include "../utils/flash_mla_attenmask_gs1.h"
 
-#include "../../../common/op_kernel/arch35/vf/vf_flash_decode_arch35.h"
+#include "../common/arch35/vf/vf_flash_decode_arch35.h"
 
 #include "../utils/flash_mla_memory_copy_arch35.h"
 #include "flash_mla_public_define_arch35.h"

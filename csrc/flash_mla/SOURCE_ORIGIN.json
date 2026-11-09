@@ -1,0 +1,583 @@
+{
+  "base_commit": "6ed99cf8cf5b587b9377387581da07d1dd427d72",
+  "upstream_reference": {
+    "root": "/mnt/sfs_turbo/hxd/pkgs/ops-transformer-master",
+    "operator_dir": "attention/flash_mla",
+    "entry": "op_kernel/flash_mla.cpp",
+    "tiling_key": "op_kernel/arch35/flash_mla_template_tiling_key.h",
+    "note": "upstream entry uses ORIG_DTYPE_Q as a compile-time dtype configuration and ASCENDC_TPL_SEL for template selection"
+  },
+  "direct_invocation_difference": "ascendc_library precompile does not expand ASCENDC_TPL_SEL (verified with a minimal actual template kernel: no template kernel symbols and a declaration-only launch header). The maintained entry therefore lists C++ explicit specializations for the same 24 combinations. SDK auto-gen then emits one kernel per specialization and the generated aclrtlaunch_<entry> template specializations are used by the host. The FP16 variant needs the distinct C name flash_mla_fp16 because both dtype binaries are linked into one host DSO.",
+  "files": [
+    {
+      "new_path": "op_kernel/flash_mla_shared.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/flash_mla_shared.h",
+      "baseline_sha256": "d84cf3c713395223b02033076c8ec2d82318e6a32bcee4fcdb78b8a2660b75a6",
+      "new_sha256": "d84cf3c713395223b02033076c8ec2d82318e6a32bcee4fcdb78b8a2660b75a6",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/init_output.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/init_output.h",
+      "baseline_sha256": "679b7475518540dfe297fca1c7ef073e67a6452aa38d3cc5feab8ab44cdc37da",
+      "new_sha256": "679b7475518540dfe297fca1c7ef073e67a6452aa38d3cc5feab8ab44cdc37da",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch_info.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch_info.h",
+      "baseline_sha256": "721e1b16b7ba36eacce1c922ef3323c157ac5a30175e1476c3d632c66b5a6a03",
+      "new_sha256": "721e1b16b7ba36eacce1c922ef3323c157ac5a30175e1476c3d632c66b5a6a03",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/vector_common.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/vector_common.h",
+      "baseline_sha256": "c3d6ebb38ce9d535ee62006a02cc807667a2afa94f6715209d6608ca8075cdde",
+      "new_sha256": "c3d6ebb38ce9d535ee62006a02cc807667a2afa94f6715209d6608ca8075cdde",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/util.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/util.h",
+      "baseline_sha256": "95236a02067a5489ef37a00998dbc9c565d62615dc3d67c686389b9ccbeb6a61",
+      "new_sha256": "95236a02067a5489ef37a00998dbc9c565d62615dc3d67c686389b9ccbeb6a61",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/const_def.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/const_def.h",
+      "baseline_sha256": "c04adb698347c9a8ae653005d4f548b1db4766f1e9f27b1251cd2bd2f5a556f9",
+      "new_sha256": "c04adb698347c9a8ae653005d4f548b1db4766f1e9f27b1251cd2bd2f5a556f9",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/memcopy/attn_copy_gm_to_ub.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/memcopy/attn_copy_gm_to_ub.h",
+      "baseline_sha256": "3e00aeb29db6a4995850f367c212ab944eed4e95a99ed78a86f30fbbb6a4f6e9",
+      "new_sha256": "3e00aeb29db6a4995850f367c212ab944eed4e95a99ed78a86f30fbbb6a4f6e9",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/memcopy/copy_ub_to_gm.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/memcopy/copy_ub_to_gm.h",
+      "baseline_sha256": "6a3ab033e324ef4cf906b7da3c89173e10e56fef179122de7f7f187af20b1270",
+      "new_sha256": "6a3ab033e324ef4cf906b7da3c89173e10e56fef179122de7f7f187af20b1270",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/memcopy/offset_calculator_v2.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/memcopy/offset_calculator_v2.h",
+      "baseline_sha256": "300172dad55fa005367910a0e06b5dc350a47b986d2d4089ba6fe9f1a0b59dc0",
+      "new_sha256": "300172dad55fa005367910a0e06b5dc350a47b986d2d4089ba6fe9f1a0b59dc0",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/memcopy/fa_gm_tensor.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/memcopy/fa_gm_tensor.h",
+      "baseline_sha256": "5bdeb9f8565cb931d2791bec62963b725e4007855b3ea5e9dc156b9673e41020",
+      "new_sha256": "5bdeb9f8565cb931d2791bec62963b725e4007855b3ea5e9dc156b9673e41020",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/memcopy/gm_coord.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/memcopy/gm_coord.h",
+      "baseline_sha256": "a43c30b8efed8e0d489660badba1a15a47a5c74f2db4cc1a68098fdac9548c8c",
+      "new_sha256": "a43c30b8efed8e0d489660badba1a15a47a5c74f2db4cc1a68098fdac9548c8c",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/memcopy/parser.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/memcopy/parser.h",
+      "baseline_sha256": "2d5734253730ad8bd43020ed8dde66d6ddc80e978775c6afbeefb806c3232bf2",
+      "new_sha256": "2d5734253730ad8bd43020ed8dde66d6ddc80e978775c6afbeefb806c3232bf2",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/memcopy/fa_ub_tensor.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/memcopy/fa_ub_tensor.h",
+      "baseline_sha256": "3d04527f05477f96be28c643f3153c2f6a0059e85c298b879ac1cea9dc24412f",
+      "new_sha256": "3d04527f05477f96be28c643f3153c2f6a0059e85c298b879ac1cea9dc24412f",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/memcopy/gm_layout.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/memcopy/gm_layout.h",
+      "baseline_sha256": "3c0ad2f812813b34e93908b7aa6d999b40c62c151abf7e8fe45051ce793f7aa0",
+      "new_sha256": "3c0ad2f812813b34e93908b7aa6d999b40c62c151abf7e8fe45051ce793f7aa0",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/memcopy/fa_l1_tensor.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/memcopy/fa_l1_tensor.h",
+      "baseline_sha256": "8eb170da3a99874ca9bb020ea91f6326e30486495c6ec4e4bfbf9082ff69673f",
+      "new_sha256": "8eb170da3a99874ca9bb020ea91f6326e30486495c6ec4e4bfbf9082ff69673f",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/memcopy/attn_copy_gm_to_l1.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/memcopy/attn_copy_gm_to_l1.h",
+      "baseline_sha256": "13202b4e5089a969f27c4bd27784ec5dfedf0e86cea8e0cbe0f6fa0d218395bd",
+      "new_sha256": "13202b4e5089a969f27c4bd27784ec5dfedf0e86cea8e0cbe0f6fa0d218395bd",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/flash_attention_score_common_regbase_arch35.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/flash_attention_score_common_regbase_arch35.h",
+      "baseline_sha256": "e92ec72a6b0b490000c60a699eb8969ea6d0f95aea48e56deb62435aae7546fc",
+      "new_sha256": "e92ec72a6b0b490000c60a699eb8969ea6d0f95aea48e56deb62435aae7546fc",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/pse_arch35.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/pse_arch35.h",
+      "baseline_sha256": "d2912d2f2747142c6ffd6b28777554fa2916e89d58a3ba156bbc67aa929e25a2",
+      "new_sha256": "d2912d2f2747142c6ffd6b28777554fa2916e89d58a3ba156bbc67aa929e25a2",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/arch_info_arch35.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/arch_info_arch35.h",
+      "baseline_sha256": "3924f3a54576fea9adc8a68de7467e8707af9fe7da74e130370caa82565a432a",
+      "new_sha256": "3924f3a54576fea9adc8a68de7467e8707af9fe7da74e130370caa82565a432a",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/util_regbase.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/util_regbase.h",
+      "baseline_sha256": "2a86ed4d73f58f191a36ca6f5fc9adf605167a3a252cbc47758ac7e2f22b045e",
+      "new_sha256": "2a86ed4d73f58f191a36ca6f5fc9adf605167a3a252cbc47758ac7e2f22b045e",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/attenmask_arch35.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/attenmask_arch35.h",
+      "baseline_sha256": "7248e23305afb1e380d6f7aef48feed1ad25143367223bc361960eaeabae8522",
+      "new_sha256": "7248e23305afb1e380d6f7aef48feed1ad25143367223bc361960eaeabae8522",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/infer_flash_attention_comm_arch35.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/infer_flash_attention_comm_arch35.h",
+      "baseline_sha256": "87c49af1aed302927849e889f03943de1fb3fccb397c7a5b6165d5ac031f5f69",
+      "new_sha256": "87c49af1aed302927849e889f03943de1fb3fccb397c7a5b6165d5ac031f5f69",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_aligned128_no_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_aligned128_no_update.h",
+      "baseline_sha256": "17446afbf3d331102de5cd0f1dc4f007af9c1e9e96baa5711c8e77e75d0fda22",
+      "new_sha256": "17446afbf3d331102de5cd0f1dc4f007af9c1e9e96baa5711c8e77e75d0fda22",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned256_update_mx.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned256_update_mx.h",
+      "baseline_sha256": "7c6107a7ee1c0c23ee3104475f8b5ffd96b0dc5cd8b5e4c24e2a4dd69866f6d9",
+      "new_sha256": "7c6107a7ee1c0c23ee3104475f8b5ffd96b0dc5cd8b5e4c24e2a4dd69866f6d9",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned64_no_update_mx.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned64_no_update_mx.h",
+      "baseline_sha256": "133c960289409a81a4b55488cfd2c1ba4fde4a4dd9cb79558686712ac4e41ef0",
+      "new_sha256": "133c960289409a81a4b55488cfd2c1ba4fde4a4dd9cb79558686712ac4e41ef0",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned256_no_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned256_no_update.h",
+      "baseline_sha256": "a6a579634493ef7a1004675090b6ae19b22ea7d9e499a01f00b6813d6a75d394",
+      "new_sha256": "a6a579634493ef7a1004675090b6ae19b22ea7d9e499a01f00b6813d6a75d394",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned512_common.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned512_common.h",
+      "baseline_sha256": "6be8e48a68349b64a2173182c51461ebc19db50b8127cd448e15061b1d67e316",
+      "new_sha256": "6be8e48a68349b64a2173182c51461ebc19db50b8127cd448e15061b1d67e316",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_div_cast_arch35.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_div_cast_arch35.h",
+      "baseline_sha256": "0ded5088b0ec7c4e789cadb958d80af085d4d0a24cac41ee2b90ec0f08c2a046",
+      "new_sha256": "0ded5088b0ec7c4e789cadb958d80af085d4d0a24cac41ee2b90ec0f08c2a046",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_fullquant_unaligned256_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_fullquant_unaligned256_update.h",
+      "baseline_sha256": "83a34eeafa6e1bdb9578ea4802673d0ecf159d9bdb630be0c78be4bd84c69df3",
+      "new_sha256": "83a34eeafa6e1bdb9578ea4802673d0ecf159d9bdb630be0c78be4bd84c69df3",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned1024_no_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned1024_no_update.h",
+      "baseline_sha256": "20e9e8a5196a6a3006ee79348fc38057ef983739a28ff0da6c14ec4ba20034cc",
+      "new_sha256": "20e9e8a5196a6a3006ee79348fc38057ef983739a28ff0da6c14ec4ba20034cc",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned128_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned128_update.h",
+      "baseline_sha256": "75251e5651a024a3b3575a0651ecd6825bce01a560130a888e12b8310796e3c7",
+      "new_sha256": "75251e5651a024a3b3575a0651ecd6825bce01a560130a888e12b8310796e3c7",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned64_update_mx.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned64_update_mx.h",
+      "baseline_sha256": "d098dfd60ac341fbc53c928a897da4a230312c13c53cec34a3a5664f1d4ac287",
+      "new_sha256": "d098dfd60ac341fbc53c928a897da4a230312c13c53cec34a3a5664f1d4ac287",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_aligned128_no_update_mx.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_aligned128_no_update_mx.h",
+      "baseline_sha256": "3f4865a8df0f205d6f02acd0f9365d9e668cab820c4d1da2120905a138a95f38",
+      "new_sha256": "3f4865a8df0f205d6f02acd0f9365d9e668cab820c4d1da2120905a138a95f38",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_fullquant_unaligned512_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_fullquant_unaligned512_update.h",
+      "baseline_sha256": "5e92dac169bb0a52817db04e042acfd128e7fa1d34051224970133d8b0b272f8",
+      "new_sha256": "5e92dac169bb0a52817db04e042acfd128e7fa1d34051224970133d8b0b272f8",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_flash_decode_arch35.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_flash_decode_arch35.h",
+      "baseline_sha256": "75ac8ef50460054585fe61acf570ea5dc0a2ac9dd11f2ef8fdb3c9876b9bc26d",
+      "new_sha256": "75ac8ef50460054585fe61acf570ea5dc0a2ac9dd11f2ef8fdb3c9876b9bc26d",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned512_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned512_update.h",
+      "baseline_sha256": "bee973273fd13563ba19ee5727ac74ce2bf510db7bf5f61a7e08f1e1b7a3fa62",
+      "new_sha256": "bee973273fd13563ba19ee5727ac74ce2bf510db7bf5f61a7e08f1e1b7a3fa62",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_mul_sel_softmaxflashv2_cast_nz_dn.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_mul_sel_softmaxflashv2_cast_nz_dn.h",
+      "baseline_sha256": "7aca148e2ddd964fe243eff5a79d99a1e8d6a878a2a5cbb31597f289b6f88746",
+      "new_sha256": "7aca148e2ddd964fe243eff5a79d99a1e8d6a878a2a5cbb31597f289b6f88746",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned128_no_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned128_no_update.h",
+      "baseline_sha256": "0375c3276e42bb194b72905d69083f0e656809295e81ea0ada3ffcee93e77892",
+      "new_sha256": "0375c3276e42bb194b72905d69083f0e656809295e81ea0ada3ffcee93e77892",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned64_no_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned64_no_update.h",
+      "baseline_sha256": "b9c3dea89e283cadcfe8426b28b1d1ab4ed9909be6fb0c06e11f7135790647a1",
+      "new_sha256": "b9c3dea89e283cadcfe8426b28b1d1ab4ed9909be6fb0c06e11f7135790647a1",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned1024_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned1024_update.h",
+      "baseline_sha256": "73db48be8687258fc67ecddd744c399d8d333dcd26c8585e91b6e314086a7331",
+      "new_sha256": "73db48be8687258fc67ecddd744c399d8d333dcd26c8585e91b6e314086a7331",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned256_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned256_update.h",
+      "baseline_sha256": "c3b8cc6d6cf1d1805ac3075ad486c4c0c86c2ab351908c52e2a4991b49322a3f",
+      "new_sha256": "c3b8cc6d6cf1d1805ac3075ad486c4c0c86c2ab351908c52e2a4991b49322a3f",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_mul_sel_softmaxflashv2_cast_nz.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_mul_sel_softmaxflashv2_cast_nz.h",
+      "baseline_sha256": "b28eff019975f65dceeceee332c82ef9a1ec97c344f363d672beccea88b89401",
+      "new_sha256": "b28eff019975f65dceeceee332c82ef9a1ec97c344f363d672beccea88b89401",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned1024_common.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned1024_common.h",
+      "baseline_sha256": "bb16a4b47cdbea0b56fbe3db24d8f2b26cd235d0077e7fbc58e1343e84bb5bc8",
+      "new_sha256": "bb16a4b47cdbea0b56fbe3db24d8f2b26cd235d0077e7fbc58e1343e84bb5bc8",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_aligned128_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_aligned128_update.h",
+      "baseline_sha256": "1910490f6ea888b750ff86918749c1dccaddc88300486319b22ae2dd69d228d8",
+      "new_sha256": "1910490f6ea888b750ff86918749c1dccaddc88300486319b22ae2dd69d228d8",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_fullquant_unaligned512_no_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_fullquant_unaligned512_no_update.h",
+      "baseline_sha256": "9f659d1ca312deebd4456765202ce28628ef964c3e4ce66e8ba6a57fda32ff2b",
+      "new_sha256": "9f659d1ca312deebd4456765202ce28628ef964c3e4ce66e8ba6a57fda32ff2b",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned256_no_update_mx.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned256_no_update_mx.h",
+      "baseline_sha256": "ef6045ce6f4d04b1b51fef70b74d5121f9541940e27e9fa0d47e81a21d80ae9d",
+      "new_sha256": "ef6045ce6f4d04b1b51fef70b74d5121f9541940e27e9fa0d47e81a21d80ae9d",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned128_no_update_mx.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned128_no_update_mx.h",
+      "baseline_sha256": "bd671ca3a5affa0d1b23602c8d9323b28e1f0e3b03558578a1bcce8fdb042dfa",
+      "new_sha256": "bd671ca3a5affa0d1b23602c8d9323b28e1f0e3b03558578a1bcce8fdb042dfa",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_aligned128_update_mx.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_aligned128_update_mx.h",
+      "baseline_sha256": "5311f1b5de95bb59418774e27fd28db92c03f7abac7a12d8945d9cc5fd1eb4c7",
+      "new_sha256": "5311f1b5de95bb59418774e27fd28db92c03f7abac7a12d8945d9cc5fd1eb4c7",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_flashupdate_new.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_flashupdate_new.h",
+      "baseline_sha256": "db24f80cd4c6bc41347c71e9a856f65c29755bd9303af110d87d4ed83f858651",
+      "new_sha256": "db24f80cd4c6bc41347c71e9a856f65c29755bd9303af110d87d4ed83f858651",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned128_update_mx.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned128_update_mx.h",
+      "baseline_sha256": "f360c4335f6afcc099f21cbf6a51ffc7fc6142e9c5a60db3cc6aec0ba5390c2d",
+      "new_sha256": "f360c4335f6afcc099f21cbf6a51ffc7fc6142e9c5a60db3cc6aec0ba5390c2d",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_fullquant_unaligned256_no_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_fullquant_unaligned256_no_update.h",
+      "baseline_sha256": "1d88257e4cb6ddad6e4298077eb2f355403ca33142e02faddb2085f199fa3964",
+      "new_sha256": "1d88257e4cb6ddad6e4298077eb2f355403ca33142e02faddb2085f199fa3964",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned64_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned64_update.h",
+      "baseline_sha256": "9fbfd6c2a95d0c04c2e8a42086b3ceb98b772684980b453b1453c9bba4e6ccce",
+      "new_sha256": "9fbfd6c2a95d0c04c2e8a42086b3ceb98b772684980b453b1453c9bba4e6ccce",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_utils.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_utils.h",
+      "baseline_sha256": "7ee642f0997aab70501630773ae8aaf9cac340d39bff1b4831b449e4526a7810",
+      "new_sha256": "7ee642f0997aab70501630773ae8aaf9cac340d39bff1b4831b449e4526a7810",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/common/arch35/vf/vf_basic_block_unaligned512_no_update.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/common/op_kernel/arch35/vf/vf_basic_block_unaligned512_no_update.h",
+      "baseline_sha256": "fc3c84cb903515740ccb3ad85efce1fd59379f526de02aa474006910ea83341b",
+      "new_sha256": "fc3c84cb903515740ccb3ad85efce1fd59379f526de02aa474006910ea83341b",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/arch35/flash_mla_public_define_arch35.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/arch35/flash_mla_public_define_arch35.h",
+      "baseline_sha256": "4f7b0a5a16485ec858b997ebf1427198830964ac05671432311d1fbfa14316ab",
+      "new_sha256": "0e9ce648e80d5b7f7a523afb3da2fa3cbbd15a1c8bdcd42e517086f85c34ba61",
+      "transformation": "include paths only"
+    },
+    {
+      "new_path": "op_kernel/arch35/flash_mla_block_cube.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/arch35/flash_mla_block_cube.h",
+      "baseline_sha256": "1ce22f3a57fd5cd5eadffee345fb9334bee9564142ce8955a02e93c1a48f5786",
+      "new_sha256": "cc33ab117bcaa7ad0b20f01758152e18348276aae7f1884c11b4d1b7c4fedb44",
+      "transformation": "include paths only"
+    },
+    {
+      "new_path": "op_kernel/arch35/flash_mla_kernel.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/arch35/flash_mla_kernel.h",
+      "baseline_sha256": "cc24a9b394a45fc29cda7c66fce8c7fbe15c166cb9551995845ffc52e773e772",
+      "new_sha256": "cc24a9b394a45fc29cda7c66fce8c7fbe15c166cb9551995845ffc52e773e772",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/arch35/flash_mla_tiling_data.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/arch35/flash_mla_tiling_data.h",
+      "baseline_sha256": "ff34e8c8147e23af90c3894dafaa76f1647076d2bf4d971f80830b0d35a7af6a",
+      "new_sha256": "ff34e8c8147e23af90c3894dafaa76f1647076d2bf4d971f80830b0d35a7af6a",
+      "transformation": "include paths only; pre-existing direct-invoke FlashMlaLaunchData POD retained"
+    },
+    {
+      "new_path": "op_kernel/arch35/flash_mla_template_tiling_key.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/arch35/flash_mla_template_tiling_key.h",
+      "baseline_sha256": "98f65301a53d86ee393d91f670fd12446afb11186ceca9629532873da746fd23",
+      "new_sha256": "98f65301a53d86ee393d91f670fd12446afb11186ceca9629532873da746fd23",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/arch35/flash_mla_block_vec.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/arch35/flash_mla_block_vec.h",
+      "baseline_sha256": "9f0563139786d2903069b9a17af14bedcf5ab18dd7f993d1054988b2dd7510d2",
+      "new_sha256": "ceb750fb88c34a7bcb67efec3b88d603ea7ae966d40f8e1c64557f5daa7ff9be",
+      "transformation": "include paths only"
+    },
+    {
+      "new_path": "op_kernel/arch35/flash_mla_block_vec_flashdecode.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/arch35/flash_mla_block_vec_flashdecode.h",
+      "baseline_sha256": "9f49168e53fd01bb1348db25c97913efa5d39e3499743d29c86a6e4b59f934d5",
+      "new_sha256": "b542e9ea31c6cbb8ee06326c1d4232086efeae56bfa0634384d69f742d9ca64c",
+      "transformation": "include paths only"
+    },
+    {
+      "new_path": "op_kernel/utils/flash_mla_common_def.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/utils/flash_mla_common_def.h",
+      "baseline_sha256": "b7ed149027b92959dc244371fd3359ca28030205302571bfe83cc4e15221e32a",
+      "new_sha256": "b7ed149027b92959dc244371fd3359ca28030205302571bfe83cc4e15221e32a",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/utils/flash_mla_type.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/utils/flash_mla_type.h",
+      "baseline_sha256": "f180b8f466d4993e2830fd0be3a9ab24d4f2b0fb27ed4a0cceeed8a3e444e5d3",
+      "new_sha256": "1f0a49732d1b9408ad015a66d65f2e652e135387f06943f3ebd634ac52bde43b",
+      "transformation": "include paths only"
+    },
+    {
+      "new_path": "op_kernel/utils/flash_mla_memory_copy_arch35.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/utils/flash_mla_memory_copy_arch35.h",
+      "baseline_sha256": "cb615ebe2aa190e9db15ba92e80a6d674f6544a33d3df295471f087bcd353664",
+      "new_sha256": "feed844a2bc3b7c2eeb803b80e02abd73a7f35d4496575465772e2609411a045",
+      "transformation": "include paths only"
+    },
+    {
+      "new_path": "op_kernel/utils/flash_mla_attenmask_gs1.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/utils/flash_mla_attenmask_gs1.h",
+      "baseline_sha256": "b8b04230ea26b1a7109e523eb0ab7a3fa3972cc09f5ed4f2c7406601d6ce87bc",
+      "new_sha256": "b8b04230ea26b1a7109e523eb0ab7a3fa3972cc09f5ed4f2c7406601d6ce87bc",
+      "transformation": "verbatim"
+    },
+    {
+      "new_path": "op_kernel/utils/flash_mla_attn_sink_gs1.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/flash_mla/op_kernel/utils/flash_mla_attn_sink_gs1.h",
+      "baseline_sha256": "a83754030a12c4e89ed684673a43f5bda5feb76e907fc0f10dc9c9bc9076ac81",
+      "new_sha256": "08d8f4dfab3fedb4687786529829be3de7ec415efea9180a3028993a696281c3",
+      "transformation": "include paths only"
+    },
+    {
+      "new_path": "op_kernel/flash_mla.cpp",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/op_kernel/flash_mla_impl.h",
+      "baseline_sha256": "6069dbd5cf4a17e27ed9efb195ac47b76f8c52ecf81652a929baca4767ba5ee0",
+      "new_sha256": "34ca18b178cb27435ad9b5e15011b48d7b1ebb042bd8f6d02533d5534be4904b",
+      "upstream_path": "attention/flash_mla/op_kernel/flash_mla.cpp",
+      "upstream_sha256": "46787028053971860b2b33af477849ec6a243fd9f85a5386315d06257a2327b1",
+      "transformation": "upstream single template entry merged with the accepted direct-invoke RunFlashMla body; tiling CopyFlashMlaTiling retained; workspace passed after the SDK HAVE_WORKSPACE wrapper advance; explicit specializations for the 24 ASCENDC_TPL_SEL combinations (layouts 0/1/2/4 x PA KV 1/2/3 x mask false/true x config0) because direct ascendc_library does not run the OPP tiling-key expander"
+    },
+    {
+      "new_path": "op_kernel/flash_mla_tiling_copy.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/op_kernel/flash_mla_tiling_copy.h",
+      "baseline_sha256": "49d974de14384fa0740fdfae802b9a722e0fad572b1dbfc3c477ce3cf0dd0d3c",
+      "new_sha256": "68b9f6a22a92456a259c51f5043ca18ac0b3b61c8eea90d0abc1f3b40a10bc5a",
+      "transformation": "include path only; accepted direct-invoke tiling POD copy unchanged"
+    },
+    {
+      "new_path": "op_host/flash_mla_torch.cpp",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/flash_mla_torch.cpp",
+      "baseline_sha256": "1e97a139985f5b4999c500e39ec14cb80d27ed4493a0fa958f97191dc88fad91",
+      "new_sha256": "66564909868dba92240a9f2dc208cc5d9ec2016f728ebddd90a9f855460426d0",
+      "transformation": "moved from csrc/flash_mla/flash_mla_torch.cpp; launch headers and direct template dispatch replace the eight wrapper entry names; schema, checks, tiling values, metadata and RunOpApi queueing/lifetime unchanged"
+    },
+    {
+      "new_path": "op_host/flash_mla_host.h",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/flash_mla_host.h",
+      "baseline_sha256": "cc8f9753ef101322f72ea5258b2fde954a22e2d9a49424e3a1370fed31e4da1b",
+      "new_sha256": "cc8f9753ef101322f72ea5258b2fde954a22e2d9a49424e3a1370fed31e4da1b",
+      "transformation": "verbatim move; include resolves to the independent metadata companion"
+    },
+    {
+      "new_path": "LICENSE",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/vendor/LICENSE",
+      "baseline_sha256": "89b1c114df62cfd183004f38d18d07f186436c3b37203dd69c3e84becf9d2282",
+      "new_sha256": "89b1c114df62cfd183004f38d18d07f186436c3b37203dd69c3e84becf9d2282",
+      "transformation": "verbatim move"
+    },
+    {
+      "new_path": "CMakeLists.txt",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/CMakeLists.txt",
+      "baseline_sha256": "c5d44e2ed31f80d0f3fc61030528a0e601dda04d9b7fcddeff3f423c7ec9ff05",
+      "new_sha256": "8628dab879f9b1d55c0961f61a734959b7acd0f700a4ac4ce7bd7dc54bd427a9",
+      "transformation": "eight-entry glob replaced by one op_kernel/flash_mla.cpp source compiled for BF16 and FP16; host target path moved to op_host/flash_mla_torch.cpp; library name and install rule unchanged"
+    },
+    {
+      "new_path": "README.md",
+      "baseline_path": "/workspace/flashmla-layout-20261109/assets/flash_mla_baseline/README.md",
+      "baseline_sha256": "3f147000f49755f6dccd492febdaec406d527c6fe1b4ec88624c2f1f43a59fb1",
+      "new_sha256": "3f147000f49755f6dccd492febdaec406d527c6fe1b4ec88624c2f1f43a59fb1",
+      "transformation": "documents the upstream-shaped tree, template parameters and direct-invoke explicit specializations"
+    }
+  ],
+  "removed": [
+    {
+      "baseline_path": "op_kernel/flash_mla_impl.h",
+      "baseline_sha256": "6069dbd5cf4a17e27ed9efb195ac47b76f8c52ecf81652a929baca4767ba5ee0",
+      "reason": "duplicate entry glue replaced by the single op_kernel/flash_mla.cpp"
+    },
+    {
+      "baseline_path": "op_kernel/sgl_flash_mla_0_0.cpp",
+      "baseline_sha256": "57cf0630edefc9aa35651453115e1760f45301b51c40c2151693dd87f2648021",
+      "reason": "duplicate entry glue replaced by the single op_kernel/flash_mla.cpp"
+    },
+    {
+      "baseline_path": "op_kernel/sgl_flash_mla_0_1.cpp",
+      "baseline_sha256": "1080684ce5582ccd8bfe81dffa8b3d707ec86eb7eeeee0260a354c49a9dd6d4e",
+      "reason": "duplicate entry glue replaced by the single op_kernel/flash_mla.cpp"
+    },
+    {
+      "baseline_path": "op_kernel/sgl_flash_mla_0_2.cpp",
+      "baseline_sha256": "fc956e5ced72a7d562649f30d3eebe69f1cd0739e04e2d6eb2c6dae0a5dccccf",
+      "reason": "duplicate entry glue replaced by the single op_kernel/flash_mla.cpp"
+    },
+    {
+      "baseline_path": "op_kernel/sgl_flash_mla_0_4.cpp",
+      "baseline_sha256": "ddc9b72de45eeab9d80cff1a1b51ce449164e971494b095757029178e3949216",
+      "reason": "duplicate entry glue replaced by the single op_kernel/flash_mla.cpp"
+    },
+    {
+      "baseline_path": "op_kernel/sgl_flash_mla_1_0.cpp",
+      "baseline_sha256": "7435495717e09bb2d326c5ca87c6900840b00123e9f6a8e34b5e3e994c75a39c",
+      "reason": "duplicate entry glue replaced by the single op_kernel/flash_mla.cpp"
+    },
+    {
+      "baseline_path": "op_kernel/sgl_flash_mla_1_1.cpp",
+      "baseline_sha256": "de57fe3eecfc9a53206778c70aeff9a8166aa755d310a70da1b3374f4b4518e1",
+      "reason": "duplicate entry glue replaced by the single op_kernel/flash_mla.cpp"
+    },
+    {
+      "baseline_path": "op_kernel/sgl_flash_mla_1_2.cpp",
+      "baseline_sha256": "02200eea1a13a24b15d050668564fbba18d8f226d1909081003dafa8179b9702",
+      "reason": "duplicate entry glue replaced by the single op_kernel/flash_mla.cpp"
+    },
+    {
+      "baseline_path": "op_kernel/sgl_flash_mla_1_4.cpp",
+      "baseline_sha256": "464dc6239521f97b0a89bc02cfa0a9d23618831c192a96c8de2e6c1206adf329",
+      "reason": "duplicate entry glue replaced by the single op_kernel/flash_mla.cpp"
+    },
+    {
+      "baseline_path": "vendor/flash_mla/op_kernel/flash_mla.cpp",
+      "baseline_sha256": "46787028053971860b2b33af477849ec6a243fd9f85a5386315d06257a2327b1",
+      "reason": "reference copy of the upstream entry; the maintained entry now lives at op_kernel/flash_mla.cpp"
+    },
+    {
+      "baseline_path": "vendor/ (mirror tree)",
+      "baseline_sha256": null,
+      "reason": "vendor mirror removed; algorithm headers moved to op_kernel/{arch35,utils,common} preserving license files"
+    }
+  ]
+}

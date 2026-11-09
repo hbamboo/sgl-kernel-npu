@@ -18,7 +18,7 @@
     "attention/flash_mla_metadata/op_host/op_api/aclnn_flash_mla_metadata.cpp": "73adeca9003edbb9450208859618242d35d7b31ceb65956cdcb13c4a8ab4e191"
   },
   "destination_sha256": {
-    "aicpu/flash_mla_metadata.h": "8197e30a2789b45a08e3e039e8d0c52fe34141bfd1fd6ad0b15b0f77c136f1cb",
+    "aicpu/flash_mla_metadata.h": "e8f9403fa2e72efbe02a037d02ccd79ffe2b0d9376d773bb383549aec824dae0",
     "aicpu/load_balance/load_balance_common.h": "f92f14469407fb0434bde6de07d65f632892a233b134654397157951deebb383",
     "aicpu/load_balance/base_info.h": "cfb8b46a7e63d3139326d2b07d34b1cd0185d883f00e42f1ba7a954972721cdd",
     "aicpu/load_balance/section_stream_k/section_stream_k.h": "2352ea26150c09449e51378463f5aeb580506187ac69787934c31413cec5054f",
@@ -57,7 +57,7 @@
     {
       "origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata.h",
       "destination": "aicpu/flash_mla_metadata.h",
-      "transformation": "only the flash_mla_shared.h include path is adapted; layout constants and FaMetadata code unchanged"
+      "transformation": "verbatim; the upstream ../../flash_mla/op_kernel/flash_mla_shared.h include now resolves to the moved shared header, so layout constants and FaMetadata code are unchanged"
     },
     {
       "origin": "attention/flash_mla_metadata/op_kernel_aicpu/flash_mla_metadata_aicpu.cpp",

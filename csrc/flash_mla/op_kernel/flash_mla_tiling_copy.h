@@ -1,5 +1,5 @@
 #pragma once
-#include "../vendor/flash_mla/op_kernel/arch35/flash_mla_tiling_data.h"
+#include "arch35/flash_mla_tiling_data.h"
 namespace optiling {
 __aicore__ inline void CopyFlashMlaTiling(GM_ADDR ptr, FlashMlaLaunchData& dst) {
     const __gm__ FlashMlaLaunchData* src = reinterpret_cast<const __gm__ FlashMlaLaunchData*>(ptr);

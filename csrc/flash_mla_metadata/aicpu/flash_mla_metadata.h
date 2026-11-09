@@ -17,7 +17,7 @@
 #define FLASH_MLA_METADATA_H
 
 #include <cstdint>
-#include "../../flash_mla/vendor/flash_mla/op_kernel/flash_mla_shared.h"
+#include "../../flash_mla/op_kernel/flash_mla_shared.h"
 #include <cassert>
 
 namespace optiling {

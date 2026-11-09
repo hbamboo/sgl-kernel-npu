@@ -18,8 +18,8 @@
 
 #include "flash_mla_common_def.h"
 #include "flash_mla_memory_copy_arch35.h"
-#include "../../../common/op_kernel/arch35/util_regbase.h"
-#include "../../../common/op_kernel/arch35/infer_flash_attention_comm_arch35.h"
+#include "../common/arch35/util_regbase.h"
+#include "../common/arch35/infer_flash_attention_comm_arch35.h"
 #include "../arch35/flash_mla_public_define_arch35.h"
 
 namespace FlashAttnKernel {

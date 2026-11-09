@@ -43,7 +43,7 @@ set(FLASH_MLA_AICPU_HEADERS
     ${FLASH_MLA_METADATA_AICPU_DIR}/load_balance/section_stream_k/section_stream_k.h
     ${FLASH_MLA_METADATA_AICPU_DIR}/load_balance/section_stream_k/section_stream_k_def.h
     ${FLASH_MLA_METADATA_AICPU_DIR}/load_balance/section_stream_k/section_stream_k_impl.h
-    ${FLASH_MLA_METADATA_ROOT}/../flash_mla/vendor/flash_mla/op_kernel/flash_mla_shared.h)
+    ${FLASH_MLA_METADATA_ROOT}/../flash_mla/op_kernel/flash_mla_shared.h)
 set(FLASH_MLA_AICPU_SO ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libsgl_flash_mla_metadata_aicpu.so)
 set(FLASH_MLA_AICPU_JSON ${FLASH_MLA_METADATA_AICPU_DIR}/libsgl_flash_mla_metadata_aicpu.json)
 set(FLASH_MLA_AICPU_JSON_OUT ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libsgl_flash_mla_metadata_aicpu.json)

@@ -16,7 +16,7 @@
 #define ATTN_SINK_GS1_H_
 
 #include "kernel_operator.h"
-#include "../../../common/op_kernel/const_def.h"
+#include "../common/const_def.h"
 
 using namespace AscendC;
 

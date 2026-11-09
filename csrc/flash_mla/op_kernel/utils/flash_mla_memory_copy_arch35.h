@@ -11,17 +11,17 @@
 #ifndef FLASH_MLA_MEMORY_COPY_ARCH35_H
 #define FLASH_MLA_MEMORY_COPY_ARCH35_H
 
-#include "../../../common/op_kernel/vector_common.h"
-#include "../../../common/op_kernel/memcopy/gm_layout.h"
-#include "../../../common/op_kernel/memcopy/parser.h"
-#include "../../../common/op_kernel/memcopy/offset_calculator_v2.h"
-#include "../../../common/op_kernel/memcopy/fa_gm_tensor.h"
-#include "../../../common/op_kernel/memcopy/fa_l1_tensor.h"
-#include "../../../common/op_kernel/memcopy/fa_ub_tensor.h"
-#include "../../../common/op_kernel/memcopy/gm_coord.h"
-#include "../../../common/op_kernel/memcopy/attn_copy_gm_to_l1.h"
-#include "../../../common/op_kernel/memcopy/attn_copy_gm_to_ub.h"
-#include "../../../common/op_kernel/memcopy/copy_ub_to_gm.h"
+#include "../common/vector_common.h"
+#include "../common/memcopy/gm_layout.h"
+#include "../common/memcopy/parser.h"
+#include "../common/memcopy/offset_calculator_v2.h"
+#include "../common/memcopy/fa_gm_tensor.h"
+#include "../common/memcopy/fa_l1_tensor.h"
+#include "../common/memcopy/fa_ub_tensor.h"
+#include "../common/memcopy/gm_coord.h"
+#include "../common/memcopy/attn_copy_gm_to_l1.h"
+#include "../common/memcopy/attn_copy_gm_to_ub.h"
+#include "../common/memcopy/copy_ub_to_gm.h"
 
 template <typename T, typename CONST_INFO_T>
 __aicore__ inline void DataCopySoftmaxLseBSNDArch35(GlobalTensor<float> softmaxLseGm, LocalTensor<T> lseSrc,
